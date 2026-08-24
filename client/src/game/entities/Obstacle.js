@@ -39,12 +39,13 @@ export class ObstacleSpawner {
     this.timer = 0;
   }
 
-  update(dt, obstacles) {
+  update(dt, obstacles, enemy) {
     this.timer += dt * 1000;
     if (this.timer >= this.spawnInterval) {
       this.timer = 0;
       const groundY = 340 + 20;
-      obstacles.push(new Obstacle(800, groundY, this.speed));
+      const spawnX = enemy ? enemy.x : 800; // fire now comes from the enemy
+      obstacles.push(new Obstacle(spawnX, groundY, this.speed));
     }
   }
 }
