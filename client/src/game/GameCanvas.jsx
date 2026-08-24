@@ -6,12 +6,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Player } from './entities/Player';
-import { Obstacle, ObstacleSpawner, isColliding } from './entities/Obstacle';
+import { Obstacle, isColliding } from './entities/Obstacle';
 import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
+const ENEMY_BULLET_SPEED = 260; // px/s, a bit faster than the old fixed obstacles
+const ENEMY_BULLET_HEIGHT = 40; // matches Obstacle's default height, used to vertically center it on the enemy
 
 export default function GameCanvas() {
   const canvasRef = useRef(null);
@@ -22,7 +24,6 @@ export default function GameCanvas() {
   const enemyRef = useRef(new Enemy(700, 340));
   const obstaclesRef = useRef([]);
   const bulletsRef = useRef([]);
-  const spawnerRef = useRef(new ObstacleSpawner(1200, 220));
   const keysRef = useRef({});
   const gameStateRef = useRef('playing');
 
@@ -31,7 +32,6 @@ export default function GameCanvas() {
     enemyRef.current = new Enemy(700, 340);
     obstaclesRef.current = [];
     bulletsRef.current = [];
-    spawnerRef.current = new ObstacleSpawner(1200, 220);
     gameStateRef.current = 'playing';
     setGameState('playing');
     setHealth(3);
@@ -78,21 +78,35 @@ export default function GameCanvas() {
       if (gameStateRef.current !== 'playing') return;
 
       const player = playerRef.current;
+      const wasGrounded = player.isGrounded;
+
       player.handleInput(keysRef.current);
       player.update(dt);
 
       const enemy = enemyRef.current;
 
-      if (enemy.alive) {
-        spawnerRef.current.update(dt, obstaclesRef.current, enemy);
+      // linked behavior: player just left the ground (jumped) -> enemy jumps + fires too
+      if (wasGrounded && !player.isGrounded && enemy.alive) {
+        enemy.jumpAndFire();
       }
+
+      if (enemy.alive) {
+        enemy.update(dt);
+
+        if (enemy.wantsToFire) {
+          enemy.wantsToFire = false;
+          const bulletY = enemy.y + (enemy.height - ENEMY_BULLET_HEIGHT) / 2;
+          obstaclesRef.current.push(new Obstacle(enemy.x, bulletY, ENEMY_BULLET_SPEED));
+        }
+      }
+
       obstaclesRef.current.forEach((o) => o.update(dt));
       obstaclesRef.current = obstaclesRef.current.filter((o) => !o.isOffScreen());
 
       bulletsRef.current.forEach((b) => b.update(dt));
       bulletsRef.current = bulletsRef.current.filter((b) => !b.isOffScreen(CANVAS_WIDTH));
 
-      // player vs fire
+      // player vs enemy bullets
       const playerBounds = player.getBounds();
       for (const obstacle of obstaclesRef.current) {
         if (isColliding(playerBounds, obstacle.getBounds())) {
@@ -100,7 +114,7 @@ export default function GameCanvas() {
         }
       }
 
-      // bullets vs enemy
+      // player bullets vs enemy
       if (enemy.alive) {
         for (const bullet of bulletsRef.current) {
           if (isColliding(bullet.getBounds(), enemy.getBounds())) {
