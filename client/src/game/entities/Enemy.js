@@ -1,10 +1,15 @@
 // src/game/entities/Enemy.js
 // Enemy gunman: reacts and moves unpredictably instead of standing still.
 // - On a random internal timer, it picks one of: jump-and-fire, step-and-fire, fire-in-place.
-// - It also reacts to the PLAYER jumping: when the player leaves the ground,
-//   the enemy jumps and fires too (linked behavior).
+// - It also reacts to the PLAYER jumping, but with a short delay instead of instantly
+//   (see REACTION_DELAY) so it doesn't feel robotically synced to the player.
+// - Firing uses a burst pattern that loops forever: 1,1,2,1,2 bullets per trigger
+//   (see FIRE_SEQUENCE). A "trigger" is any of jump-and-fire / step-and-fire /
+//   fire-in-place / landing / delayed player-jump reaction.
 // - Firing is event-driven: GameCanvas checks `wantsToFire` each frame and
-//   spawns the actual bullet/obstacle when it's true.
+//   spawns the actual EnemyBullet when it's true. For a 2-bullet burst, this
+//   flag flips true twice, spaced by BURST_GAP, so GameCanvas doesn't need
+//   to know anything about bursts.
 
 export const ENEMY_GRAVITY = 1800;
 export const ENEMY_JUMP_VELOCITY = -600;
@@ -12,6 +17,13 @@ export const ENEMY_MOVE_SPEED = 150;
 export const ENEMY_GROUND_Y = 340;
 export const ENEMY_PATROL_MIN_X = 550;
 export const ENEMY_PATROL_MAX_X = 750;
+
+// Bullets-per-trigger pattern, loops forever: 1,1,2,1,2,1,1,2,1,2,...
+const FIRE_SEQUENCE = [1, 1, 2, 1, 2];
+const BURST_GAP = 0.15; // seconds between shots within a multi-bullet burst
+
+// How long the enemy waits after the player jumps before it reacts.
+const REACTION_DELAY = 0.35; // seconds
 
 export class Enemy {
   constructor(x, y) {
@@ -36,10 +48,30 @@ export class Enemy {
 
     // flag GameCanvas checks each frame to know when to spawn a bullet
     this.wantsToFire = false;
+
+    // burst-fire state
+    this.fireSequenceIndex = 0;
+    this.burstRemaining = 0;
+    this.burstTimer = 0;
+
+    // delayed reaction to the player jumping (null = no reaction pending)
+    this.pendingReactionTimer = null;
   }
 
   randomInterval() {
     return 1.2 + Math.random() * 1.5; // seconds between random actions
+  }
+
+  // Kicks off a burst: fires the first bullet immediately, queues the rest
+  // (if any) to fire BURST_GAP apart, and advances the pattern index.
+  startBurst() {
+    if (!this.alive) return;
+    const count = FIRE_SEQUENCE[this.fireSequenceIndex];
+    this.fireSequenceIndex = (this.fireSequenceIndex + 1) % FIRE_SEQUENCE.length;
+
+    this.wantsToFire = true; // first shot fires this frame
+    this.burstRemaining = count - 1; // remaining shots to trickle out
+    this.burstTimer = 0;
   }
 
   jumpAndFire() {
@@ -48,7 +80,7 @@ export class Enemy {
       this.vy = ENEMY_JUMP_VELOCITY;
       this.isGrounded = false;
     }
-    this.wantsToFire = true;
+    this.startBurst();
   }
 
   moveStepAndFire() {
@@ -62,7 +94,7 @@ export class Enemy {
 
   fireInPlace() {
     if (!this.alive) return;
-    this.wantsToFire = true;
+    this.startBurst();
   }
 
   chooseRandomAction() {
@@ -76,8 +108,25 @@ export class Enemy {
     }
   }
 
+  // Called by GameCanvas when the player jumps. Doesn't react immediately —
+  // just arms a delay timer; the actual jump-and-fire happens in update()
+  // once REACTION_DELAY has elapsed.
+  triggerDelayedReaction() {
+    if (!this.alive) return;
+    this.pendingReactionTimer = REACTION_DELAY;
+  }
+
   update(dt) {
     if (!this.alive) return;
+
+    // delayed reaction to the player's jump
+    if (this.pendingReactionTimer !== null) {
+      this.pendingReactionTimer -= dt;
+      if (this.pendingReactionTimer <= 0) {
+        this.pendingReactionTimer = null;
+        this.jumpAndFire();
+      }
+    }
 
     // vertical physics (jump/land)
     this.vy += ENEMY_GRAVITY * dt;
@@ -86,7 +135,7 @@ export class Enemy {
       this.y = ENEMY_GROUND_Y;
       this.vy = 0;
       if (!this.isGrounded) {
-        this.wantsToFire = true; // fire again on landing
+        this.startBurst(); // fire again on landing
       }
       this.isGrounded = true;
     }
@@ -97,9 +146,19 @@ export class Enemy {
       if (Math.abs(diff) < 2) {
         this.x = this.moveTargetX;
         this.moveTargetX = null;
-        this.wantsToFire = true; // fire once it settles into the new spot
+        this.startBurst(); // fire once it settles into the new spot
       } else {
         this.x += Math.sign(diff) * ENEMY_MOVE_SPEED * dt;
+      }
+    }
+
+    // continue a multi-bullet burst, spaced BURST_GAP apart
+    if (this.burstRemaining > 0) {
+      this.burstTimer += dt;
+      if (this.burstTimer >= BURST_GAP) {
+        this.burstTimer = 0;
+        this.burstRemaining -= 1;
+        this.wantsToFire = true;
       }
     }
 
