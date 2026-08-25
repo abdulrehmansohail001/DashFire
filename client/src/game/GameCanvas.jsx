@@ -10,9 +10,15 @@ import { isColliding } from './entities/Obstacle';
 import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
+import { SpriteSheet } from './entities/SpriteSheet';
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
+
+// Sprite sheets are loaded once at module scope (not per-mount) so the
+// image only fetches/decodes a single time. 313 = 1252 / 4 (4x4 grid).
+const playerSheet = new SpriteSheet('/sprites/player.png', 313, 313, 4, 4);
+const enemySheet = new SpriteSheet('/sprites/enemy.png', 313, 313, 4, 4);
 
 export default function GameCanvas() {
   const canvasRef = useRef(null);
@@ -45,8 +51,9 @@ export default function GameCanvas() {
       const player = playerRef.current;
       const direction = player.facing; // 'left' | 'right'
       const bulletX = direction === 'right' ? player.x + player.width : player.x;
-      const bulletY = player.y + player.height / 2 - 2;
+            const bulletY = player.y + player.height / 2 - 2;
       bulletsRef.current.push(new Bullet(bulletX, bulletY, direction));
+      player.triggerShoot();
     }
 
         const JUMP_KEYS = ['ArrowUp', ' ', 'w', 'W'];
@@ -156,8 +163,8 @@ export default function GameCanvas() {
       ctx.lineTo(800, 400);
       ctx.stroke();
 
-      playerRef.current.draw(ctx);
-      enemyRef.current.draw(ctx);
+            playerRef.current.draw(ctx, playerSheet);
+      enemyRef.current.draw(ctx, enemySheet);
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
 
