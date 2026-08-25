@@ -23,8 +23,10 @@ const FIRE_SEQUENCE = [1, 1, 2, 1, 2];
 const BURST_GAP = 0.15; // seconds between shots within a multi-bullet burst
 
 // How long the enemy waits after the player jumps before it reacts.
-const REACTION_DELAY = 0.35; // seconds
-
+// Randomized range (not a fixed value) so it doesn't read as a fixed-latency
+// echo of the player's input.
+const REACTION_DELAY_MIN = 0.5; // seconds
+const REACTION_DELAY_MAX = 0.9; // seconds
 export class Enemy {
   constructor(x, y) {
     this.x = x;
@@ -58,8 +60,8 @@ export class Enemy {
     this.pendingReactionTimer = null;
   }
 
-  randomInterval() {
-    return 2.2 + Math.random() * 2.0; // seconds between random actions (was 1.2–2.7, too frequent)
+      randomInterval() {
+    return 2.4 + Math.random() * 1.6; // seconds between random actions (was 3.2–5.8, overcorrected too slow)
   }
 
   // Kicks off a burst: fires the first bullet immediately, queues the rest
@@ -111,9 +113,10 @@ export class Enemy {
   // Called by GameCanvas when the player jumps. Doesn't react immediately —
   // just arms a delay timer; the actual jump-and-fire happens in update()
   // once REACTION_DELAY has elapsed.
-  triggerDelayedReaction() {
+    triggerDelayedReaction() {
     if (!this.alive) return;
-    this.pendingReactionTimer = REACTION_DELAY;
+    this.pendingReactionTimer =
+      REACTION_DELAY_MIN + Math.random() * (REACTION_DELAY_MAX - REACTION_DELAY_MIN);
   }
 
   update(dt) {

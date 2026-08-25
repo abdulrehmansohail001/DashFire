@@ -49,6 +49,8 @@ export default function GameCanvas() {
       bulletsRef.current.push(new Bullet(bulletX, bulletY, direction));
     }
 
+        const JUMP_KEYS = ['ArrowUp', ' ', 'w', 'W'];
+
     const handleKeyDown = (e) => {
       keysRef.current[e.key] = true;
 
@@ -62,7 +64,15 @@ export default function GameCanvas() {
       if ((e.key === 'f' || e.key === 'F') && gameStateRef.current === 'playing') {
         shoot();
       }
+
+      // Jump only fires on the actual keydown edge (e.repeat is true for
+      // browser auto-repeat while a key is held), so holding the key does
+      // NOT queue up extra jumps for the moment you land.
+      if (JUMP_KEYS.includes(e.key) && !e.repeat && gameStateRef.current === 'playing') {
+        playerRef.current.jump();
+      }
     };
+    
     const handleKeyUp = (e) => {
       keysRef.current[e.key] = false;
     };
