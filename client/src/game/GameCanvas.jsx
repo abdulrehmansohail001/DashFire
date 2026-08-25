@@ -123,7 +123,24 @@ function drawHpBar(ctx, x, y, width, height, pct, label, labelAlign) {
   ctx.textAlign = labelAlign;
   ctx.fillText(label, labelAlign === 'left' ? x : x + width, y - 6);
 }
+// Draws the level number + control hints in the empty gap between the two
+// HP bar clusters at the top of the canvas — stays in canvas coordinate
+// space so it never drifts over gameplay near the ground, unlike a
+// screen-space DOM overlay would on different aspect ratios.
+function drawTopCenterHud(ctx, levelDisplay) {
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff';
 
+  ctx.font = 'bold 12px monospace';
+  ctx.fillText(`LEVEL ${levelDisplay}/10`, CANVAS_WIDTH / 2, 20);
+
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#ccc';
+  ctx.fillText('A/D MOVE  •  SPACE JUMP  •  F SHOOT', CANVAS_WIDTH / 2, 34);
+
+  ctx.restore();
+}
 export default function GameCanvas() {
   const canvasRef = useRef(null);
   const [health, setHealth] = useState(3);
@@ -337,13 +354,15 @@ export default function GameCanvas() {
       const enemyCircleX = CANVAS_WIDTH - 40;
       const enemies = enemiesRef.current;
       const totalMax = enemies.reduce((sum, e) => sum + e.maxHealth, 0);
-      if (totalMax > 0) {
+            if (totalMax > 0) {
         const totalCurrent = enemies.reduce((sum, e) => sum + Math.max(e.health, 0), 0);
         const barWidth = 150;
         const barX = enemyCircleX - circleRadius - 12 - barWidth;
         drawHpBar(ctx, barX, circleY - 8, barWidth, 16, totalCurrent / totalMax, 'ENEMY HP', 'right');
         drawHudPortrait(ctx, enemySheet, enemyCircleX, circleY, circleRadius, '#a83232', 'E');
       }
+
+      drawTopCenterHud(ctx, levelIndexRef.current + 1);
 
       if (gameStateRef.current === 'gameover') {
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -426,6 +445,9 @@ export default function GameCanvas() {
         scale that buffer up to fill the browser viewport while preserving
         the 2:1 aspect ratio, letterboxing with black bars if the window's
         aspect ratio doesn't match exactly. No entity code needs to change.
+        All HUD text (level, controls, HP bars) is drawn ON the canvas
+        itself in draw() — no DOM overlay — so it never drifts out of sync
+        with gameplay elements like bullets near the ground.
       */}
       <canvas
         ref={canvasRef}
@@ -438,26 +460,6 @@ export default function GameCanvas() {
           background: 'transparent',
         }}
       />
-
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 16,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          color: '#fff',
-          fontFamily: 'monospace',
-          fontSize: '14px',
-          background: 'rgba(0,0,0,0.55)',
-          padding: '6px 14px',
-          borderRadius: '6px',
-          pointerEvents: 'none',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        Level: {levelNumber}/10 &nbsp;|&nbsp; Move: A/D &nbsp;|&nbsp; Jump: W/Space
-        &nbsp;|&nbsp; Shoot: F
-      </div>
     </div>
   );
 }
