@@ -33,7 +33,7 @@ const ARENA_MAX_X = 750;
 
 const playerSheet = new SpriteSheet('/sprites/player.png', 313, 313, 4, 4);
 const enemySheet = new SpriteSheet('/sprites/enemy.png', 313, 313, 4, 4);
-const moonBgSheet = new SpriteSheet('/sprites/moon_bg.png', 800, 400, 4, 4);
+const moonBgSheet = new SpriteSheet('/sprites/moon_bg.jpg', 366, 352, 8, 1);
 // Builds N enemies for a level config, splitting the arena into N
 // non-overlapping patrol slots and starting each enemy in the middle of its slot.
 function buildEnemiesForLevel(levelConfig) {

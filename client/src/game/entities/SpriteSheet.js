@@ -33,6 +33,7 @@ export class SpriteSheet {
 
     const sx = col * this.frameWidth;
     const sy = row * this.frameHeight;
+    
 
     if (flip) {
       ctx.save();

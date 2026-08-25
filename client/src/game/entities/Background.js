@@ -1,10 +1,8 @@
 // src/game/entities/Background.js
-// Cycles through a 4x4 sprite sheet of background frames (same lunar
-// ground in every frame; the planet drifts and stars shimmer smoothly
-// across all 16 steps, looping back to frame 1 seamlessly) to give the
-// backdrop a sense of slow motion without any parallax-scrolling logic.
-// Reuses the existing SpriteSheet class — a background is really just a
-// full-canvas-sized "sprite."
+// Cycles through a 1x8 horizontal sprite sheet of background frames 
+// (same lunar ground in every frame; the planet drifts and stars shimmer smoothly
+// across all 8 steps, looping back seamlessly) to give the backdrop a sense of 
+// slow motion. Reuses the existing SpriteSheet class.
 
 export class Background {
   constructor(sheet, frameDuration = 0.5) {
@@ -12,13 +10,11 @@ export class Background {
     this.frameDuration = frameDuration; // seconds each background frame holds
     this.timer = 0;
 
-    // Cycles through all 16 cells of the 4x4 sheet, in reading order,
-    // matching the frame order requested in the generation prompt.
+    // Cycles through all 8 cells of the 1x8 horizontal strip.
+    // Row is always 0 because all frames are in a single line.
     this.sequence = [];
-    for (let row = 0; row < 4; row++) {
-      for (let col = 0; col < 4; col++) {
-        this.sequence.push({ row, col });
-      }
+    for (let col = 0; col < 8; col++) {
+      this.sequence.push({ row: 0, col });
     }
     this.index = 0;
   }
@@ -31,23 +27,16 @@ export class Background {
     }
   }
 
-    draw(ctx, canvasWidth, canvasHeight) {
-    const { row, col } = this.sequence[this.index];
-    const ROW_Y_OFFSET = [0, 14, 29, 43]; // measured horizon drift per row
-    const CROP_HEIGHT = 357; // 400 - 43, keeps row3's shifted crop in bounds
-
+  draw(ctx, canvasWidth, canvasHeight) {
     if (!this.sheet.loaded) {
       ctx.fillStyle = '#0a0a1a';
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       return;
     }
 
-    const sx = col * this.sheet.frameWidth;
-    const sy = row * this.sheet.frameHeight + ROW_Y_OFFSET[row];
-    ctx.drawImage(
-      this.sheet.image,
-      sx, sy, this.sheet.frameWidth, CROP_HEIGHT,
-      0, 0, canvasWidth, canvasHeight
-    );
+    const { row, col } = this.sequence[this.index];
+
+    // Delegate directly to your SpriteSheet's built-in draw method
+    this.sheet.draw(ctx, row, col, 0, 0, canvasWidth, canvasHeight);
   }
 }
