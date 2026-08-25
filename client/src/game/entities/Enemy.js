@@ -38,6 +38,8 @@ const FRAME_DURATION = { idle: 0.2, patrol: 0.12, jump: 0.12, shoot: 0.07 };
 const FRAME_COUNT = 4;
 const SHOOT_ANIM_DURATION = 0.25;
 const SPRITE_DRAW_SIZE = 100;
+const HIT_FLASH_DURATION = 0.18; // seconds the enemy blinks after taking a hit
+const HIT_FLASH_INTERVAL = 0.06; // seconds per on/off blink step
 
 export class Enemy {
   constructor(x, y, config = {}) {
@@ -52,8 +54,9 @@ export class Enemy {
     this.vy = 0;
     this.isGrounded = true;
 
-    // difficulty knobs, all sourced from level config
+        // difficulty knobs, all sourced from level config
     this.health = cfg.health;
+    this.maxHealth = cfg.health; // fixed reference for HP bar %, never decremented
     this.moveSpeed = cfg.moveSpeed;
     this.bulletSpeed = cfg.bulletSpeed;
     this.patrolMinX = cfg.patrolMinX;
@@ -83,6 +86,7 @@ export class Enemy {
     this.frameIndex = 0;
     this.frameTimer = 0;
     this.shootTimer = 0;
+     this.hitFlashTimer = 0; // >0 while blinking from a recent hit
   }
 
   randomInterval() {
@@ -180,8 +184,12 @@ export class Enemy {
       }
     }
 
-    if (this.shootTimer > 0) {
+        if (this.shootTimer > 0) {
       this.shootTimer -= dt;
+    }
+
+    if (this.hitFlashTimer > 0) {
+      this.hitFlashTimer -= dt;
     }
 
     this.actionTimer += dt;
@@ -220,9 +228,10 @@ export class Enemy {
     }
   }
 
-  takeHit() {
+    takeHit() {
     if (!this.alive) return;
     this.health -= 1;
+    this.hitFlashTimer = HIT_FLASH_DURATION; // blink regardless of whether this kills it
     if (this.health <= 0) {
       this.alive = false;
     }
@@ -232,8 +241,14 @@ export class Enemy {
     return { x: this.x, y: this.y, width: this.width, height: this.height };
   }
 
-  draw(ctx, spriteSheet) {
+    draw(ctx, spriteSheet) {
     if (!this.alive) return;
+
+    // blink: skip rendering on alternating short windows while hitFlashTimer is active
+    if (this.hitFlashTimer > 0) {
+      const step = Math.floor(this.hitFlashTimer / HIT_FLASH_INTERVAL);
+      if (step % 2 === 0) return;
+    }
 
     if (spriteSheet) {
       const row = ANIM_ROW[this.animState];

@@ -59,7 +59,49 @@ function buildEnemiesForLevel(levelConfig) {
 
   return enemies;
 }
+// Draws a top-of-canvas HP bar summed across all currently-configured
+// enemies for the level (works whether a level has 1 gunman or several).
+// Green at full health, shifting to red as it depletes.
+function drawEnemyHealthBar(ctx, enemies) {
+  const totalMax = enemies.reduce((sum, e) => sum + e.maxHealth, 0);
+  if (totalMax <= 0) return;
 
+  const totalCurrent = enemies.reduce((sum, e) => sum + Math.max(e.health, 0), 0);
+  const pct = Math.max(0, Math.min(1, totalCurrent / totalMax));
+
+  const barWidth = 300;
+  const barHeight = 16;
+  const barX = (CANVAS_WIDTH - barWidth) / 2;
+  const barY = 14;
+
+  // frame
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(barX - 3, barY - 3, barWidth + 6, barHeight + 6);
+
+  // empty track
+  ctx.fillStyle = '#444';
+  ctx.fillRect(barX, barY, barWidth, barHeight);
+
+  // filled portion, green -> red as pct drops
+  const green = { r: 34, g: 197, b: 94 };
+  const red = { r: 220, g: 38, b: 38 };
+  const r = Math.round(red.r + (green.r - red.r) * pct);
+  const g = Math.round(red.g + (green.g - red.g) * pct);
+  const b = Math.round(red.b + (green.b - red.b) * pct);
+  ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+  ctx.fillRect(barX, barY, barWidth * pct, barHeight);
+
+  // border
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(barX, barY, barWidth, barHeight);
+
+  // label
+  ctx.fillStyle = '#fff';
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('ENEMY HP', CANVAS_WIDTH / 2, barY - 6);
+}
 export default function GameCanvas() {
   const canvasRef = useRef(null);
   const [health, setHealth] = useState(3);
@@ -247,10 +289,12 @@ export default function GameCanvas() {
       ctx.lineTo(800, 400);
       ctx.stroke();
 
-      playerRef.current.draw(ctx, playerSheet);
+            playerRef.current.draw(ctx, playerSheet);
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
+
+      drawEnemyHealthBar(ctx, enemiesRef.current);
 
       if (gameStateRef.current === 'gameover') {
         ctx.fillStyle = 'rgba(0,0,0,0.6)';

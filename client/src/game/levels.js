@@ -15,11 +15,11 @@
 // burstGap: seconds between shots within one burst
 
 export const LEVELS = [
-  // Level 1 — tutorial pace
+    // Level 1 — tutorial pace, 10 HP so the health bar has room to show progress
   {
     level: 1,
     enemyCount: 1,
-    health: 1,
+    health: 10,
     moveSpeed: 120,
     bulletSpeed: 200,
     actionIntervalMin: 2.4,
