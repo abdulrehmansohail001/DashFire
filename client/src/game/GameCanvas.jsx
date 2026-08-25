@@ -183,6 +183,7 @@ export default function GameCanvas() {
     function shoot() {
       if (gameStateRef.current !== 'playing') return;
       const player = playerRef.current;
+      if (!player.canShoot()) return;
       const direction = player.facing;
       const bulletX = direction === 'right' ? player.x + player.width : player.x;
       const bulletY = player.y + player.height / 2 - 2;

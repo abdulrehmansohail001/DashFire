@@ -44,6 +44,7 @@ export class Player {
     this.health = 3;
     this.invulnerable = false;
     this.invulnerableTimer = 0;
+    this.shootCooldown = 0;
 
     // Animation state
     this.animState = 'idle';
@@ -82,6 +83,11 @@ export class Player {
   // shoot pose is synced with the shot rather than a separate timer drifting.
   triggerShoot() {
     this.shootTimer = SHOOT_ANIM_DURATION;
+    this.shootCooldown = 1.0;
+  }
+
+  canShoot() {
+    return this.shootCooldown <= 0;
   }
 
   update(dt) {
@@ -105,6 +111,10 @@ export class Player {
       if (this.invulnerableTimer <= 0) {
         this.invulnerable = false;
       }
+    }
+
+    if (this.shootCooldown > 0) {
+      this.shootCooldown -= dt;
     }
 
     if (this.shootTimer > 0) {
