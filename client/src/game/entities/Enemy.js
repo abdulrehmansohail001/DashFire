@@ -59,7 +59,7 @@ export class Enemy {
   }
 
   randomInterval() {
-    return 1.2 + Math.random() * 1.5; // seconds between random actions
+    return 2.2 + Math.random() * 2.0; // seconds between random actions (was 1.2–2.7, too frequent)
   }
 
   // Kicks off a burst: fires the first bullet immediately, queues the rest
@@ -131,12 +131,9 @@ export class Enemy {
     // vertical physics (jump/land)
     this.vy += ENEMY_GRAVITY * dt;
     this.y += this.vy * dt;
-    if (this.y >= ENEMY_GROUND_Y) {
+        if (this.y >= ENEMY_GROUND_Y) {
       this.y = ENEMY_GROUND_Y;
       this.vy = 0;
-      if (!this.isGrounded) {
-        this.startBurst(); // fire again on landing
-      }
       this.isGrounded = true;
     }
 
