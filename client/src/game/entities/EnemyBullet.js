@@ -27,8 +27,15 @@ export class EnemyBullet {
     return { x: this.x, y: this.y, width: this.width, height: this.height };
   }
 
-  draw(ctx) {
-    ctx.fillStyle = '#ff4500';
+    draw(ctx) {
+    // Hot magenta instead of orange-red — the old color blended into the
+    // red accent lights on the moon background's horizon spires.
+    ctx.fillStyle = '#ff2fd6';
     ctx.fillRect(this.x, this.y, this.width, this.height);
+
+    // Thin white core so it reads as an energy bolt and pops even more
+    // against the dark background.
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(this.x + 2, this.y + 1, this.width - 4, this.height - 2);
   }
 }

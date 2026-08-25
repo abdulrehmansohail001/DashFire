@@ -1,23 +1,25 @@
 // src/game/entities/Background.js
-// Cycles through a 2x2 sprite sheet of background frames (same lunar
-// ground in every frame, only sky elements like stars/planet position
-// differ) to give the illusion of a subtly-alive backdrop without any
-// parallax scrolling logic. Reuses the existing SpriteSheet class — a
-// background is really just a full-canvas-sized "sprite."
+// Cycles through a 4x4 sprite sheet of background frames (same lunar
+// ground in every frame; the planet drifts and stars shimmer smoothly
+// across all 16 steps, looping back to frame 1 seamlessly) to give the
+// backdrop a sense of slow motion without any parallax-scrolling logic.
+// Reuses the existing SpriteSheet class — a background is really just a
+// full-canvas-sized "sprite."
 
 export class Background {
-  constructor(sheet, frameDuration = 2.0) {
+  constructor(sheet, frameDuration = 0.5) {
     this.sheet = sheet;
     this.frameDuration = frameDuration; // seconds each background frame holds
     this.timer = 0;
 
-    // Cycles through all 4 quadrants of the sheet in order.
-    this.sequence = [
-      { row: 0, col: 0 },
-      { row: 0, col: 1 },
-      { row: 1, col: 0 },
-      { row: 1, col: 1 },
-    ];
+    // Cycles through all 16 cells of the 4x4 sheet, in reading order,
+    // matching the frame order requested in the generation prompt.
+    this.sequence = [];
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 4; col++) {
+        this.sequence.push({ row, col });
+      }
+    }
     this.index = 0;
   }
 
@@ -33,7 +35,6 @@ export class Background {
     const { row, col } = this.sequence[this.index];
     const drew = this.sheet.draw(ctx, row, col, 0, 0, canvasWidth, canvasHeight, false);
     if (!drew) {
-      // Flat fallback while the image loads, so there's never a blank frame.
       ctx.fillStyle = '#0a0a1a';
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     }

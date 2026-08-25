@@ -33,7 +33,7 @@ const ARENA_MAX_X = 750;
 
 const playerSheet = new SpriteSheet('/sprites/player.png', 313, 313, 4, 4);
 const enemySheet = new SpriteSheet('/sprites/enemy.png', 313, 313, 4, 4);
-const moonBgSheet = new SpriteSheet('/sprites/moon_bg.png', 800, 400, 2, 2);
+const moonBgSheet = new SpriteSheet('/sprites/moon_bg.png', 800, 400, 4, 4);
 // Builds N enemies for a level config, splitting the arena into N
 // non-overlapping patrol slots and starting each enemy in the middle of its slot.
 function buildEnemiesForLevel(levelConfig) {
@@ -133,7 +133,7 @@ export default function GameCanvas() {
 
   const playerRef = useRef(new Player(100, 340));
   const enemiesRef = useRef(buildEnemiesForLevel(LEVELS[0]));
-    const backgroundRef = useRef(new Background(moonBgSheet, 2.0));
+    const backgroundRef = useRef(new Background(moonBgSheet, 0.2));
   const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
   const keysRef = useRef({});
