@@ -1,8 +1,12 @@
 // src/game/GameCanvas.jsx
 // React wrapper around the Canvas game loop. React only mounts the canvas
-// and manages the HUD state (health, game-over/win) — the actual per-frame
-// loop runs outside React's render cycle via requestAnimationFrame,
-// so React re-renders don't fight the game loop's own update rate.
+// and manages the HUD state (health, level, gameState) — the actual
+// per-frame loop runs outside React's render cycle via requestAnimationFrame.
+//
+// Levels are entirely data-driven from levels.js: startLevel() builds
+// however many Enemy instances a level needs, with that level's difficulty
+// config, and spreads their patrol zones across the arena so they don't
+// overlap. No per-level code branches live in this file.
 
 import { useEffect, useRef, useState } from 'react';
 import { Player } from './entities/Player';
@@ -11,35 +15,101 @@ import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
 import { SpriteSheet } from './entities/SpriteSheet';
+import { LEVELS } from './levels';
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
+const ENEMY_GROUND_Y = 340;
 
-// Sprite sheets are loaded once at module scope (not per-mount) so the
-// image only fetches/decodes a single time. 313 = 1252 / 4 (4x4 grid).
+// Arena span enemies are allowed to patrol within, split evenly per enemy.
+const ARENA_MIN_X = 480;
+const ARENA_MAX_X = 750;
+
 const playerSheet = new SpriteSheet('/sprites/player.png', 313, 313, 4, 4);
 const enemySheet = new SpriteSheet('/sprites/enemy.png', 313, 313, 4, 4);
+
+// Builds N enemies for a level config, splitting the arena into N
+// non-overlapping patrol slots and starting each enemy in the middle of its slot.
+function buildEnemiesForLevel(levelConfig) {
+  const { enemyCount } = levelConfig;
+  const slotWidth = (ARENA_MAX_X - ARENA_MIN_X) / enemyCount;
+  const enemies = [];
+
+  for (let i = 0; i < enemyCount; i++) {
+    const slotMin = ARENA_MIN_X + i * slotWidth;
+    const slotMax = slotMin + slotWidth;
+    const startX = slotMin + slotWidth / 2;
+
+    enemies.push(
+      new Enemy(startX, ENEMY_GROUND_Y, {
+        health: levelConfig.health,
+        moveSpeed: levelConfig.moveSpeed,
+        bulletSpeed: levelConfig.bulletSpeed,
+        actionIntervalMin: levelConfig.actionIntervalMin,
+        actionIntervalMax: levelConfig.actionIntervalMax,
+        reactionDelayMin: levelConfig.reactionDelayMin,
+        reactionDelayMax: levelConfig.reactionDelayMax,
+        fireSequence: levelConfig.fireSequence,
+        burstGap: levelConfig.burstGap,
+        patrolMinX: slotMin,
+        patrolMaxX: slotMax,
+      })
+    );
+  }
+
+  return enemies;
+}
 
 export default function GameCanvas() {
   const canvasRef = useRef(null);
   const [health, setHealth] = useState(3);
-  const [gameState, setGameState] = useState('playing'); // 'playing' | 'gameover' | 'win'
+  const [levelNumber, setLevelNumber] = useState(1);
+  // 'playing' | 'gameover' | 'levelComplete' | 'gameComplete'
+  const [gameState, setGameState] = useState('playing');
 
   const playerRef = useRef(new Player(100, 340));
-  const enemyRef = useRef(new Enemy(700, 340));
+  const enemiesRef = useRef(buildEnemiesForLevel(LEVELS[0]));
   const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
   const keysRef = useRef({});
   const gameStateRef = useRef('playing');
+  const levelIndexRef = useRef(0); // 0-based index into LEVELS
 
-  const resetGame = () => {
-    playerRef.current = new Player(100, 340);
-    enemyRef.current = new Enemy(700, 340);
+  const startLevel = (index, keepHealth = true) => {
+    levelIndexRef.current = index;
+    const config = LEVELS[index];
+
+    playerRef.current.x = 100;
+    playerRef.current.y = 340;
+    playerRef.current.vx = 0;
+    playerRef.current.vy = 0;
+    if (!keepHealth) {
+      playerRef.current.health = 3;
+    } else {
+      // small heal on advancing to a new level, capped at max 3
+      playerRef.current.health = Math.min(3, playerRef.current.health + 1);
+    }
+
+    enemiesRef.current = buildEnemiesForLevel(config);
     enemyBulletsRef.current = [];
     bulletsRef.current = [];
+
     gameStateRef.current = 'playing';
     setGameState('playing');
-    setHealth(3);
+    setLevelNumber(config.level);
+    setHealth(playerRef.current.health);
+  };
+
+  const restartFromLevel1 = () => {
+    playerRef.current = new Player(100, 340);
+    startLevel(0, false);
+  };
+
+  const advanceToNextLevel = () => {
+    const nextIndex = levelIndexRef.current + 1;
+    if (nextIndex < LEVELS.length) {
+      startLevel(nextIndex, true);
+    }
   };
 
   useEffect(() => {
@@ -49,37 +119,42 @@ export default function GameCanvas() {
     function shoot() {
       if (gameStateRef.current !== 'playing') return;
       const player = playerRef.current;
-      const direction = player.facing; // 'left' | 'right'
+      const direction = player.facing;
       const bulletX = direction === 'right' ? player.x + player.width : player.x;
-            const bulletY = player.y + player.height / 2 - 2;
+      const bulletY = player.y + player.height / 2 - 2;
       bulletsRef.current.push(new Bullet(bulletX, bulletY, direction));
       player.triggerShoot();
     }
 
-        const JUMP_KEYS = ['ArrowUp', ' ', 'w', 'W'];
+    const JUMP_KEYS = ['ArrowUp', ' ', 'w', 'W'];
 
     const handleKeyDown = (e) => {
       keysRef.current[e.key] = true;
 
+      if (gameStateRef.current === 'gameover' && (e.key === 'r' || e.key === 'R')) {
+        restartFromLevel1();
+      }
+
       if (
-        (gameStateRef.current === 'gameover' || gameStateRef.current === 'win') &&
-        (e.key === 'r' || e.key === 'R')
+        gameStateRef.current === 'levelComplete' &&
+        (e.key === 'n' || e.key === 'N' || e.key === ' ')
       ) {
-        resetGame();
+        advanceToNextLevel();
+      }
+
+      if (gameStateRef.current === 'gameComplete' && (e.key === 'r' || e.key === 'R')) {
+        restartFromLevel1();
       }
 
       if ((e.key === 'f' || e.key === 'F') && gameStateRef.current === 'playing') {
         shoot();
       }
 
-      // Jump only fires on the actual keydown edge (e.repeat is true for
-      // browser auto-repeat while a key is held), so holding the key does
-      // NOT queue up extra jumps for the moment you land.
       if (JUMP_KEYS.includes(e.key) && !e.repeat && gameStateRef.current === 'playing') {
         playerRef.current.jump();
       }
     };
-    
+
     const handleKeyUp = (e) => {
       keysRef.current[e.key] = false;
     };
@@ -99,20 +174,24 @@ export default function GameCanvas() {
       player.handleInput(keysRef.current);
       player.update(dt);
 
-      const enemy = enemyRef.current;
+      const enemies = enemiesRef.current;
+      const playerJustJumped = wasGrounded && !player.isGrounded;
 
-      // linked behavior: player just left the ground (jumped) -> enemy reacts after a short delay
-      if (wasGrounded && !player.isGrounded && enemy.alive) {
-        enemy.triggerDelayedReaction();
-      }
+      for (const enemy of enemies) {
+        if (!enemy.alive) continue;
 
-      if (enemy.alive) {
+        if (playerJustJumped) {
+          enemy.triggerDelayedReaction();
+        }
+
         enemy.update(dt);
 
         if (enemy.wantsToFire) {
           enemy.wantsToFire = false;
           const bulletY = enemy.y + enemy.height / 2 - 2;
-          enemyBulletsRef.current.push(new EnemyBullet(enemy.x, bulletY, 'left'));
+          enemyBulletsRef.current.push(
+            new EnemyBullet(enemy.x, bulletY, 'left', enemy.bulletSpeed)
+          );
         }
       }
 
@@ -130,20 +209,25 @@ export default function GameCanvas() {
         }
       }
 
-      // player bullets vs enemy
-      if (enemy.alive) {
-        for (const bullet of bulletsRef.current) {
+      // player bullets vs any alive enemy
+      for (const bullet of bulletsRef.current) {
+        if (bullet.hit) continue;
+        for (const enemy of enemies) {
+          if (!enemy.alive) continue;
           if (isColliding(bullet.getBounds(), enemy.getBounds())) {
             enemy.takeHit();
             bullet.hit = true;
+            break;
           }
         }
-        bulletsRef.current = bulletsRef.current.filter((b) => !b.hit);
       }
+      bulletsRef.current = bulletsRef.current.filter((b) => !b.hit);
 
-      if (!enemy.alive && gameStateRef.current === 'playing') {
-        gameStateRef.current = 'win';
-        setGameState('win');
+      const allEnemiesDead = enemies.every((e) => !e.alive);
+      if (allEnemiesDead && gameStateRef.current === 'playing') {
+        const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
+        gameStateRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
+        setGameState(gameStateRef.current);
       }
 
       if (player.health <= 0 && gameStateRef.current === 'playing') {
@@ -163,8 +247,8 @@ export default function GameCanvas() {
       ctx.lineTo(800, 400);
       ctx.stroke();
 
-            playerRef.current.draw(ctx, playerSheet);
-      enemyRef.current.draw(ctx, enemySheet);
+      playerRef.current.draw(ctx, playerSheet);
+      enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
 
@@ -178,21 +262,35 @@ export default function GameCanvas() {
         ctx.fillText('GAME OVER', 400, 180);
 
         ctx.font = '18px monospace';
-        ctx.fillText('Press R to restart', 400, 220);
+        ctx.fillText('Press R to restart from Level 1', 400, 220);
       }
 
-      if (gameStateRef.current === 'win') {
+      if (gameStateRef.current === 'levelComplete') {
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
         ctx.fillStyle = '#3aff6a';
         ctx.font = '32px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('ENEMY DOWN — LEVEL CLEAR', 400, 180);
+        ctx.fillText(`LEVEL ${levelIndexRef.current + 1} CLEAR`, 400, 180);
 
         ctx.fillStyle = '#fff';
         ctx.font = '18px monospace';
-        ctx.fillText('Press R to restart', 400, 220);
+        ctx.fillText('Press N to continue', 400, 220);
+      }
+
+      if (gameStateRef.current === 'gameComplete') {
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        ctx.fillStyle = '#ffd23a';
+        ctx.font = '30px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('ALL 10 LEVELS CLEARED', 400, 170);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '18px monospace';
+        ctx.fillText('Press R to play again', 400, 210);
       }
     }
 
@@ -218,7 +316,8 @@ export default function GameCanvas() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
       <div style={{ color: '#fff', fontFamily: 'monospace', fontSize: '18px' }}>
-        Health: {health} &nbsp;|&nbsp; Move: A/D or ←/→ &nbsp;|&nbsp; Jump: W/Space &nbsp;|&nbsp; Shoot: F
+        Level: {levelNumber}/10 &nbsp;|&nbsp; Health: {health} &nbsp;|&nbsp; Move: A/D
+        &nbsp;|&nbsp; Jump: W/Space &nbsp;|&nbsp; Shoot: F
       </div>
       <canvas
         ref={canvasRef}

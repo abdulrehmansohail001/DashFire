@@ -5,12 +5,12 @@
 // without cross-contaminating logic.
 
 export class EnemyBullet {
-  constructor(x, y, direction = 'left') {
+    constructor(x, y, direction = 'left', speed = 260) {
     this.x = x;
     this.y = y;
     this.width = 10;
     this.height = 4;
-    this.speed = 260; // px/s — matches the old enemy-bullet speed you had via Obstacle
+    this.speed = speed; // px/s, sourced from the enemy's level config
     this.direction = direction; // 'left' | 'right'
     this.hit = false;
   }
