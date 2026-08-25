@@ -141,21 +141,21 @@ function drawTopCenterHud(ctx, levelDisplay) {
 
   ctx.restore();
 }
-export default function GameCanvas() {
+export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onExitToMenu }) {
   const canvasRef = useRef(null);
-  const [health, setHealth] = useState(3);
-  const [levelNumber, setLevelNumber] = useState(1);
+    const [health, setHealth] = useState(3);
+  const [levelNumber, setLevelNumber] = useState(LEVELS[initialLevelIndex].level);
   // 'playing' | 'gameover' | 'levelComplete' | 'gameComplete'
   const [gameState, setGameState] = useState('playing');
 
-  const playerRef = useRef(new Player(100, 340));
-  const enemiesRef = useRef(buildEnemiesForLevel(LEVELS[0]));
-    const backgroundRef = useRef(new Background(moonBgSheet, 0.2));
+    const playerRef = useRef(new Player(100, 340));
+  const enemiesRef = useRef(buildEnemiesForLevel(LEVELS[initialLevelIndex]));
+  const backgroundRef = useRef(new Background(moonBgSheet, 0.2));
   const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
   const keysRef = useRef({});
   const gameStateRef = useRef('playing');
-  const levelIndexRef = useRef(0); // 0-based index into LEVELS
+  const levelIndexRef = useRef(initialLevelIndex); // 0-based index into LEVELS
 
   const startLevel = (index, keepHealth = true) => {
     levelIndexRef.current = index;
@@ -181,17 +181,11 @@ export default function GameCanvas() {
     setHealth(playerRef.current.health);
   };
 
-  const restartFromLevel1 = () => {
+    const restartCurrentLevel = () => {
     playerRef.current = new Player(100, 340);
-    startLevel(0, false);
+    startLevel(levelIndexRef.current, false);
   };
-
-  const advanceToNextLevel = () => {
-    const nextIndex = levelIndexRef.current + 1;
-    if (nextIndex < LEVELS.length) {
-      startLevel(nextIndex, true);
-    }
-  };
+    
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -213,19 +207,23 @@ export default function GameCanvas() {
     const handleKeyDown = (e) => {
       keysRef.current[e.key] = true;
 
-      if (gameStateRef.current === 'gameover' && (e.key === 'r' || e.key === 'R')) {
-        restartFromLevel1();
+            if (gameStateRef.current === 'gameover' && (e.key === 'r' || e.key === 'R')) {
+        restartCurrentLevel();
       }
 
       if (
         gameStateRef.current === 'levelComplete' &&
         (e.key === 'n' || e.key === 'N' || e.key === ' ')
       ) {
-        advanceToNextLevel();
+        onLevelComplete && onLevelComplete(levelIndexRef.current);
       }
 
       if (gameStateRef.current === 'gameComplete' && (e.key === 'r' || e.key === 'R')) {
-        restartFromLevel1();
+        onLevelComplete && onLevelComplete(levelIndexRef.current);
+      }
+
+      if (e.key === 'Escape' && gameStateRef.current === 'playing') {
+        onExitToMenu && onExitToMenu();
       }
 
       if ((e.key === 'f' || e.key === 'F') && gameStateRef.current === 'playing') {
@@ -364,7 +362,7 @@ export default function GameCanvas() {
 
       drawTopCenterHud(ctx, levelIndexRef.current + 1);
 
-      if (gameStateRef.current === 'gameover') {
+            if (gameStateRef.current === 'gameover') {
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
@@ -374,7 +372,7 @@ export default function GameCanvas() {
         ctx.fillText('GAME OVER', 400, 180);
 
         ctx.font = '18px monospace';
-        ctx.fillText('Press R to restart from Level 1', 400, 220);
+        ctx.fillText('Press R to retry this level', 400, 220);
       }
 
       if (gameStateRef.current === 'levelComplete') {
@@ -388,7 +386,7 @@ export default function GameCanvas() {
 
         ctx.fillStyle = '#fff';
         ctx.font = '18px monospace';
-        ctx.fillText('Press N to continue', 400, 220);
+        ctx.fillText('Press N to return to Level Select', 400, 220);
       }
 
       if (gameStateRef.current === 'gameComplete') {
@@ -402,7 +400,7 @@ export default function GameCanvas() {
 
         ctx.fillStyle = '#fff';
         ctx.font = '18px monospace';
-        ctx.fillText('Press R to play again', 400, 210);
+        ctx.fillText('Press R to return to Level Select', 400, 210);
       }
     }
 
