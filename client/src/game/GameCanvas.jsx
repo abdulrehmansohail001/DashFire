@@ -20,6 +20,7 @@ import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
 import { SpriteSheet } from './entities/SpriteSheet';
 import { LEVELS } from './levels';
+import { Background } from './entities/Background';
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
@@ -32,7 +33,7 @@ const ARENA_MAX_X = 750;
 
 const playerSheet = new SpriteSheet('/sprites/player.png', 313, 313, 4, 4);
 const enemySheet = new SpriteSheet('/sprites/enemy.png', 313, 313, 4, 4);
-
+const moonBgSheet = new SpriteSheet('/sprites/moon_bg.png', 800, 400, 2, 2);
 // Builds N enemies for a level config, splitting the arena into N
 // non-overlapping patrol slots and starting each enemy in the middle of its slot.
 function buildEnemiesForLevel(levelConfig) {
@@ -132,6 +133,7 @@ export default function GameCanvas() {
 
   const playerRef = useRef(new Player(100, 340));
   const enemiesRef = useRef(buildEnemiesForLevel(LEVELS[0]));
+    const backgroundRef = useRef(new Background(moonBgSheet, 2.0));
   const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
   const keysRef = useRef({});
@@ -298,8 +300,10 @@ export default function GameCanvas() {
       setHealth(Math.max(player.health, 0));
     }
 
-    function draw() {
+        function draw() {
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+      backgroundRef.current.draw(ctx, CANVAS_WIDTH, CANVAS_HEIGHT);
 
       ctx.strokeStyle = '#666';
       ctx.beginPath();
@@ -382,10 +386,11 @@ export default function GameCanvas() {
       }
     }
 
-    function loop(now) {
+        function loop(now) {
       const dt = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
 
+      backgroundRef.current.update(dt); // drifts even over menu/overlay screens
       update(dt);
       draw();
 
