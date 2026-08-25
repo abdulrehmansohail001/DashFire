@@ -407,18 +407,57 @@ export default function GameCanvas() {
     };
   }, []);
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-      <div style={{ color: '#fff', fontFamily: 'monospace', fontSize: '18px' }}>
-        Level: {levelNumber}/10 &nbsp;|&nbsp; Move: A/D &nbsp;|&nbsp; Jump: W/Space
-        &nbsp;|&nbsp; Shoot: F
-      </div>
+    return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: '#000',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      {/*
+        Internal drawing buffer stays 800x400 (CANVAS_WIDTH/HEIGHT) — every
+        entity's physics, spawn position, and patrol zone math is built on
+        that coordinate space. CSS width/height + object-fit: contain just
+        scale that buffer up to fill the browser viewport while preserving
+        the 2:1 aspect ratio, letterboxing with black bars if the window's
+        aspect ratio doesn't match exactly. No entity code needs to change.
+      */}
       <canvas
         ref={canvasRef}
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
-        style={{ background: '#4a4a6a', border: '2px solid #888' }}
+        style={{
+          width: '100vw',
+          height: '100vh',
+          objectFit: 'contain',
+          background: 'transparent',
+        }}
       />
+
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 16,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          color: '#fff',
+          fontFamily: 'monospace',
+          fontSize: '14px',
+          background: 'rgba(0,0,0,0.55)',
+          padding: '6px 14px',
+          borderRadius: '6px',
+          pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Level: {levelNumber}/10 &nbsp;|&nbsp; Move: A/D &nbsp;|&nbsp; Jump: W/Space
+        &nbsp;|&nbsp; Shoot: F
+      </div>
     </div>
   );
 }
