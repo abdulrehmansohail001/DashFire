@@ -4,7 +4,8 @@
 // sprite-sheet drawing later without touching movement/physics logic.
 
 export const GRAVITY = 1800;       // px/s^2
-export const JUMP_VELOCITY = -700; // px/s (negative = upward)
+export const JUMP_VELOCITY = -700;        // px/s (negative = upward) — first (ground) jump
+export const DOUBLE_JUMP_VELOCITY = -520;  // px/s — weaker second (mid-air) jump
 export const MOVE_SPEED = 300;     // px/s
 export const MAX_JUMPS = 2;        // 1 = single jump only, 2 = adds a mid-air double-jump
 export const GROUND_Y = 340;       // y-position of the "floor"
@@ -48,9 +49,11 @@ export class Player {
   // responsible for only calling this once per actual press.
     // Allows MAX_JUMPS total jumps before landing (MAX_JUMPS=2 -> one
   // ground jump + one real mid-air double-jump).
-  jump() {
+    jump() {
     if (this.jumpsUsed < MAX_JUMPS) {
-      this.vy = JUMP_VELOCITY;
+      // First jump (jumpsUsed 0 -> 1) uses full power; any jump after that
+      // (the mid-air double-jump) is weaker/shorter.
+      this.vy = this.jumpsUsed === 0 ? JUMP_VELOCITY : DOUBLE_JUMP_VELOCITY;
       this.isGrounded = false;
       this.jumpsUsed += 1;
     }

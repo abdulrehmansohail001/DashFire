@@ -60,8 +60,8 @@ export class Enemy {
     this.pendingReactionTimer = null;
   }
 
-      randomInterval() {
-    return 2.4 + Math.random() * 1.6; // seconds between random actions (was 3.2–5.8, overcorrected too slow)
+       randomInterval() {
+    return 1.8 + Math.random() * 1.0; // seconds between random actions (was 2.4–4.0 — tightened range + faster avg)
   }
 
   // Kicks off a burst: fires the first bullet immediately, queues the rest
@@ -99,17 +99,16 @@ export class Enemy {
     this.startBurst();
   }
 
-  chooseRandomAction() {
+   chooseRandomAction() {
     const roll = Math.random();
-    if (roll < 0.34) {
-      this.jumpAndFire();
-    } else if (roll < 0.67) {
+    if (roll < 0.45) {
+      this.jumpAndFire(); // bumped up from 0.34 so the enemy jumps more often
+    } else if (roll < 0.72) {
       this.moveStepAndFire();
     } else {
       this.fireInPlace();
     }
   }
-
   // Called by GameCanvas when the player jumps. Doesn't react immediately —
   // just arms a delay timer; the actual jump-and-fire happens in update()
   // once REACTION_DELAY has elapsed.
