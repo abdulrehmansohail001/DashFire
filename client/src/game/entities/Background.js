@@ -31,12 +31,23 @@ export class Background {
     }
   }
 
-  draw(ctx, canvasWidth, canvasHeight) {
+    draw(ctx, canvasWidth, canvasHeight) {
     const { row, col } = this.sequence[this.index];
-    const drew = this.sheet.draw(ctx, row, col, 0, 0, canvasWidth, canvasHeight, false);
-    if (!drew) {
+    const ROW_Y_OFFSET = [0, 14, 29, 43]; // measured horizon drift per row
+    const CROP_HEIGHT = 357; // 400 - 43, keeps row3's shifted crop in bounds
+
+    if (!this.sheet.loaded) {
       ctx.fillStyle = '#0a0a1a';
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      return;
     }
+
+    const sx = col * this.sheet.frameWidth;
+    const sy = row * this.sheet.frameHeight + ROW_Y_OFFSET[row];
+    ctx.drawImage(
+      this.sheet.image,
+      sx, sy, this.sheet.frameWidth, CROP_HEIGHT,
+      0, 0, canvasWidth, canvasHeight
+    );
   }
 }
