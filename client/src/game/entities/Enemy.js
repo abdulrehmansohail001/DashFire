@@ -1,15 +1,16 @@
 // src/game/entities/Enemy.js
 // Enemy gunman. Behavior (jump/step/fire-in-place, burst pattern, reaction
 // delay, speed, health, bullet speed, patrol zone) is DATA-DRIVEN via the
-// `config` object passed into the constructor. This means difficulty across
-// all 10 levels lives in levels.js as plain data — this file never needs to
-// change again per level.
+// `config` object passed into the constructor — difficulty across all 10
+// levels lives in levels.js as plain data, this file doesn't change per level.
 //
 // - On a random internal timer, it picks one of: jump-and-fire, step-and-fire, fire-in-place.
 // - It also reacts to the PLAYER jumping, but with a short delay instead of instantly.
 // - Firing uses a burst pattern from config.fireSequence, looping forever.
 // - Firing is event-driven: GameCanvas checks `wantsToFire` each frame and
 //   spawns the actual EnemyBullet when it's true (reading enemy.bulletSpeed).
+// - Blinks briefly after every hit (hitFlashTimer), and tracks maxHealth
+//   separately from health so the HUD HP bar can compute a percentage.
 //
 // Rendering: 4x4 sprite sheet. Row 0: idle  Row 1: patrol/step  Row 2: jump  Row 3: shoot.
 
@@ -17,7 +18,6 @@ export const ENEMY_GRAVITY = 1800;
 export const ENEMY_JUMP_VELOCITY = -600;
 export const ENEMY_GROUND_Y = 340;
 
-// Fallback defaults, used for any field a level config doesn't specify.
 const DEFAULTS = {
   health: 1,
   moveSpeed: 150,
@@ -32,12 +32,12 @@ const DEFAULTS = {
   burstGap: 0.15,
 };
 
-// Animation tuning (visual only, not difficulty-related, stays fixed across levels)
 const ANIM_ROW = { idle: 0, patrol: 1, jump: 2, shoot: 3 };
 const FRAME_DURATION = { idle: 0.2, patrol: 0.12, jump: 0.12, shoot: 0.07 };
 const FRAME_COUNT = 4;
 const SHOOT_ANIM_DURATION = 0.25;
 const SPRITE_DRAW_SIZE = 100;
+
 const HIT_FLASH_DURATION = 0.18; // seconds the enemy blinks after taking a hit
 const HIT_FLASH_INTERVAL = 0.06; // seconds per on/off blink step
 
@@ -54,7 +54,6 @@ export class Enemy {
     this.vy = 0;
     this.isGrounded = true;
 
-        // difficulty knobs, all sourced from level config
     this.health = cfg.health;
     this.maxHealth = cfg.health; // fixed reference for HP bar %, never decremented
     this.moveSpeed = cfg.moveSpeed;
@@ -86,7 +85,7 @@ export class Enemy {
     this.frameIndex = 0;
     this.frameTimer = 0;
     this.shootTimer = 0;
-     this.hitFlashTimer = 0; // >0 while blinking from a recent hit
+    this.hitFlashTimer = 0; // >0 while blinking from a recent hit
   }
 
   randomInterval() {
@@ -184,7 +183,7 @@ export class Enemy {
       }
     }
 
-        if (this.shootTimer > 0) {
+    if (this.shootTimer > 0) {
       this.shootTimer -= dt;
     }
 
@@ -228,7 +227,7 @@ export class Enemy {
     }
   }
 
-    takeHit() {
+  takeHit() {
     if (!this.alive) return;
     this.health -= 1;
     this.hitFlashTimer = HIT_FLASH_DURATION; // blink regardless of whether this kills it
@@ -241,13 +240,12 @@ export class Enemy {
     return { x: this.x, y: this.y, width: this.width, height: this.height };
   }
 
-    draw(ctx, spriteSheet) {
+  draw(ctx, spriteSheet) {
     if (!this.alive) return;
 
-    // blink: skip rendering on alternating short windows while hitFlashTimer is active
     if (this.hitFlashTimer > 0) {
       const step = Math.floor(this.hitFlashTimer / HIT_FLASH_INTERVAL);
-      if (step % 2 === 0) return;
+      if (step % 2 === 0) return; // blink: skip this frame
     }
 
     if (spriteSheet) {

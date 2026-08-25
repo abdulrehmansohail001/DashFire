@@ -7,6 +7,10 @@
 // however many Enemy instances a level needs, with that level's difficulty
 // config, and spreads their patrol zones across the arena so they don't
 // overlap. No per-level code branches live in this file.
+//
+// HUD: player HP (circle portrait + bar) top-left, enemy HP (bar + circle
+// portrait) top-right above the enemy's patrol zone. Both portraits are
+// cropped from each sprite sheet's idle frame via SpriteSheet.drawPortrait.
 
 import { useEffect, useRef, useState } from 'react';
 import { Player } from './entities/Player';
@@ -20,6 +24,7 @@ import { LEVELS } from './levels';
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
 const ENEMY_GROUND_Y = 340;
+const PLAYER_MAX_HEALTH = 3;
 
 // Arena span enemies are allowed to patrol within, split evenly per enemy.
 const ARENA_MIN_X = 480;
@@ -59,49 +64,65 @@ function buildEnemiesForLevel(levelConfig) {
 
   return enemies;
 }
-// Draws a top-of-canvas HP bar summed across all currently-configured
-// enemies for the level (works whether a level has 1 gunman or several).
-// Green at full health, shifting to red as it depletes.
-function drawEnemyHealthBar(ctx, enemies) {
-  const totalMax = enemies.reduce((sum, e) => sum + e.maxHealth, 0);
-  if (totalMax <= 0) return;
 
-  const totalCurrent = enemies.reduce((sum, e) => sum + Math.max(e.health, 0), 0);
-  const pct = Math.max(0, Math.min(1, totalCurrent / totalMax));
+// Draws a circular HUD portrait — sprite sheet's idle frame if loaded,
+// otherwise a flat-color circle with a single-letter fallback so the HUD
+// never shows a blank gap while art is loading.
+function drawHudPortrait(ctx, sheet, centerX, centerY, radius, fallbackColor, fallbackLabel) {
+  ctx.save();
 
-  const barWidth = 300;
-  const barHeight = 16;
-  const barX = (CANVAS_WIDTH - barWidth) / 2;
-  const barY = 14;
+  const drew = sheet ? sheet.drawPortrait(ctx, 0, 0, centerX, centerY, radius) : false;
 
-  // frame
+  if (!drew) {
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fillStyle = fallbackColor;
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 16px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(fallbackLabel, centerX, centerY);
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// Draws a labeled HP bar that fades green -> red as pct drops.
+function drawHpBar(ctx, x, y, width, height, pct, label, labelAlign) {
+  const clamped = Math.max(0, Math.min(1, pct));
+
   ctx.fillStyle = '#1a1a1a';
-  ctx.fillRect(barX - 3, barY - 3, barWidth + 6, barHeight + 6);
+  ctx.fillRect(x - 3, y - 3, width + 6, height + 6);
 
-  // empty track
   ctx.fillStyle = '#444';
-  ctx.fillRect(barX, barY, barWidth, barHeight);
+  ctx.fillRect(x, y, width, height);
 
-  // filled portion, green -> red as pct drops
   const green = { r: 34, g: 197, b: 94 };
   const red = { r: 220, g: 38, b: 38 };
-  const r = Math.round(red.r + (green.r - red.r) * pct);
-  const g = Math.round(red.g + (green.g - red.g) * pct);
-  const b = Math.round(red.b + (green.b - red.b) * pct);
+  const r = Math.round(red.r + (green.r - red.r) * clamped);
+  const g = Math.round(red.g + (green.g - red.g) * clamped);
+  const b = Math.round(red.b + (green.b - red.b) * clamped);
   ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-  ctx.fillRect(barX, barY, barWidth * pct, barHeight);
+  ctx.fillRect(x, y, width * clamped, height);
 
-  // border
   ctx.strokeStyle = '#fff';
   ctx.lineWidth = 1;
-  ctx.strokeRect(barX, barY, barWidth, barHeight);
+  ctx.strokeRect(x, y, width, height);
 
-  // label
   ctx.fillStyle = '#fff';
   ctx.font = '11px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('ENEMY HP', CANVAS_WIDTH / 2, barY - 6);
+  ctx.textAlign = labelAlign;
+  ctx.fillText(label, labelAlign === 'left' ? x : x + width, y - 6);
 }
+
 export default function GameCanvas() {
   const canvasRef = useRef(null);
   const [health, setHealth] = useState(3);
@@ -126,10 +147,9 @@ export default function GameCanvas() {
     playerRef.current.vx = 0;
     playerRef.current.vy = 0;
     if (!keepHealth) {
-      playerRef.current.health = 3;
+      playerRef.current.health = PLAYER_MAX_HEALTH;
     } else {
-      // small heal on advancing to a new level, capped at max 3
-      playerRef.current.health = Math.min(3, playerRef.current.health + 1);
+      playerRef.current.health = Math.min(PLAYER_MAX_HEALTH, playerRef.current.health + 1);
     }
 
     enemiesRef.current = buildEnemiesForLevel(config);
@@ -243,7 +263,6 @@ export default function GameCanvas() {
       bulletsRef.current.forEach((b) => b.update(dt));
       bulletsRef.current = bulletsRef.current.filter((b) => !b.isOffScreen(CANVAS_WIDTH));
 
-      // player vs enemy bullets
       const playerBounds = player.getBounds();
       for (const bullet of enemyBulletsRef.current) {
         if (isColliding(playerBounds, bullet.getBounds())) {
@@ -251,7 +270,6 @@ export default function GameCanvas() {
         }
       }
 
-      // player bullets vs any alive enemy
       for (const bullet of bulletsRef.current) {
         if (bullet.hit) continue;
         for (const enemy of enemies) {
@@ -289,12 +307,38 @@ export default function GameCanvas() {
       ctx.lineTo(800, 400);
       ctx.stroke();
 
-            playerRef.current.draw(ctx, playerSheet);
+      playerRef.current.draw(ctx, playerSheet);
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
 
-      drawEnemyHealthBar(ctx, enemiesRef.current);
+      // --- HUD: player HP top-left ---
+      const playerCircleX = 40;
+      const circleY = 40;
+      const circleRadius = 24;
+      drawHudPortrait(ctx, playerSheet, playerCircleX, circleY, circleRadius, '#3ad1ff', 'P');
+      drawHpBar(
+        ctx,
+        playerCircleX + circleRadius + 12,
+        circleY - 8,
+        150,
+        16,
+        playerRef.current.health / PLAYER_MAX_HEALTH,
+        'PLAYER HP',
+        'left'
+      );
+
+      // --- HUD: enemy HP top-right, above the enemy patrol area ---
+      const enemyCircleX = CANVAS_WIDTH - 40;
+      const enemies = enemiesRef.current;
+      const totalMax = enemies.reduce((sum, e) => sum + e.maxHealth, 0);
+      if (totalMax > 0) {
+        const totalCurrent = enemies.reduce((sum, e) => sum + Math.max(e.health, 0), 0);
+        const barWidth = 150;
+        const barX = enemyCircleX - circleRadius - 12 - barWidth;
+        drawHpBar(ctx, barX, circleY - 8, barWidth, 16, totalCurrent / totalMax, 'ENEMY HP', 'right');
+        drawHudPortrait(ctx, enemySheet, enemyCircleX, circleY, circleRadius, '#a83232', 'E');
+      }
 
       if (gameStateRef.current === 'gameover') {
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -360,8 +404,8 @@ export default function GameCanvas() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
       <div style={{ color: '#fff', fontFamily: 'monospace', fontSize: '18px' }}>
-        Level: {levelNumber}/10 &nbsp;|&nbsp; Health: {health} &nbsp;|&nbsp; Move: A/D
-        &nbsp;|&nbsp; Jump: W/Space &nbsp;|&nbsp; Shoot: F
+        Level: {levelNumber}/10 &nbsp;|&nbsp; Move: A/D &nbsp;|&nbsp; Jump: W/Space
+        &nbsp;|&nbsp; Shoot: F
       </div>
       <canvas
         ref={canvasRef}
