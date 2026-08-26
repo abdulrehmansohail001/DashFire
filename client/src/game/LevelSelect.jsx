@@ -6,7 +6,7 @@
 
 import './LevelSelect.css';
 import { LEVELS } from './levels';
-
+import { PixelLock, PixelCheck } from './PixelIcon';
 export default function LevelSelect({ unlockedCount, onSelectLevel }) {
   return (
             <div className="level-select">
@@ -36,11 +36,15 @@ export default function LevelSelect({ unlockedCount, onSelectLevel }) {
                 isUnlocked ? `Play level ${levelConfig.level}` : `Level ${levelConfig.level} locked`
               }
             >
-              {isCleared && <span className="level-node__cleared-badge">✓</span>}
+                            {isCleared && (
+                <span className="level-node__cleared-badge">
+                  <PixelCheck size={12} color="#04140a" />
+                </span>
+              )}
               {isUnlocked ? (
                 <span className="level-node__number">{levelConfig.level}</span>
               ) : (
-                <span className="level-node__lock">🔒</span>
+                <PixelLock size={22} color="#c9862f" />
               )}
             </button>
           );

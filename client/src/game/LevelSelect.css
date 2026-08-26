@@ -30,7 +30,7 @@
   background-image: url('/sprites/moon_bg.jpg');
   background-repeat: no-repeat;
   background-size: 800vw 100vh;
-  animation: moon-menu-cycle 2.8s steps(7) infinite;
+  animation: moon-menu-cycle 1.6s steps(7) infinite;
 }
 
 @keyframes moon-menu-cycle {
@@ -135,10 +135,6 @@
   pointer-events: none;
 }
 
-.level-node__lock {
-  font-size: 18px;
-  pointer-events: none;
-}
 
 .level-node__cleared-badge {
   position: absolute;
