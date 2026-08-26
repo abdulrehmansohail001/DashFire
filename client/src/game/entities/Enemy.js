@@ -81,6 +81,7 @@ export class Enemy {
 
     this.pendingReactionTimer = null;
 
+        this.facing = 'left'; // updated every frame in update() to track the player
     this.animState = 'idle';
     this.frameIndex = 0;
     this.frameTimer = 0;
@@ -143,8 +144,12 @@ export class Enemy {
       this.reactionDelayMin + Math.random() * (this.reactionDelayMax - this.reactionDelayMin);
   }
 
-  update(dt) {
+    update(dt, playerX) {
     if (!this.alive) return;
+
+    if (typeof playerX === 'number') {
+      this.facing = playerX < this.x ? 'left' : 'right';
+    }
 
     if (this.pendingReactionTimer !== null) {
       this.pendingReactionTimer -= dt;
@@ -252,8 +257,8 @@ export class Enemy {
       const row = ANIM_ROW[this.animState];
       const drawX = this.x + this.width / 2 - SPRITE_DRAW_SIZE / 2;
       const drawY = this.y + this.height - SPRITE_DRAW_SIZE;
-      const drew = spriteSheet.draw(
-        ctx, row, this.frameIndex, drawX, drawY, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE, false
+            const drew = spriteSheet.draw(
+        ctx, row, this.frameIndex, drawX, drawY, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE, this.facing === 'right'
       );
       if (drew) return;
     }

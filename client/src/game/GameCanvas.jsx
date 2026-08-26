@@ -288,13 +288,14 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
           enemy.triggerDelayedReaction();
         }
 
-        enemy.update(dt);
+                enemy.update(dt, player.x);
 
         if (enemy.wantsToFire) {
           enemy.wantsToFire = false;
-                    const bulletY = enemy.y + enemy.height * 0.35 - 2; // ~gun height, not box-center
+          const bulletY = enemy.y + enemy.height * 0.35 - 2; // ~gun height, not box-center
+          const bulletX = enemy.facing === 'right' ? enemy.x + enemy.width : enemy.x;
           enemyBulletsRef.current.push(
-            new EnemyBullet(enemy.x, bulletY, 'left', enemy.bulletSpeed)
+            new EnemyBullet(bulletX, bulletY, enemy.facing, enemy.bulletSpeed)
           );
         }
       }
