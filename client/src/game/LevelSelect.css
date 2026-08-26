@@ -10,12 +10,35 @@
   gap: 14px;
   overflow: hidden;
   font-family: 'Press Start 2P', monospace;
-  background-image: url('/sprites/menu_bg.jpg');
-  background-size: cover;
-  background-position: center;
+  background: #000; /* shows briefly before the strip image loads */
 }
 
-/* dark wash over the photo so the pixel-font UI stays readable */
+/*
+  Animates through the same 8-frame moon_bg.jpg strip used in-game, via
+  the classic CSS sprite-sheet technique: the image is scaled to 8x the
+  viewport width (each frame = exactly 1 viewport width), then
+  background-position-x steps leftward one frame at a time. Using vw for
+  both background-size and the keyframe positions keeps the two in
+  lockstep at any window size, so frames never land on a fractional
+  offset. steps(7) across an 8-frame sheet is correct: it produces 7
+  discrete jumps, landing exactly on positions 0, -100vw, -200vw, ...,
+  -700vw (all 8 frames) before looping back to frame 1.
+*/
+.level-select__backdrop-anim {
+  position: absolute;
+  inset: 0;
+  background-image: url('/sprites/moon_bg.jpg');
+  background-repeat: no-repeat;
+  background-size: 800vw 100vh;
+  animation: moon-menu-cycle 2.8s steps(7) infinite;
+}
+
+@keyframes moon-menu-cycle {
+  from { background-position-x: 0vw; }
+  to { background-position-x: -700vw; }
+}
+
+/* dark wash over the animated strip so the pixel-font UI stays readable */
 .level-select__backdrop {
   position: absolute;
   inset: 0;

@@ -9,7 +9,8 @@ import { LEVELS } from './levels';
 
 export default function LevelSelect({ unlockedCount, onSelectLevel }) {
   return (
-        <div className="level-select">
+            <div className="level-select">
+      <div className="level-select__backdrop-anim" />
       <div className="level-select__backdrop" />
       <div className="level-select__scanlines" />
 
