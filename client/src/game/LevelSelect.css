@@ -10,20 +10,9 @@
   gap: 14px;
   overflow: hidden;
   font-family: 'Press Start 2P', monospace;
-  background: #000; /* shows briefly before the strip image loads */
+  background: #000;
 }
 
-/*
-  Animates through the same 8-frame moon_bg.jpg strip used in-game, via
-  the classic CSS sprite-sheet technique: the image is scaled to 8x the
-  viewport width (each frame = exactly 1 viewport width), then
-  background-position-x steps leftward one frame at a time. Using vw for
-  both background-size and the keyframe positions keeps the two in
-  lockstep at any window size, so frames never land on a fractional
-  offset. steps(7) across an 8-frame sheet is correct: it produces 7
-  discrete jumps, landing exactly on positions 0, -100vw, -200vw, ...,
-  -700vw (all 8 frames) before looping back to frame 1.
-*/
 .level-select__backdrop-anim {
   position: absolute;
   inset: 0;
@@ -38,7 +27,6 @@
   to { background-position-x: -700vw; }
 }
 
-/* dark wash over the animated strip so the pixel-font UI stays readable */
 .level-select__backdrop {
   position: absolute;
   inset: 0;
@@ -46,7 +34,6 @@
   pointer-events: none;
 }
 
-/* CRT scanline texture, ties the menu back to the game's retro feel */
 .level-select__scanlines {
   position: absolute;
   inset: 0;
@@ -82,59 +69,57 @@
 .level-select__grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 26px;
+  gap: 28px;
   z-index: 1;
 }
 
+/*
+  Node visuals now come entirely from level_node.png's own riveted-metal
+  frame — no CSS border, box-shadow, or border-radius needed, since the
+  artwork already has its own edge baked in. Only the number/lock overlay
+  and a darken+desaturate filter for locked state are added on top.
+*/
 .level-node {
   position: relative;
-  width: 66px;
-  height: 66px;
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  border: none;
   border-radius: 0;
+  background-image: url('/sprites/level_node.png');
+  background-size: cover;
+  background-position: center;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Press Start 2P', monospace;
-  font-size: 20px;
   cursor: pointer;
-  image-rendering: pixelated;
-  transition: transform 0.1s steps(2, end);
-}
-
-.level-node--unlocked {
-  background: #0e1f33;
-  border: 3px solid #3ad1ff;
-  color: #eafcff;
-  box-shadow: 4px 4px 0 #000;
+  transition: transform 0.1s steps(2, end), filter 0.15s ease;
 }
 
 .level-node--unlocked:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 #000;
 }
 
 .level-node--unlocked:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 #000;
-}
-
-.level-node--cleared {
-  border-color: #34c85a;
+  transform: translate(1px, 1px);
 }
 
 .level-node--locked {
-  background: #14141c;
-  border: 3px solid #3a3a45;
-  color: #55555f;
   cursor: not-allowed;
-  box-shadow: 4px 4px 0 #000;
-  opacity: 0.7;
+  filter: grayscale(1) brightness(0.4);
 }
 
 .level-node__number {
+  color: #fff;
+  font-size: 22px;
   pointer-events: none;
+  text-shadow:
+    2px 2px 0 #000, -2px -2px 0 #000,
+    2px -2px 0 #000, -2px 2px 0 #000,
+    2px 0 0 #000, -2px 0 0 #000,
+    0 2px 0 #000, 0 -2px 0 #000;
 }
-
 
 .level-node__cleared-badge {
   position: absolute;
@@ -142,13 +127,14 @@
   right: -11px;
   width: 26px;
   height: 26px;
-  border-radius: 0;
   background: #34c85a;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid #000;
+  z-index: 1;
 }
+
 .level-select__hint {
   margin-top: 10px;
   color: #6c7a8a;
