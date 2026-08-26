@@ -14,7 +14,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Player } from './entities/Player';
-import { isColliding } from './entities/Obstacle';
+import { isColliding, Obstacle } from './entities/Obstacle';
 import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
@@ -35,6 +35,8 @@ const playerSheet = new SpriteSheet('/sprites/player.png', 313, 313, 4, 4);
 const playerExtraSheet = new SpriteSheet('/sprites/player_extra.png', 125, 125, 4, 4);
 const enemySheet = new SpriteSheet('/sprites/enemy.png', 313, 313, 4, 4);
 const moonBgSheet = new SpriteSheet('/sprites/moon_bg.jpg', 366, 352, 8, 1);
+const obstacleImage = new Image();
+obstacleImage.src = '/sprites/obstacle.png';
 // Builds N enemies for a level config, splitting the arena into N
 // non-overlapping patrol slots and starting each enemy in the middle of its slot.
 function buildEnemiesForLevel(levelConfig) {
@@ -155,8 +157,9 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
     const playerRef = useRef(new Player(100, 310));
   const enemiesRef = useRef(buildEnemiesForLevel(LEVELS[initialLevelIndex]));
   const backgroundRef = useRef(new Background(moonBgSheet, 0.20));
-  const enemyBulletsRef = useRef([]);
+    const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
+  const obstacleRef = useRef(null);
   const keysRef = useRef({});
   const gameStateRef = useRef('playing');
     const levelIndexRef = useRef(initialLevelIndex); // 0-based index into LEVELS
@@ -176,9 +179,10 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
       playerRef.current.health = Math.min(PLAYER_MAX_HEALTH, playerRef.current.health + 1);
     }
 
-    enemiesRef.current = buildEnemiesForLevel(config);
+        enemiesRef.current = buildEnemiesForLevel(config);
     enemyBulletsRef.current = [];
     bulletsRef.current = [];
+    obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
 
     gameStateRef.current = 'playing';
     setGameState('playing');
@@ -274,9 +278,23 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
 
       const wasGrounded = player.isGrounded;
 
-      player.handleInput(keysRef.current);
+            player.handleInput(keysRef.current);
       player.setSitting(!!keysRef.current['ArrowDown']);
+
+      const prevPlayerX = player.x;
       player.update(dt);
+
+      // Solid wall: push the player back out if it's grounded-level overlap.
+      // No y-overlap once the player jumps above it, so this naturally lets
+      // the player pass overhead.
+      const obstacle = obstacleRef.current;
+      if (obstacle && isColliding(player.getBounds(), obstacle.getBounds())) {
+        if (prevPlayerX < obstacle.x) {
+          player.x = obstacle.x - player.width;
+        } else {
+          player.x = obstacle.x + obstacle.width;
+        }
+      }
 
       const enemies = enemiesRef.current;
       const playerJustJumped = wasGrounded && !player.isGrounded;
@@ -313,8 +331,12 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
         }
       }
 
-      for (const bullet of bulletsRef.current) {
+            for (const bullet of bulletsRef.current) {
         if (bullet.hit) continue;
+        if (obstacleRef.current && isColliding(bullet.getBounds(), obstacleRef.current.getBounds())) {
+          bullet.hit = true; // player bullets can't pass through the wall
+          continue;
+        }
         for (const enemy of enemies) {
           if (!enemy.alive) continue;
           if (isColliding(bullet.getBounds(), enemy.getBounds())) {
@@ -347,7 +369,11 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
         function draw() {
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-      backgroundRef.current.draw(ctx, CANVAS_WIDTH, CANVAS_HEIGHT);
+            backgroundRef.current.draw(ctx, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+      if (obstacleRef.current) {
+        obstacleRef.current.draw(ctx, obstacleImage);
+      }
 
       ctx.strokeStyle = '#666';
       ctx.beginPath();

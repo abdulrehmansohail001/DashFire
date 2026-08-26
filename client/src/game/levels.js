@@ -57,10 +57,11 @@ export const LEVELS = [
     fireSequence: [1, 1, 2],
     burstGap: 0.18,
   },
-  // Level 4 — takes 2 hits now, bullets faster
+    // Level 4 — takes 2 hits now, bullets faster, wall obstacle introduced
   {
     level: 4,
     enemyCount: 1,
+    hasObstacle: true,
     health: 2,
     moveSpeed: 160,
     bulletSpeed: 260,
@@ -71,10 +72,11 @@ export const LEVELS = [
     fireSequence: [1, 1, 2],
     burstGap: 0.16,
   },
-  // Level 5 — more frequent bursts
+    // Level 5 — more frequent bursts, wall obstacle
   {
     level: 5,
     enemyCount: 1,
+    hasObstacle: true,
     health: 2,
     moveSpeed: 170,
     bulletSpeed: 280,
