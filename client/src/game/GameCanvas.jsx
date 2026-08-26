@@ -32,6 +32,7 @@ const ARENA_MIN_X = 480;
 const ARENA_MAX_X = 750;
 
 const playerSheet = new SpriteSheet('/sprites/player.png', 313, 313, 4, 4);
+const playerExtraSheet = new SpriteSheet('/sprites/player_extra.png', 343, 286, 4, 4);
 const enemySheet = new SpriteSheet('/sprites/enemy.png', 313, 313, 4, 4);
 const moonBgSheet = new SpriteSheet('/sprites/moon_bg.jpg', 366, 352, 8, 1);
 // Builds N enemies for a level config, splitting the arena into N
@@ -145,7 +146,10 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
   const canvasRef = useRef(null);
     const [health, setHealth] = useState(3);
   const [levelNumber, setLevelNumber] = useState(LEVELS[initialLevelIndex].level);
-  // 'playing' | 'gameover' | 'levelComplete' | 'gameComplete'
+    // 'playing' | 'dying' | 'gameover' | 'celebrating' | 'levelComplete' | 'gameComplete'
+  // 'dying'/'celebrating' are animation-only holds: the death/victory sprite
+  // sequence plays out (gameplay paused) before flipping to the actual
+  // result screen, so results never appear mid-animation.
   const [gameState, setGameState] = useState('playing');
 
     const playerRef = useRef(new Player(100, 310));
@@ -155,7 +159,8 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
   const bulletsRef = useRef([]);
   const keysRef = useRef({});
   const gameStateRef = useRef('playing');
-  const levelIndexRef = useRef(initialLevelIndex); // 0-based index into LEVELS
+    const levelIndexRef = useRef(initialLevelIndex); // 0-based index into LEVELS
+  const outroTargetRef = useRef(null); // 'levelComplete' | 'gameComplete' — which screen to show once the victory animation finishes
 
   const startLevel = (index, keepHealth = true) => {
     levelIndexRef.current = index;
@@ -245,13 +250,32 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
     let lastTime = performance.now();
     let animationFrameId;
 
-    function update(dt) {
+        function update(dt) {
+      const player = playerRef.current;
+
+      // Death/victory animation is playing out — freeze gameplay, just let
+      // the outro-locked player advance its own frames, and flip to the
+      // real result screen once it's done.
+      if (gameStateRef.current === 'dying' || gameStateRef.current === 'celebrating') {
+        player.update(dt);
+        if (player.animComplete) {
+          if (gameStateRef.current === 'dying') {
+            gameStateRef.current = 'gameover';
+            setGameState('gameover');
+          } else {
+            gameStateRef.current = outroTargetRef.current;
+            setGameState(outroTargetRef.current);
+          }
+        }
+        return;
+      }
+
       if (gameStateRef.current !== 'playing') return;
 
-      const player = playerRef.current;
       const wasGrounded = player.isGrounded;
 
       player.handleInput(keysRef.current);
+      player.setSitting(!!keysRef.current['ArrowDown']);
       player.update(dt);
 
       const enemies = enemiesRef.current;
@@ -301,16 +325,19 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
       }
       bulletsRef.current = bulletsRef.current.filter((b) => !b.hit);
 
-      const allEnemiesDead = enemies.every((e) => !e.alive);
+            const allEnemiesDead = enemies.every((e) => !e.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
-        gameStateRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
-        setGameState(gameStateRef.current);
+        outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
+        player.triggerVictory();
+        gameStateRef.current = 'celebrating';
+        setGameState('celebrating');
       }
 
       if (player.health <= 0 && gameStateRef.current === 'playing') {
-        gameStateRef.current = 'gameover';
-        setGameState('gameover');
+        player.triggerDeath();
+        gameStateRef.current = 'dying';
+        setGameState('dying');
       }
 
       setHealth(Math.max(player.health, 0));
@@ -327,7 +354,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
       ctx.lineTo(800, 400);
       ctx.stroke();
 
-      playerRef.current.draw(ctx, playerSheet);
+            playerRef.current.draw(ctx, playerSheet, playerExtraSheet);
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
