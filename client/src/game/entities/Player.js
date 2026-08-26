@@ -12,7 +12,7 @@ export const JUMP_VELOCITY = -700;        // px/s (negative = upward) — first 
 export const DOUBLE_JUMP_VELOCITY = -520; // px/s — weaker second (mid-air) jump
 export const MOVE_SPEED = 300;            // px/s
 export const MAX_JUMPS = 2;               // 1 = single jump only, 2 = adds a mid-air double-jump
-export const GROUND_Y = 340;              // y-position of the "floor"
+export const GROUND_Y = 310;              // y-position of the "floor"
 export const CANVAS_WIDTH = 800;
 
 // Animation tuning
@@ -32,7 +32,7 @@ export class Player {
     this.x = x;
     this.y = y;
     this.width = 40;
-    this.height = 60;
+    this.height = 90;
 
     this.vx = 0;
     this.vy = 0;

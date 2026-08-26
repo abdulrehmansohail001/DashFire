@@ -16,7 +16,7 @@
 
 export const ENEMY_GRAVITY = 1800;
 export const ENEMY_JUMP_VELOCITY = -600;
-export const ENEMY_GROUND_Y = 340;
+export const ENEMY_GROUND_Y = 310;
 
 const DEFAULTS = {
   health: 1,
@@ -48,7 +48,7 @@ export class Enemy {
     this.x = x;
     this.y = y;
     this.width = 40;
-    this.height = 60;
+    this.height = 90;
 
     this.vx = 0;
     this.vy = 0;
