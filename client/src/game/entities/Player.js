@@ -37,7 +37,7 @@ const ANIM_CONFIG = {
   run:     { sheet: 'main',  row: 1, frames: 4, loop: true },
   jump:    { sheet: 'main',  row: 2, frames: 4, loop: true },
   shoot:   { sheet: 'main',  row: 3, frames: 4, loop: true },
-  sit:     { sheet: 'extra', row: 0, frames: 4, loop: false },
+    sit:     { sheet: 'extra', cells: [[0, 0], [0, 1], [0, 2], [0, 2]], loop: false },
   death:   { sheet: 'extra', cells: [[1, 0], [1, 1], [1, 2], [1, 3], [2, 0], [2, 1], [2, 2], [2, 3]], loop: false },
   victory: { sheet: 'extra', row: 3, frames: 4, loop: false },
 };
