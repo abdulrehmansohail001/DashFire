@@ -159,7 +159,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
   const backgroundRef = useRef(new Background(moonBgSheet, 0.20));
     const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
-  const obstacleRef = useRef(null);
+    const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
   const keysRef = useRef({});
   const gameStateRef = useRef('playing');
     const levelIndexRef = useRef(initialLevelIndex); // 0-based index into LEVELS
@@ -170,7 +170,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
     const config = LEVELS[index];
 
     playerRef.current.x = 100;
-    playerRef.current.y = 340;
+    playerRef.current.y = 310;
     playerRef.current.vx = 0;
     playerRef.current.vy = 0;
     if (!keepHealth) {
