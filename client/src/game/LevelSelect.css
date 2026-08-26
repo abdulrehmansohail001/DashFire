@@ -50,7 +50,7 @@
 
 .level-select__title {
   margin: 0;
-  color: #3ad1ff;
+  color: #ffffffb7;
   font-size: 34px;
   letter-spacing: 6px;
   text-shadow: 3px 3px 0 #000, 6px 6px 0 rgba(58, 209, 255, 0.35);
@@ -84,8 +84,9 @@
   width: 76px;
   height: 76px;
   padding: 0;
-  border: none;
-  border-radius: 0;
+    border: none;
+  border-radius: 14px;
+  overflow: hidden;
   background-image: url('/sprites/level_node.png');
   background-size: cover;
   background-position: center;
