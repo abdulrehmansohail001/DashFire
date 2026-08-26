@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 .level-select {
   position: fixed;
   inset: 0;
@@ -5,96 +7,105 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
   overflow: hidden;
-  background: radial-gradient(ellipse at 50% 20%, #10233a 0%, #050510 60%, #000 100%);
-  font-family: monospace;
+  font-family: 'Press Start 2P', monospace;
+  background-image: url('/sprites/menu_bg.jpg');
+  background-size: cover;
+  background-position: center;
 }
 
-/* subtle starfield, purely CSS, no image asset needed */
+/* dark wash over the photo so the pixel-font UI stays readable */
 .level-select__backdrop {
   position: absolute;
   inset: 0;
-  background-image:
-    radial-gradient(1px 1px at 10% 20%, #ffffff 100%, transparent 100%),
-    radial-gradient(1px 1px at 80% 10%, #ffffff 100%, transparent 100%),
-    radial-gradient(1px 1px at 60% 70%, #cfe8ff 100%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 30% 80%, #ffffff 100%, transparent 100%),
-    radial-gradient(1px 1px at 90% 60%, #cfe8ff 100%, transparent 100%),
-    radial-gradient(1px 1px at 45% 40%, #ffffff 100%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 15% 55%, #ffffff 100%, transparent 100%),
-    radial-gradient(1px 1px at 70% 85%, #cfe8ff 100%, transparent 100%);
-  background-repeat: no-repeat;
-  opacity: 0.9;
+  background: rgba(4, 8, 16, 0.72);
   pointer-events: none;
+}
+
+/* CRT scanline texture, ties the menu back to the game's retro feel */
+.level-select__scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0px,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 .level-select__title {
   margin: 0;
   color: #3ad1ff;
-  font-size: 42px;
-  letter-spacing: 10px;
-  text-shadow: 0 0 12px rgba(58, 209, 255, 0.7), 0 0 30px rgba(58, 209, 255, 0.35);
+  font-size: 34px;
+  letter-spacing: 6px;
+  text-shadow: 3px 3px 0 #000, 6px 6px 0 rgba(58, 209, 255, 0.35);
   z-index: 1;
 }
 
 .level-select__subtitle {
-  margin: 0 0 8px 0;
+  margin: 4px 0 12px 0;
   color: #9fb3c8;
-  font-size: 13px;
-  letter-spacing: 4px;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-shadow: 2px 2px 0 #000;
   z-index: 1;
 }
 
 .level-select__grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 22px;
+  gap: 26px;
   z-index: 1;
 }
 
 .level-node {
   position: relative;
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
+  width: 66px;
+  height: 66px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: monospace;
-  font-weight: bold;
-  font-size: 22px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  image-rendering: pixelated;
+  transition: transform 0.1s steps(2, end);
 }
 
 .level-node--unlocked {
   background: #0e1f33;
-  border: 2px solid #3ad1ff;
+  border: 3px solid #3ad1ff;
   color: #eafcff;
-  box-shadow: 0 0 10px rgba(58, 209, 255, 0.45);
+  box-shadow: 4px 4px 0 #000;
 }
 
 .level-node--unlocked:hover {
-  transform: scale(1.08);
-  box-shadow: 0 0 20px rgba(58, 209, 255, 0.8);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #000;
+}
+
+.level-node--unlocked:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #000;
 }
 
 .level-node--cleared {
   border-color: #34c85a;
-  box-shadow: 0 0 10px rgba(52, 200, 90, 0.5);
-}
-
-.level-node--cleared:hover {
-  box-shadow: 0 0 20px rgba(52, 200, 90, 0.85);
 }
 
 .level-node--locked {
   background: #14141c;
-  border: 2px solid #3a3a45;
+  border: 3px solid #3a3a45;
   color: #55555f;
   cursor: not-allowed;
-  opacity: 0.6;
+  box-shadow: 4px 4px 0 #000;
+  opacity: 0.7;
 }
 
 .level-node__number {
@@ -102,30 +113,31 @@
 }
 
 .level-node__lock {
-  font-size: 20px;
+  font-size: 18px;
   pointer-events: none;
 }
 
 .level-node__cleared-badge {
   position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
+  top: -9px;
+  right: -9px;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
   background: #34c85a;
   color: #04140a;
-  font-size: 11px;
+  font-size: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 6px rgba(52, 200, 90, 0.7);
+  border: 2px solid #000;
 }
 
 .level-select__hint {
-  margin-top: 6px;
+  margin-top: 10px;
   color: #6c7a8a;
-  font-size: 11px;
+  font-size: 9px;
   letter-spacing: 1px;
+  text-shadow: 2px 2px 0 #000;
   z-index: 1;
 }

@@ -150,7 +150,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
 
     const playerRef = useRef(new Player(100, 340));
   const enemiesRef = useRef(buildEnemiesForLevel(LEVELS[initialLevelIndex]));
-  const backgroundRef = useRef(new Background(moonBgSheet, 0.2));
+  const backgroundRef = useRef(new Background(moonBgSheet, 0.20));
   const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
   const keysRef = useRef({});

@@ -9,8 +9,9 @@ import { LEVELS } from './levels';
 
 export default function LevelSelect({ unlockedCount, onSelectLevel }) {
   return (
-    <div className="level-select">
+        <div className="level-select">
       <div className="level-select__backdrop" />
+      <div className="level-select__scanlines" />
 
       <h1 className="level-select__title">DASHFIRE</h1>
       <p className="level-select__subtitle">SELECT A LEVEL</p>
