@@ -72,7 +72,7 @@ export class Player {
     this.isGrounded = true;
     this.jumpsUsed = 0; // resets to 0 on landing; jump() allowed while jumpsUsed < MAX_JUMPS
 
-    this.health = 3;
+    this.health = 10;
     this.invulnerable = false;
     this.invulnerableTimer = 0;
     this.shootCooldown = 0;

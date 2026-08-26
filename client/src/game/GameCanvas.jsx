@@ -25,7 +25,7 @@ import { Background } from './entities/Background';
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
 const ENEMY_GROUND_Y = 340;
-const PLAYER_MAX_HEALTH = 3;
+const PLAYER_MAX_HEALTH = 10;
 
 // Arena span enemies are allowed to patrol within, split evenly per enemy.
 const ARENA_MIN_X = 480;
@@ -146,7 +146,7 @@ function drawTopCenterHud(ctx, levelDisplay) {
 }
 export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onExitToMenu }) {
   const canvasRef = useRef(null);
-    const [health, setHealth] = useState(3);
+    const [health, setHealth] = useState(10);
   const [levelNumber, setLevelNumber] = useState(LEVELS[initialLevelIndex].level);
     // 'playing' | 'dying' | 'gameover' | 'celebrating' | 'levelComplete' | 'gameComplete'
   // 'dying'/'celebrating' are animation-only holds: the death/victory sprite
@@ -402,17 +402,25 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
         'left'
       );
 
-      // --- HUD: enemy HP top-right, above the enemy patrol area ---
+            // --- HUD: enemy HP top-right, above the enemy patrol area ---
+      // One independent bar per enemy (not summed/shared) — stacked
+      // vertically when a level has more than one gunman, so defeating
+      // one enemy visibly empties ITS bar rather than partially draining
+      // a combined total.
       const enemyCircleX = CANVAS_WIDTH - 40;
       const enemies = enemiesRef.current;
-      const totalMax = enemies.reduce((sum, e) => sum + e.maxHealth, 0);
-            if (totalMax > 0) {
-        const totalCurrent = enemies.reduce((sum, e) => sum + Math.max(e.health, 0), 0);
-        const barWidth = 150;
-        const barX = enemyCircleX - circleRadius - 12 - barWidth;
-        drawHpBar(ctx, barX, circleY - 8, barWidth, 16, totalCurrent / totalMax, 'ENEMY HP', 'right');
-        drawHudPortrait(ctx, enemySheet, enemyCircleX, circleY, circleRadius, '#a83232', 'E');
-      }
+      const ENEMY_ROW_HEIGHT = 56;
+      const barWidth = 150;
+      const barX = enemyCircleX - circleRadius - 12 - barWidth;
+
+      enemies.forEach((enemy, i) => {
+        if (!enemy.maxHealth) return;
+        const rowCircleY = 34 + i * ENEMY_ROW_HEIGHT;
+        const label = enemies.length > 1 ? `ENEMY ${i + 1} HP` : 'ENEMY HP';
+        const pct = Math.max(enemy.health, 0) / enemy.maxHealth;
+        drawHpBar(ctx, barX, rowCircleY - 8, barWidth, 16, pct, label, 'right');
+        drawHudPortrait(ctx, enemySheet, enemyCircleX, rowCircleY, circleRadius, '#a83232', 'E');
+      });
 
       drawTopCenterHud(ctx, levelIndexRef.current + 1);
 
