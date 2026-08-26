@@ -148,7 +148,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
   // 'playing' | 'gameover' | 'levelComplete' | 'gameComplete'
   const [gameState, setGameState] = useState('playing');
 
-    const playerRef = useRef(new Player(100, 340));
+    const playerRef = useRef(new Player(100, 310));
   const enemiesRef = useRef(buildEnemiesForLevel(LEVELS[initialLevelIndex]));
   const backgroundRef = useRef(new Background(moonBgSheet, 0.20));
   const enemyBulletsRef = useRef([]);
@@ -182,7 +182,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
   };
 
     const restartCurrentLevel = () => {
-    playerRef.current = new Player(100, 340);
+    playerRef.current = new Player(100, 310);
     startLevel(levelIndexRef.current, false);
   };
     
@@ -197,7 +197,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
       if (!player.canShoot()) return;
       const direction = player.facing;
       const bulletX = direction === 'right' ? player.x + player.width : player.x;
-      const bulletY = player.y + player.height / 2 - 2;
+            const bulletY = player.y + player.height * 0.35 - 2; // ~gun height, not box-center
       bulletsRef.current.push(new Bullet(bulletX, bulletY, direction));
       player.triggerShoot();
     }
@@ -268,7 +268,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
 
         if (enemy.wantsToFire) {
           enemy.wantsToFire = false;
-          const bulletY = enemy.y + enemy.height / 2 - 2;
+                    const bulletY = enemy.y + enemy.height * 0.35 - 2; // ~gun height, not box-center
           enemyBulletsRef.current.push(
             new EnemyBullet(enemy.x, bulletY, 'left', enemy.bulletSpeed)
           );
