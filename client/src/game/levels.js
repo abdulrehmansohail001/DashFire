@@ -19,7 +19,7 @@ export const LEVELS = [
   {
     level: 1,
     enemyCount: 1,
-    health: 10,
+    health: 5,
     moveSpeed: 120,
     bulletSpeed: 400,
     actionIntervalMin: 1.4,
@@ -33,7 +33,7 @@ export const LEVELS = [
    {
     level: 2,
     enemyCount: 2,
-    health: 10,
+    health: 5,
     moveSpeed: 120,
     bulletSpeed: 400,
     actionIntervalMin: 1.4,
@@ -44,18 +44,18 @@ export const LEVELS = [
     burstGap: 0.2,
   },
   // Level 3 — introduces occasional double-bursts
-  {
+   {
     level: 3,
-    enemyCount: 1,
-    health: 1,
-    moveSpeed: 150,
-    bulletSpeed: 240,
-    actionIntervalMin: 1.9,
-    actionIntervalMax: 2.7,
-    reactionDelayMin: 0.55,
-    reactionDelayMax: 0.9,
-    fireSequence: [1, 1, 2],
-    burstGap: 0.18,
+    enemyCount: 2,
+    health: 10,
+    moveSpeed: 120,
+    bulletSpeed: 400,
+    actionIntervalMin: 1.4,
+    actionIntervalMax: 2.4,
+    reactionDelayMin: 0.7,
+    reactionDelayMax: 1.1,
+    fireSequence: [1,1,2],
+    burstGap: 0.2,
   },
     // Level 4 — takes 2 hits now, bullets faster, wall obstacle introduced
   {
