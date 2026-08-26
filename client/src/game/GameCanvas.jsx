@@ -32,7 +32,7 @@ const ARENA_MIN_X = 480;
 const ARENA_MAX_X = 750;
 
 const playerSheet = new SpriteSheet('/sprites/player.png', 313, 313, 4, 4);
-const playerExtraSheet = new SpriteSheet('/sprites/player_extra.png', 343, 286, 4, 4);
+const playerExtraSheet = new SpriteSheet('/sprites/player_extra.png', 125, 125, 4, 4);
 const enemySheet = new SpriteSheet('/sprites/enemy.png', 313, 313, 4, 4);
 const moonBgSheet = new SpriteSheet('/sprites/moon_bg.jpg', 366, 352, 8, 1);
 // Builds N enemies for a level config, splitting the arena into N
