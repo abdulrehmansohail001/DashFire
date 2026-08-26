@@ -30,17 +30,17 @@ export const LEVELS = [
     burstGap: 0.2,
   },
   // Level 2 — slightly faster, still single shots
-  {
+   {
     level: 2,
-    enemyCount: 1,
-    health: 1,
-    moveSpeed: 140,
-    bulletSpeed: 220,
-    actionIntervalMin: 2.1,
-    actionIntervalMax: 3.0,
-    reactionDelayMin: 0.6,
-    reactionDelayMax: 1.0,
-    fireSequence: [1, 1],
+    enemyCount: 2,
+    health: 10,
+    moveSpeed: 120,
+    bulletSpeed: 400,
+    actionIntervalMin: 1.4,
+    actionIntervalMax: 2.4,
+    reactionDelayMin: 0.7,
+    reactionDelayMax: 1.1,
+    fireSequence: [1,1,2],
     burstGap: 0.2,
   },
   // Level 3 — introduces occasional double-bursts
