@@ -38,13 +38,13 @@ export default function LevelSelect({ unlockedCount, onSelectLevel }) {
             >
                             {isCleared && (
                 <span className="level-node__cleared-badge">
-                  <PixelCheck size={12} color="#04140a" />
+                  <PixelCheck size={20} color="#04140a" />
                 </span>
               )}
               {isUnlocked ? (
                 <span className="level-node__number">{levelConfig.level}</span>
               ) : (
-                <PixelLock size={22} color="#c9862f" />
+                <PixelLock size={20} color="#c9862f" />
               )}
             </button>
           );

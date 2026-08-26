@@ -90,7 +90,7 @@
   position: relative;
   width: 66px;
   height: 66px;
-  border-radius: 6px;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -138,20 +138,17 @@
 
 .level-node__cleared-badge {
   position: absolute;
-  top: -9px;
-  right: -9px;
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
+  top: -11px;
+  right: -11px;
+  width: 26px;
+  height: 26px;
+  border-radius: 0;
   background: #34c85a;
-  color: #04140a;
-  font-size: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid #000;
 }
-
 .level-select__hint {
   margin-top: 10px;
   color: #6c7a8a;
