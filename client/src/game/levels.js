@@ -87,11 +87,15 @@ export const LEVELS = [
     fireSequence: [1,1,2],
     burstGap: 0.2,
   },
-  // Level 6 — 2 hits to kill, fast bullets, tight reaction
+    // Level 6 — first eagle level: 2 gunmen at 10 HP each, PLUS a flying eagle
+  // that patrols at a fixed height and lobs arcing bombs. hasEagle: true is
+  // the switch GameCanvas checks to actually spawn it — everything else
+  // (Eagle.js, EagleProjectile.js, the throw/arc/collision logic in
+  // GameCanvas) was already correct, it just never had a level flip it on.
   {
     level: 6,
-    enemyCount: 1,
-    health: 2,
+    enemyCount: 2,
+    health: 10,
     moveSpeed: 185,
     bulletSpeed: 300,
     actionIntervalMin: 1.4,
@@ -100,6 +104,14 @@ export const LEVELS = [
     reactionDelayMax: 0.7,
     fireSequence: [1, 2, 1, 2],
     burstGap: 0.14,
+
+    hasEagle: true,
+    eagleHealth: 6,
+    eagleSpeed: 100,
+    eagleThrowIntervalMin: 1.4,
+    eagleThrowIntervalMax: 2.4,
+    eagleThrowSpeedMin: -160,
+    eagleThrowSpeedMax: 160,
   },
   // Level 7 — TWO gunmen now
   {
