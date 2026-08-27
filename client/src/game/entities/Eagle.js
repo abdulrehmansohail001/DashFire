@@ -8,6 +8,9 @@
 const FRAME_COUNT = 8;
 const FRAME_DURATION = 0.09; // seconds per wing-flap frame
 const SPRITE_DRAW_SIZE = 100; // frames are now square, one size covers both dimensions
+
+const HIT_FLASH_DURATION = 0.18; // seconds the eagle blinks after taking a hit
+const HIT_FLASH_INTERVAL = 0.06; // seconds per on/off blink step
 export class Eagle {
   // placement lets multiple eagles on one level get distinct starting
   // positions and patrol lanes so they don't stack on top of each other.
@@ -36,8 +39,9 @@ export class Eagle {
     this.throwInterval = this.randomThrowInterval();
     this.wantsToThrow = false;
 
-    this.frameIndex = 0;
+        this.frameIndex = 0;
     this.frameTimer = 0;
+    this.hitFlashTimer = 0; // >0 while blinking from a recent hit
   }
 
   randomThrowInterval() {
@@ -48,9 +52,10 @@ export class Eagle {
     return this.throwSpeedMin + Math.random() * (this.throwSpeedMax - this.throwSpeedMin);
   }
 
-  takeHit() {
+    takeHit() {
     if (!this.alive) return;
     this.health -= 1;
+    this.hitFlashTimer = HIT_FLASH_DURATION; // blink regardless of whether this kills it
     if (this.health <= 0) {
       this.alive = false;
     }
@@ -75,10 +80,14 @@ export class Eagle {
       this.wantsToThrow = true;
     }
 
-    this.frameTimer += dt;
+        this.frameTimer += dt;
     if (this.frameTimer >= FRAME_DURATION) {
       this.frameTimer = 0;
       this.frameIndex = (this.frameIndex + 1) % FRAME_COUNT;
+    }
+
+    if (this.hitFlashTimer > 0) {
+      this.hitFlashTimer -= dt;
     }
   }
 
@@ -88,6 +97,11 @@ export class Eagle {
 
     draw(ctx, spriteSheet) {
     if (!this.alive) return;
+
+    if (this.hitFlashTimer > 0) {
+      const step = Math.floor(this.hitFlashTimer / HIT_FLASH_INTERVAL);
+      if (step % 2 === 0) return; // blink: skip this frame
+    }
 
         if (spriteSheet && spriteSheet.loaded) {
       const flip = this.vx < 0;

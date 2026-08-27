@@ -436,13 +436,15 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
           boss.wantsToFire = false;
           const bulletY = boss.y + boss.height * 0.3 - 2;
           enemyBulletsRef.current.push(
-            new BossFireball(boss.x, bulletY, 'left', levelConfigRef.current.bulletSpeed ?? 320)
+            new BossFireball(boss.x, bulletY, 'left', levelConfigRef.current.bulletSpeed ?? 260)
           );
         }
 
         if (boss.wantsToSpawn) {
           boss.wantsToSpawn = false;
           const aliveShieldCount = enemiesRef.current.filter((e) => e.alive).length;
+          const eagleAlive = eaglesRef.current.some((e) => e.alive);
+
           if (aliveShieldCount < MAX_BOSS_SHIELD_ENEMIES) {
             const spawnX = SHIELD_PATROL_MIN_X + aliveShieldCount * 70;
             enemiesRef.current.push(
@@ -459,6 +461,15 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
                 patrolMinX: SHIELD_PATROL_MIN_X,
                 patrolMaxX: SHIELD_PATROL_MAX_X,
               })
+            );
+          } else if (!eagleAlive) {
+            // Gunmen slots are full — summon the 1-HP shield eagle instead.
+            eaglesRef.current.push(
+              new Eagle(
+                EAGLE_HEIGHT_Y,
+                { ...levelConfigRef.current, eagleHealth: levelConfigRef.current.eagleHealth ?? 1 },
+                { startX: 550, minX: SHIELD_PATROL_MIN_X, maxX: SHIELD_PATROL_MAX_X + 60 }
+              )
             );
           }
         }

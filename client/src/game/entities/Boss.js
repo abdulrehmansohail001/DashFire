@@ -11,6 +11,9 @@ const FRAME_DURATIONS = [0.6, 0.6, 0.35, 0.35, 0.25, 0.45]; // idle,idle,charge,
 const FIRE_FRAME = 4;
 const SPAWN_FRAME = 5;
 
+const HIT_FLASH_DURATION = 0.18; // seconds the boss blinks after taking a hit
+const HIT_FLASH_INTERVAL = 0.06; // seconds per on/off blink step
+
 const SPRITE_DRAW_HEIGHT = 260; // sheet cells are ~166.67x250 (tall portrait) — scale height, keep aspect
 const SPRITE_ASPECT = (500 / 3) / 250;
 const SPRITE_DRAW_WIDTH = SPRITE_DRAW_HEIGHT * SPRITE_ASPECT;
@@ -31,13 +34,14 @@ export class Boss {
     this.frameTimer = 0;
     this.bobTimer = 0;
 
-    this.wantsToFire = false;
+        this.wantsToFire = false;
     this.wantsToSpawn = false;
+    this.hitFlashTimer = 0; // >0 while blinking from a recent hit
   }
-
   takeHit() {
     if (!this.alive) return;
     this.health -= 1;
+    this.hitFlashTimer = HIT_FLASH_DURATION; // blink regardless of whether this kills it
     if (this.health <= 0) {
       this.alive = false;
     }
@@ -60,6 +64,10 @@ export class Boss {
         this.wantsToSpawn = true;
       }
     }
+
+    if (this.hitFlashTimer > 0) {
+      this.hitFlashTimer -= dt;
+    }
   }
 
   getBounds() {
@@ -68,6 +76,11 @@ export class Boss {
 
   draw(ctx, spriteSheet) {
     if (!this.alive) return;
+
+    if (this.hitFlashTimer > 0) {
+      const step = Math.floor(this.hitFlashTimer / HIT_FLASH_INTERVAL);
+      if (step % 2 === 0) return; // blink: skip this frame
+    }
 
     const bob = Math.sin(this.bobTimer * 2) * 3; // barely-there hover motion
 
