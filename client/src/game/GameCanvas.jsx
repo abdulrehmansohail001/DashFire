@@ -24,6 +24,7 @@ import { Background } from './entities/Background';
 import { Eagle } from './entities/Eagle';
 import { EagleProjectile } from './entities/EagleProjectile';
 import { Boss } from './entities/Boss';
+import { playSound } from './sound';
 import { BossFireball } from './entities/BossFireball';
 
 const CANVAS_WIDTH = 800;
@@ -308,8 +309,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       const direction = player.facing;
       const bulletX = direction === 'right' ? player.x + player.width : player.x;
             const bulletY = player.y + player.height * 0.35 - 2; // ~gun height, not box-center
-      bulletsRef.current.push(new Bullet(bulletX, bulletY, direction));
+            bulletsRef.current.push(new Bullet(bulletX, bulletY, direction));
       player.triggerShoot();
+      playSound('shoot', 0.5);
     }
 
     const JUMP_KEYS = ['ArrowUp', ' ', 'w', 'W'];
@@ -429,6 +431,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       for (const bullet of enemyBulletsRef.current) {
         if (isColliding(playerBounds, bullet.getBounds())) {
           player.takeHit();
+          playSound('hit', 0.6);
         }
       }
 
@@ -540,8 +543,10 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         for (const enemy of enemies) {
           if (!enemy.alive) continue;
           if (isColliding(bullet.getBounds(), enemy.getBounds())) {
+            const wasAlive = enemy.alive;
             enemy.takeHit();
             bullet.hit = true;
+            playSound(wasAlive && !enemy.alive ? 'explosion' : 'hit', 0.6);
             break;
           }
         }
@@ -557,12 +562,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         player.triggerVictory();
         gameStateRef.current = 'celebrating';
         setGameState('celebrating');
+        playSound('victory', 0.7);
       }
 
       if (player.health <= 0 && gameStateRef.current === 'playing') {
         player.triggerDeath();
         gameStateRef.current = 'dying';
         setGameState('dying');
+        playSound('gameover', 0.7);
       }
 
       setHealth(Math.max(player.health, 0));

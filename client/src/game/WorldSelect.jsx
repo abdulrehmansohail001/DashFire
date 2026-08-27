@@ -5,6 +5,7 @@
 // locked placeholders for future content; clicking them does nothing.
 
 import './WorldSelect.css';
+import { playSound } from './sound';
 import { PixelLock } from './PixelIcon';
 import { WORLDS } from './worlds';
 
@@ -31,7 +32,11 @@ export default function WorldSelect({ onSelectWorld }) {
                 'world-node' + (isUnlocked ? ' world-node--unlocked' : ' world-node--locked')
               }
               disabled={!isUnlocked}
-              onClick={() => isUnlocked && onSelectWorld(index)}
+              onClick={() => {
+                if (!isUnlocked) return;
+                playSound('click', 0.6);
+                onSelectWorld(index);
+              }}
               aria-label={isUnlocked ? `Play ${worldConfig.name}` : `${worldConfig.name} locked`}
             >
               {isUnlocked ? (

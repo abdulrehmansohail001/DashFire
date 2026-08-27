@@ -5,6 +5,7 @@
 // are dimmed with a lock icon; unlocked levels are clickable.
 
 import './LevelSelect.css';
+import { playSound } from './sound';
 import { PixelLock, PixelCheck } from './PixelIcon';
 export default function LevelSelect({ levels, unlockedCount, onSelectLevel, onBack }) {
   return (
@@ -19,7 +20,7 @@ export default function LevelSelect({ levels, unlockedCount, onSelectLevel, onBa
         </button>
       )}
 
-      <h1 className="level-select__title">DASHFIRE</h1>
+      <h1 className="level-select__title">MISSION-MOON</h1>
       <p className="level-select__subtitle">SELECT A LEVEL</p>
 
       <div className="level-select__grid">
@@ -36,7 +37,11 @@ export default function LevelSelect({ levels, unlockedCount, onSelectLevel, onBa
                 (isCleared ? ' level-node--cleared' : '')
               }
               disabled={!isUnlocked}
-              onClick={() => isUnlocked && onSelectLevel(index)}
+              onClick={() => {
+                if (!isUnlocked) return;
+                playSound('click', 0.6);
+                onSelectLevel(index);
+              }}
               aria-label={
                 isUnlocked ? `Play level ${levelConfig.level}` : `Level ${levelConfig.level} locked`
               }
