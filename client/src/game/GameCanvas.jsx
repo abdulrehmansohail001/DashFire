@@ -97,23 +97,29 @@ function buildEnemiesForLevel(levelConfig) {
 
   return enemies;
 }
-// Builds N eagles for a level config, splitting the eagle patrol span into
-// N non-overlapping lanes so multiple eagles don't fly on top of each
-// other. Mirrors buildEnemiesForLevel's slot-splitting approach.
+// Builds N eagles for a level config. All eagles now share the FULL patrol
+// width instead of being locked into non-overlapping lanes — only their
+// starting spot is staggered, plus a randomized speed and flight-height
+// jitter, so with multiple eagles they naturally cross paths and pass each
+// other instead of each looking robotically confined to its own slice.
 function buildEaglesForLevel(levelConfig) {
   if (!levelConfig.hasEagle) return [];
   const eagleCount = levelConfig.eagleCount ?? 1;
   const span = EAGLE_ARENA_MAX_X - EAGLE_ARENA_MIN_X - EAGLE_WIDTH;
-  const slotWidth = span / eagleCount;
   const eagles = [];
 
   for (let i = 0; i < eagleCount; i++) {
-    const slotMin = EAGLE_ARENA_MIN_X + i * slotWidth;
-    const slotMax = slotMin + slotWidth;
-    const startX = slotMin + slotWidth / 2;
+    const startX = EAGLE_ARENA_MIN_X + (span * (i + 0.5)) / eagleCount; // stagger only, not a hard lane
+    const speedMultiplier = 0.8 + Math.random() * 0.4; // 0.8x - 1.2x, so they don't move in lockstep
+    const yJitter = (Math.random() - 0.5) * 24; // stays within the double-jump-reachable band
 
     eagles.push(
-      new Eagle(EAGLE_HEIGHT_Y, levelConfig, { startX, minX: slotMin, maxX: slotMax })
+      new Eagle(EAGLE_HEIGHT_Y + yJitter, levelConfig, {
+        startX,
+        minX: EAGLE_ARENA_MIN_X,
+        maxX: EAGLE_ARENA_MAX_X - EAGLE_WIDTH,
+        speedMultiplier,
+      })
     );
   }
 
@@ -466,9 +472,14 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
             // Gunmen slots are full — summon the 1-HP shield eagle instead.
             eaglesRef.current.push(
               new Eagle(
-                EAGLE_HEIGHT_Y,
+                EAGLE_HEIGHT_Y + (Math.random() - 0.5) * 24,
                 { ...levelConfigRef.current, eagleHealth: levelConfigRef.current.eagleHealth ?? 1 },
-                { startX: 550, minX: SHIELD_PATROL_MIN_X, maxX: SHIELD_PATROL_MAX_X + 60 }
+                {
+                  startX: 550,
+                  minX: EAGLE_ARENA_MIN_X,
+                  maxX: EAGLE_ARENA_MAX_X - EAGLE_WIDTH,
+                  speedMultiplier: 0.8 + Math.random() * 0.4,
+                }
               )
             );
           }

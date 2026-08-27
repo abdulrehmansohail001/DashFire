@@ -23,7 +23,7 @@ export class Eagle {
 
     this.minX = placement.minX ?? 60;
     this.maxX = placement.maxX ?? (740 - this.width);
-    this.speed = config.eagleSpeed ?? 90; // px/s
+        this.speed = (config.eagleSpeed ?? 90) * (placement.speedMultiplier ?? 1); // px/s, jittered so multiple eagles don't move in lockstep
     this.vx = this.speed; // starts moving right; flips at patrol bounds
 
     this.throwIntervalMin = config.eagleThrowIntervalMin ?? 1.5;
