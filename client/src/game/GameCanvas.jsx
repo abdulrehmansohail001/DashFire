@@ -23,6 +23,7 @@ import { LEVELS } from './levels';
 import { Background } from './entities/Background';
 import { Eagle } from './entities/Eagle';
 import { EagleProjectile } from './entities/EagleProjectile';
+import { Boss } from './entities/Boss';
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
@@ -47,10 +48,19 @@ const EAGLE_ARENA_MIN_X = 60;
 const EAGLE_ARENA_MAX_X = 740;
 const EAGLE_WIDTH = 60;
 
+// Boss sits fixed near the right edge; the shield gunmen it spawns patrol
+// a lane in front of it so they never overlap the boss's own hitbox.
+const BOSS_X = 680;
+const BOSS_Y = 260; // feet at y=400, same ground line as everything else
+const MAX_BOSS_SHIELD_ENEMIES = 2;
+const SHIELD_PATROL_MIN_X = 480;
+const SHIELD_PATROL_MAX_X = 620;
+
 const playerSheet = new SpriteSheet('/sprites/player.png', 313, 313, 4, 4);
 const playerExtraSheet = new SpriteSheet('/sprites/player_extra.png', 125, 125, 4, 4);
 const enemySheet = new SpriteSheet('/sprites/enemy.png', 313, 313, 4, 4);
 const eagleSheet = new SpriteSheet('/sprites/eagle.png', 180, 180, 8, 1);
+const bossSheet = new SpriteSheet('/sprites/boss.png', 418, 627, 6, 1);
 const moonBgSheet = new SpriteSheet('/sprites/moon_bg.jpg', 366, 352, 8, 1);
 const obstacleImage = new Image();
 obstacleImage.src = '/sprites/obstacle.png';
@@ -206,9 +216,11 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
   const backgroundRef = useRef(new Background(moonBgSheet, 0.20));
     const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
-    const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
+      const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
       const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
   const eagleProjectilesRef = useRef([]);
+  const bossRef = useRef(LEVELS[initialLevelIndex].hasBoss ? new Boss(BOSS_X, BOSS_Y, LEVELS[initialLevelIndex]) : null);
+  const levelConfigRef = useRef(LEVELS[initialLevelIndex]);
   const keysRef = useRef({});
   const gameStateRef = useRef('playing');
     const levelIndexRef = useRef(initialLevelIndex); // 0-based index into LEVELS
@@ -231,9 +243,11 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
         enemiesRef.current = buildEnemiesForLevel(config);
     enemyBulletsRef.current = [];
     bulletsRef.current = [];
-    obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
+        obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
         eaglesRef.current = buildEaglesForLevel(config);
     eagleProjectilesRef.current = [];
+    bossRef.current = config.hasBoss ? new Boss(BOSS_X, BOSS_Y, config) : null;
+    levelConfigRef.current = config;
 
     gameStateRef.current = 'playing';
     setGameState('playing');
@@ -400,7 +414,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
         }
       }
 
-      eagleProjectilesRef.current.forEach((p) => p.update(dt));
+            eagleProjectilesRef.current.forEach((p) => p.update(dt));
       eagleProjectilesRef.current = eagleProjectilesRef.current.filter((p) => {
         if (isColliding(playerBounds, p.getBounds())) {
           player.takeHit();
@@ -408,6 +422,46 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
         }
         return !p.hasLanded(400); // 400 = ground line; despawn once it lands, hit or not
       });
+
+      // Boss: mostly stationary, cycles its own animation and just signals
+      // when to fire or summon a shield gunman — GameCanvas enforces the
+      // shield cap since Boss itself has no visibility into how many of
+      // its spawned gunmen are still alive.
+      const boss = bossRef.current;
+      if (boss && boss.alive) {
+        boss.update(dt);
+
+        if (boss.wantsToFire) {
+          boss.wantsToFire = false;
+          const bulletY = boss.y + boss.height * 0.3 - 2;
+          enemyBulletsRef.current.push(
+            new EnemyBullet(boss.x, bulletY, 'left', levelConfigRef.current.bulletSpeed ?? 320)
+          );
+        }
+
+        if (boss.wantsToSpawn) {
+          boss.wantsToSpawn = false;
+          const aliveShieldCount = enemiesRef.current.filter((e) => e.alive).length;
+          if (aliveShieldCount < MAX_BOSS_SHIELD_ENEMIES) {
+            const spawnX = SHIELD_PATROL_MIN_X + aliveShieldCount * 70;
+            enemiesRef.current.push(
+              new Enemy(spawnX, ENEMY_GROUND_Y, {
+                health: levelConfigRef.current.health,
+                moveSpeed: levelConfigRef.current.moveSpeed,
+                bulletSpeed: levelConfigRef.current.bulletSpeed,
+                actionIntervalMin: levelConfigRef.current.actionIntervalMin,
+                actionIntervalMax: levelConfigRef.current.actionIntervalMax,
+                reactionDelayMin: levelConfigRef.current.reactionDelayMin,
+                reactionDelayMax: levelConfigRef.current.reactionDelayMax,
+                fireSequence: levelConfigRef.current.fireSequence,
+                burstGap: levelConfigRef.current.burstGap,
+                patrolMinX: SHIELD_PATROL_MIN_X,
+                patrolMaxX: SHIELD_PATROL_MAX_X,
+              })
+            );
+          }
+        }
+      }
 
             for (const bullet of bulletsRef.current) {
         if (bullet.hit) continue;
@@ -425,7 +479,12 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
             break;
           }
         }
-        if (hitEagle) continue;
+                if (hitEagle) continue;
+        if (bossRef.current && bossRef.current.alive && isColliding(bullet.getBounds(), bossRef.current.getBounds())) {
+          bossRef.current.takeHit();
+          bullet.hit = true;
+          continue;
+        }
         for (const enemy of enemies) {
           if (!enemy.alive) continue;
           if (isColliding(bullet.getBounds(), enemy.getBounds())) {
@@ -437,7 +496,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
       }
       bulletsRef.current = bulletsRef.current.filter((b) => !b.hit);
 
-           const allEnemiesDead = enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive);
+           const allEnemiesDead = enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && (!bossRef.current || !bossRef.current.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
@@ -474,8 +533,9 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
-                  eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
+                        eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
+      if (bossRef.current) bossRef.current.draw(ctx, bossSheet);
 
       // --- HUD: player HP top-left ---
       const playerCircleX = 40;
@@ -521,12 +581,20 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
         const label = eaglesRef.current.length > 1 ? `EAGLE ${i + 1} HP` : 'EAGLE HP';
         const pct = Math.max(eagle.health, 0) / eagle.maxHealth;
         drawHpBar(ctx, barX, eagleRowY - 8, barWidth, 16, pct, label, 'right');
-        drawHudPortrait(ctx, eagleSheet, enemyCircleX, eagleRowY, circleRadius, '#2a2a35', 'B', {
+                drawHudPortrait(ctx, eagleSheet, enemyCircleX, eagleRowY, circleRadius, '#2a2a35', 'B', {
           cropRatio: 0.30,
           cropTopRatio: 0.139,
           cropLeftRatio: 0.294,
         });
       });
+
+      // Boss gets the last row in the stack, same pattern as everything else.
+      if (bossRef.current && bossRef.current.maxHealth) {
+        const bossRowY = 34 + (enemies.length + eaglesRef.current.length) * ENEMY_ROW_HEIGHT;
+        const pct = Math.max(bossRef.current.health, 0) / bossRef.current.maxHealth;
+        drawHpBar(ctx, barX, bossRowY - 8, barWidth, 16, pct, 'BOSS HP', 'right');
+        drawHudPortrait(ctx, bossSheet, enemyCircleX, bossRowY, circleRadius, '#3a0a0a', 'X');
+      }
 
       drawTopCenterHud(ctx, levelIndexRef.current + 1);
 

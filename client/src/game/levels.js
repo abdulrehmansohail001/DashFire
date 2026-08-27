@@ -155,7 +155,7 @@ export const LEVELS = [
     level: 9,
     hasObstacle: true,
     enemyCount: 2,
-    health: 10,
+    health: 1,
     moveSpeed: 185,
     bulletSpeed: 300,
     actionIntervalMin: 1.4,
@@ -173,18 +173,22 @@ export const LEVELS = [
     eagleThrowSpeedMin: -160,
     eagleThrowSpeedMax: 160,
   },
-  // Level 10 — final boss pace: 2 gunmen, fastest, toughest
+  // Level 10 — final boss: mostly-stationary war machine that fires at
+  // you and periodically summons a basic gunman (up to 2 alive at once)
+  // to shield itself. No static gunmen this level — the boss spawns them.
   {
     level: 10,
-    enemyCount: 2,
-    health: 3,
-    moveSpeed: 200,
-    bulletSpeed: 320,
-    actionIntervalMin: 1.2,
-    actionIntervalMax: 1.8,
-    reactionDelayMin: 0.3,
-    reactionDelayMax: 0.6,
-    fireSequence: [2, 1, 2, 2],
-    burstGap: 0.12,
+    enemyCount: 0,
+    hasBoss: true,
+    bossHealth: 25,
+    health: 2,          // HP of each shield gunman the boss spawns
+    moveSpeed: 190,
+    bulletSpeed: 320,   // also reused for the boss's own bullets
+    actionIntervalMin: 1.3,
+    actionIntervalMax: 2.0,
+    reactionDelayMin: 0.35,
+    reactionDelayMax: 0.65,
+    fireSequence: [1, 2],
+    burstGap: 0.15,
   },
 ];
