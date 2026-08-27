@@ -44,6 +44,7 @@ const ARENA_MAX_X = 750;
 const playerSheet = new SpriteSheet('/sprites/player.png', 313, 313, 4, 4);
 const playerExtraSheet = new SpriteSheet('/sprites/player_extra.png', 125, 125, 4, 4);
 const enemySheet = new SpriteSheet('/sprites/enemy.png', 313, 313, 4, 4);
+const eagleSheet = new SpriteSheet('/sprites/eagle.png', 272, 724, 8, 1);
 const moonBgSheet = new SpriteSheet('/sprites/moon_bg.jpg', 366, 352, 8, 1);
 const obstacleImage = new Image();
 obstacleImage.src = '/sprites/obstacle.png';
@@ -427,8 +428,8 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
-      if (eagleRef.current) {
-        eagleRef.current.draw(ctx);
+            if (eagleRef.current) {
+        eagleRef.current.draw(ctx, eagleSheet);
         eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
       }
 
@@ -474,7 +475,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
         const eagleRowY = 34 + enemies.length * ENEMY_ROW_HEIGHT;
         const pct = Math.max(eagleRef.current.health, 0) / eagleRef.current.maxHealth;
         drawHpBar(ctx, barX, eagleRowY - 8, barWidth, 16, pct, 'EAGLE HP', 'right');
-        drawHudPortrait(ctx, null, enemyCircleX, eagleRowY, circleRadius, '#2a2a35', 'B');
+                drawHudPortrait(ctx, eagleSheet, enemyCircleX, eagleRowY, circleRadius, '#2a2a35', 'B');
       }
 
       drawTopCenterHud(ctx, levelIndexRef.current + 1);

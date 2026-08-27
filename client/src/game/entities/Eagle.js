@@ -5,7 +5,10 @@
 //
 // GameCanvas polls `wantsToThrow` each frame (same pattern as Enemy's
 // `wantsToFire`) to know when to actually spawn an EagleProjectile.
-
+const FRAME_COUNT = 8;
+const FRAME_DURATION = 0.09; // seconds per wing-flap frame
+const SPRITE_DRAW_WIDTH = 90;
+const SPRITE_DRAW_HEIGHT = 90 * (724 / 272); // preserve the sheet's own aspect ratio
 export class Eagle {
   constructor(y, config) {
     this.x = 400; // starts centered; patrol immediately carries it outward
@@ -27,9 +30,12 @@ export class Eagle {
     this.maxHealth = this.health;
     this.alive = true;
 
-    this.throwTimer = 0;
+        this.throwTimer = 0;
     this.throwInterval = this.randomThrowInterval();
     this.wantsToThrow = false;
+
+    this.frameIndex = 0;
+    this.frameTimer = 0;
   }
 
   randomThrowInterval() {
@@ -60,11 +66,17 @@ export class Eagle {
       this.vx = -this.speed;
     }
 
-    this.throwTimer += dt;
+        this.throwTimer += dt;
     if (this.throwTimer >= this.throwInterval) {
       this.throwTimer = 0;
       this.throwInterval = this.randomThrowInterval();
       this.wantsToThrow = true;
+    }
+
+    this.frameTimer += dt;
+    if (this.frameTimer >= FRAME_DURATION) {
+      this.frameTimer = 0;
+      this.frameIndex = (this.frameIndex + 1) % FRAME_COUNT;
     }
   }
 
@@ -72,12 +84,16 @@ export class Eagle {
     return { x: this.x, y: this.y, width: this.width, height: this.height };
   }
 
-  draw(ctx, spriteSheet) {
+    draw(ctx, spriteSheet) {
     if (!this.alive) return;
 
     if (spriteSheet && spriteSheet.loaded) {
       const flip = this.vx < 0;
-      const drew = spriteSheet.draw(ctx, 0, 0, this.x, this.y, this.width, this.height, flip);
+      const drawX = this.x + this.width / 2 - SPRITE_DRAW_WIDTH / 2;
+      const drawY = this.y + this.height / 2 - SPRITE_DRAW_HEIGHT / 2;
+      const drew = spriteSheet.draw(
+        ctx, 0, this.frameIndex, drawX, drawY, SPRITE_DRAW_WIDTH, SPRITE_DRAW_HEIGHT, flip
+      );
       if (drew) return;
     }
 
