@@ -30,12 +30,33 @@ export class EnemyBullet {
     draw(ctx) {
     // Hot magenta instead of orange-red — the old color blended into the
     // red accent lights on the moon background's horizon spires.
-    ctx.fillStyle = '#ff2fd6';
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    const cx = this.x + this.width / 2;
+    const cy = this.y + this.height / 2;
 
-    // Thin white core so it reads as an energy bolt and pops even more
+    ctx.save();
+
+    // Motion streak trailing behind the direction of travel.
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = '#ff2fd6';
+    const trailLength = this.width * 1.6;
+    const trailX = this.direction === 'right' ? cx - trailLength : cx;
+    ctx.fillRect(trailX, this.y + this.height * 0.15, trailLength, this.height * 0.7);
+
+    // Outer glow.
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#ff2fd6';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, this.width * 0.75, this.height * 1.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bright white core so it reads as an energy bolt and pops even more
     // against the dark background.
+    ctx.globalAlpha = 1;
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(this.x + 2, this.y + 1, this.width - 4, this.height - 2);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, this.width * 0.45, this.height * 0.9, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
   }
 }
