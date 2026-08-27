@@ -28,7 +28,7 @@ export class Background {
   }
 
   draw(ctx, canvasWidth, canvasHeight) {
-    if (!this.sheet.loaded) {
+    if (!this.sheet || !this.sheet.loaded) {
       ctx.fillStyle = '#0a0a1a';
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       return;

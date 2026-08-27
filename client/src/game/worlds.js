@@ -13,6 +13,7 @@
 // drawHudPortrait) already falls back gracefully.
 
 import { LEVELS as WORLD_1_LEVELS } from './levels';
+import { LEVELS as WORLD_2_LEVELS } from './levels_world2';
 
 export const WORLDS = [
   {
@@ -31,17 +32,17 @@ export const WORLDS = [
   },
   {
     id: 1,
-    name: 'Martian Wastes',
+    name: 'Mars Invasion',
     sprites: {
       player: { path: '/sprites/player.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
       playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
-      enemy: null,   // TODO: martian_cat.png once generated
+      enemy: null,   // TODO: plug in martian_cat.png once generated — swap this null for the sprite spec
       eagle: null,   // World 2 has no eagle — replaced by Frog (separate entity, not built yet)
       boss: null,
       background: null, // TODO: mars_bg.jpg
       obstacle: '/sprites/obstacle.png',
     },
-    levels: [], // not built yet — keeps World 2 locked in WorldSelect until filled in
+    levels: WORLD_2_LEVELS,
   },
   { id: 2, name: 'World 3', sprites: {}, levels: [] },
   { id: 3, name: 'World 4', sprites: {}, levels: [] },
