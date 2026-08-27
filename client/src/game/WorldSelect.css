@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-.level-select {
+.world-select {
   position: fixed;
   inset: 0;
   display: flex;
@@ -13,28 +13,28 @@
   background: #000;
 }
 
-.level-select__backdrop-anim {
+.world-select__backdrop-anim {
   position: absolute;
   inset: 0;
   background-image: url('/sprites/moon_bg.jpg');
   background-repeat: no-repeat;
   background-size: 800vw 100vh;
-  animation: moon-menu-cycle 1.6s steps(7) infinite;
+  animation: world-menu-cycle 1.6s steps(7) infinite;
 }
 
-@keyframes moon-menu-cycle {
+@keyframes world-menu-cycle {
   from { background-position-x: 0vw; }
   to { background-position-x: -700vw; }
 }
 
-.level-select__backdrop {
+.world-select__backdrop {
   position: absolute;
   inset: 0;
   background: rgba(4, 8, 16, 0.72);
   pointer-events: none;
 }
 
-.level-select__scanlines {
+.world-select__scanlines {
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(
@@ -48,7 +48,7 @@
   opacity: 0.5;
 }
 
-.level-select__title {
+.world-select__title {
   margin: 0;
   color: #ffffffb7;
   font-size: 34px;
@@ -57,7 +57,7 @@
   z-index: 1;
 }
 
-.level-select__subtitle {
+.world-select__subtitle {
   margin: 4px 0 12px 0;
   color: #9fb3c8;
   font-size: 11px;
@@ -66,25 +66,19 @@
   z-index: 1;
 }
 
-.level-select__grid {
+.world-select__grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 28px;
   z-index: 1;
 }
 
-/*
-  Node visuals now come entirely from level_node.png's own riveted-metal
-  frame — no CSS border, box-shadow, or border-radius needed, since the
-  artwork already has its own edge baked in. Only the number/lock overlay
-  and a darken+desaturate filter for locked state are added on top.
-*/
-.level-node {
+.world-node {
   position: relative;
-  width: 76px;
-  height: 76px;
+  width: 90px;
+  height: 90px;
   padding: 0;
-    border: none;
+  border: none;
   border-radius: 14px;
   overflow: hidden;
   background-image: url('/sprites/level_node.png');
@@ -98,22 +92,22 @@
   transition: transform 0.1s steps(2, end), filter 0.15s ease;
 }
 
-.level-node--unlocked:hover {
+.world-node--unlocked:hover {
   transform: translate(-2px, -2px);
 }
 
-.level-node--unlocked:active {
+.world-node--unlocked:active {
   transform: translate(1px, 1px);
 }
 
-.level-node--locked {
+.world-node--locked {
   cursor: not-allowed;
   filter: grayscale(1) brightness(0.4);
 }
 
-.level-node__number {
+.world-node__number {
   color: #fff;
-  font-size: 22px;
+  font-size: 26px;
   pointer-events: none;
   text-shadow:
     2px 2px 0 #000, -2px -2px 0 #000,
@@ -122,41 +116,7 @@
     0 2px 0 #000, 0 -2px 0 #000;
 }
 
-.level-node__cleared-badge {
-  position: absolute;
-  top: -11px;
-  right: -11px;
-  width: 26px;
-  height: 26px;
-  background: #34c85a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #000;
-  z-index: 1;
-}
-
-.level-select__back {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 2;
-  background: none;
-  border: 2px solid #3ad1ff88;
-  color: #9fb3c8;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  padding: 8px 10px;
-  cursor: pointer;
-  text-shadow: 2px 2px 0 #000;
-}
-
-.level-select__back:hover {
-  color: #fff;
-  border-color: #3ad1ff;
-}
-
-.level-select__hint {
+.world-select__hint {
   margin-top: 10px;
   color: #6c7a8a;
   font-size: 9px;

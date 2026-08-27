@@ -7,12 +7,18 @@
 import './LevelSelect.css';
 import { LEVELS } from './levels';
 import { PixelLock, PixelCheck } from './PixelIcon';
-export default function LevelSelect({ unlockedCount, onSelectLevel }) {
+export default function LevelSelect({ unlockedCount, onSelectLevel, onBack }) {
   return (
             <div className="level-select">
       <div className="level-select__backdrop-anim" />
       <div className="level-select__backdrop" />
       <div className="level-select__scanlines" />
+
+      {onBack && (
+        <button className="level-select__back" onClick={onBack} aria-label="Back to world select">
+          ← WORLDS
+        </button>
+      )}
 
       <h1 className="level-select__title">DASHFIRE</h1>
       <p className="level-select__subtitle">SELECT A LEVEL</p>

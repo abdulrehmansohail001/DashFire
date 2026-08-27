@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import GameCanvas from './game/GameCanvas';
 import LevelSelect from './game/LevelSelect';
+import WorldSelect from './game/WorldSelect';
 import './App.css';
 
 const UNLOCKED_KEY = 'dashfire_unlocked_level';
 
 function App() {
-  const [screen, setScreen] = useState('menu'); // 'menu' | 'game'
+  const [screen, setScreen] = useState('worldSelect'); // 'worldSelect' | 'menu' | 'game'
   const [selectedLevelIndex, setSelectedLevelIndex] = useState(0); // 0-based
   const [unlockedCount, setUnlockedCount] = useState(1); // how many levels are playable, 1 = only Level 1
-
   // Load saved progress once on mount. No backend yet — localStorage is a
   // fine stand-in until the server/database side is built out; swapping
   // this for a real API call later only touches this effect + the setter
@@ -22,9 +22,19 @@ function App() {
     }
   }, []);
 
+  const handleSelectWorld = () => {
+    // Only World 1 is selectable right now, so there's nothing to branch
+    // on yet — this just moves into the existing level-select screen.
+    setScreen('menu');
+  };
+
   const handleSelectLevel = (index) => {
     setSelectedLevelIndex(index);
     setScreen('game');
+  };
+
+  const handleBackToWorlds = () => {
+    setScreen('worldSelect');
   };
 
   // Called by GameCanvas when the player clears `clearedIndex` (0-based).
@@ -44,8 +54,13 @@ function App() {
 
   return (
     <div className="app-container">
+      {screen === 'worldSelect' && <WorldSelect onSelectWorld={handleSelectWorld} />}
       {screen === 'menu' && (
-        <LevelSelect unlockedCount={unlockedCount} onSelectLevel={handleSelectLevel} />
+        <LevelSelect
+          unlockedCount={unlockedCount}
+          onSelectLevel={handleSelectLevel}
+          onBack={handleBackToWorlds}
+        />
       )}
       {screen === 'game' && (
         <GameCanvas
