@@ -29,6 +29,14 @@ const CANVAS_HEIGHT = 400;
 const ENEMY_GROUND_Y = 340;
 const PLAYER_MAX_HEALTH = 10;
 
+// Eagle flies at a height reachable only via a genuine double-jump, not a
+// single jump. Bullets only travel horizontally, so the player can only
+// hit the eagle if their gun-height AT THE MOMENT OF FIRING overlaps this
+// range. A single jump's best bullet-height is ~y205 (never reaches this
+// box); a realistically-timed (not frame-perfect) double jump lands
+// around y140-170, which sits comfortably inside it.
+const EAGLE_HEIGHT_Y = 150;
+
 // Arena span enemies are allowed to patrol within, split evenly per enemy.
 const ARENA_MIN_X = 480;
 const ARENA_MAX_X = 750;
@@ -162,7 +170,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
     const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
     const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
-  const eagleRef = useRef(LEVELS[initialLevelIndex].hasEagle ? new Eagle(70, LEVELS[initialLevelIndex]) : null);
+    const eagleRef = useRef(LEVELS[initialLevelIndex].hasEagle ? new Eagle(EAGLE_HEIGHT_Y, LEVELS[initialLevelIndex]) : null);
   const eagleProjectilesRef = useRef([]);
   const keysRef = useRef({});
   const gameStateRef = useRef('playing');
@@ -187,7 +195,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
     enemyBulletsRef.current = [];
     bulletsRef.current = [];
     obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
-    eagleRef.current = config.hasEagle ? new Eagle(70, config) : null;
+       eagleRef.current = config.hasEagle ? new Eagle(EAGLE_HEIGHT_Y, config) : null;
     eagleProjectilesRef.current = [];
 
     gameStateRef.current = 'playing';
