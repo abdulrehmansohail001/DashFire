@@ -63,12 +63,18 @@ export class SpriteSheet {
   //
   // Returns true if it drew something; false if the image isn't loaded yet
   // (caller should fall back to a placeholder circle).
-  drawPortrait(ctx, row, col, centerX, centerY, radius, cropRatio = 0.55, cropTopRatio = 0.06) {
+    // cropLeftRatio: optional explicit horizontal start offset (0-1 of frame
+  // width), for sprites whose subject isn't horizontally centered in the
+  // frame (e.g. a wide-wingspan flying pose). Leave null to keep the
+  // default auto-centering behavior.
+  drawPortrait(ctx, row, col, centerX, centerY, radius, cropRatio = 0.55, cropTopRatio = 0.06, cropLeftRatio = null) {
     if (!this.loaded) return false;
 
     const cropWidth = this.frameWidth * cropRatio;
     const cropHeight = this.frameHeight * cropRatio;
-    const sx = col * this.frameWidth + (this.frameWidth - cropWidth) / 2;
+    const sx = cropLeftRatio !== null
+      ? col * this.frameWidth + this.frameWidth * cropLeftRatio
+      : col * this.frameWidth + (this.frameWidth - cropWidth) / 2;
     const sy = row * this.frameHeight + this.frameHeight * cropTopRatio;
 
     ctx.save();

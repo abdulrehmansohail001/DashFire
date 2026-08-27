@@ -83,10 +83,17 @@ function buildEnemiesForLevel(levelConfig) {
 // Draws a circular HUD portrait — sprite sheet's idle frame if loaded,
 // otherwise a flat-color circle with a single-letter fallback so the HUD
 // never shows a blank gap while art is loading.
-function drawHudPortrait(ctx, sheet, centerX, centerY, radius, fallbackColor, fallbackLabel) {
+function drawHudPortrait(ctx, sheet, centerX, centerY, radius, fallbackColor, fallbackLabel, cropOptions) {
   ctx.save();
 
-  const drew = sheet ? sheet.drawPortrait(ctx, 0, 0, centerX, centerY, radius) : false;
+  const drew = sheet
+    ? cropOptions
+      ? sheet.drawPortrait(
+          ctx, 0, 0, centerX, centerY, radius,
+          cropOptions.cropRatio, cropOptions.cropTopRatio, cropOptions.cropLeftRatio
+        )
+      : sheet.drawPortrait(ctx, 0, 0, centerX, centerY, radius)
+    : false;
 
   if (!drew) {
     ctx.beginPath();
@@ -475,7 +482,11 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
         const eagleRowY = 34 + enemies.length * ENEMY_ROW_HEIGHT;
         const pct = Math.max(eagleRef.current.health, 0) / eagleRef.current.maxHealth;
         drawHpBar(ctx, barX, eagleRowY - 8, barWidth, 16, pct, 'EAGLE HP', 'right');
-                drawHudPortrait(ctx, eagleSheet, enemyCircleX, eagleRowY, circleRadius, '#2a2a35', 'B');
+                drawHudPortrait(ctx, eagleSheet, enemyCircleX, eagleRowY, circleRadius, '#2a2a35', 'B', {
+          cropRatio: 0.30,
+          cropTopRatio: 0.139,
+          cropLeftRatio: 0.294,
+        });
       }
 
       drawTopCenterHud(ctx, levelIndexRef.current + 1);
