@@ -21,6 +21,8 @@ import { EnemyBullet } from './entities/EnemyBullet';
 import { SpriteSheet } from './entities/SpriteSheet';
 import { LEVELS } from './levels';
 import { Background } from './entities/Background';
+import { Eagle } from './entities/Eagle';
+import { EagleProjectile } from './entities/EagleProjectile';
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
@@ -160,6 +162,8 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
     const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
     const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
+  const eagleRef = useRef(LEVELS[initialLevelIndex].hasEagle ? new Eagle(70, LEVELS[initialLevelIndex]) : null);
+  const eagleProjectilesRef = useRef([]);
   const keysRef = useRef({});
   const gameStateRef = useRef('playing');
     const levelIndexRef = useRef(initialLevelIndex); // 0-based index into LEVELS
@@ -183,6 +187,8 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
     enemyBulletsRef.current = [];
     bulletsRef.current = [];
     obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
+    eagleRef.current = config.hasEagle ? new Eagle(70, config) : null;
+    eagleProjectilesRef.current = [];
 
     gameStateRef.current = 'playing';
     setGameState('playing');
@@ -331,10 +337,38 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
         }
       }
 
+      // Eagle: patrol/throw update, then its projectiles' own arc + collision.
+      // Shootable — player bullets can hit it below, and it counts toward
+      // the win condition alongside the ground gunmen.
+      if (eagleRef.current) {
+        eagleRef.current.update(dt);
+        if (eagleRef.current.wantsToThrow) {
+          eagleRef.current.wantsToThrow = false;
+          const throwX = eagleRef.current.x + eagleRef.current.width / 2;
+          const throwY = eagleRef.current.y + eagleRef.current.height;
+          const throwVx = eagleRef.current.randomThrowVx();
+          eagleProjectilesRef.current.push(new EagleProjectile(throwX, throwY, throwVx));
+        }
+
+        eagleProjectilesRef.current.forEach((p) => p.update(dt));
+        eagleProjectilesRef.current = eagleProjectilesRef.current.filter((p) => {
+          if (isColliding(playerBounds, p.getBounds())) {
+            player.takeHit();
+            return false; // consumed on hit
+          }
+          return !p.hasLanded(400); // 400 = ground line; despawn once it lands, hit or not
+        });
+      }
+
             for (const bullet of bulletsRef.current) {
         if (bullet.hit) continue;
         if (obstacleRef.current && isColliding(bullet.getBounds(), obstacleRef.current.getBounds())) {
           bullet.hit = true; // player bullets can't pass through the wall
+          continue;
+        }
+        if (eagleRef.current && eagleRef.current.alive && isColliding(bullet.getBounds(), eagleRef.current.getBounds())) {
+          eagleRef.current.takeHit();
+          bullet.hit = true;
           continue;
         }
         for (const enemy of enemies) {
@@ -348,7 +382,7 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
       }
       bulletsRef.current = bulletsRef.current.filter((b) => !b.hit);
 
-            const allEnemiesDead = enemies.every((e) => !e.alive);
+      const allEnemiesDead = enemies.every((e) => !e.alive) && (!eagleRef.current || !eagleRef.current.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
@@ -385,6 +419,10 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
+      if (eagleRef.current) {
+        eagleRef.current.draw(ctx);
+        eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
+      }
 
       // --- HUD: player HP top-left ---
       const playerCircleX = 40;
@@ -421,6 +459,15 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
         drawHpBar(ctx, barX, rowCircleY - 8, barWidth, 16, pct, label, 'right');
         drawHudPortrait(ctx, enemySheet, enemyCircleX, rowCircleY, circleRadius, '#a83232', 'E');
       });
+
+      // Eagle gets its own stacked row below the ground enemies, same
+      // pattern — its own independent bar, not merged into anything.
+      if (eagleRef.current && eagleRef.current.alive) {
+        const eagleRowY = 34 + enemies.length * ENEMY_ROW_HEIGHT;
+        const pct = Math.max(eagleRef.current.health, 0) / eagleRef.current.maxHealth;
+        drawHpBar(ctx, barX, eagleRowY - 8, barWidth, 16, pct, 'EAGLE HP', 'right');
+        drawHudPortrait(ctx, null, enemyCircleX, eagleRowY, circleRadius, '#2a2a35', 'B');
+      }
 
       drawTopCenterHud(ctx, levelIndexRef.current + 1);
 
