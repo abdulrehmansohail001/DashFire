@@ -9,14 +9,17 @@ const FRAME_COUNT = 8;
 const FRAME_DURATION = 0.09; // seconds per wing-flap frame
 const SPRITE_DRAW_SIZE = 100; // frames are now square, one size covers both dimensions
 export class Eagle {
-  constructor(y, config) {
-    this.x = 400; // starts centered; patrol immediately carries it outward
+  // placement lets multiple eagles on one level get distinct starting
+  // positions and patrol lanes so they don't stack on top of each other.
+  // Omitting it keeps the original single-eagle full-width patrol.
+  constructor(y, config, placement = {}) {
+    this.x = placement.startX ?? 400;
     this.y = y;   // constant height — never changes
     this.width = 60;
     this.height = 40;
 
-    this.minX = 60;
-    this.maxX = 740 - this.width;
+    this.minX = placement.minX ?? 60;
+    this.maxX = placement.maxX ?? (740 - this.width);
     this.speed = config.eagleSpeed ?? 90; // px/s
     this.vx = this.speed; // starts moving right; flips at patrol bounds
 

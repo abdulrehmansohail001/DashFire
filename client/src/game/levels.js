@@ -113,9 +113,46 @@ export const LEVELS = [
     eagleThrowSpeedMin: -160,
     eagleThrowSpeedMax: 160,
   },
-  // Level 7 — TWO gunmen now
+    // Level 7 — one gunman + two eagles patrolling separate lanes
   {
     level: 7,
+    enemyCount: 1,
+    health: 10,
+    moveSpeed: 185,
+    bulletSpeed: 300,
+    actionIntervalMin: 1.4,
+    actionIntervalMax: 2.1,
+    reactionDelayMin: 0.4,
+    reactionDelayMax: 0.7,
+    fireSequence: [1, 2, 1, 2],
+    burstGap: 0.14,
+
+    hasEagle: true,
+    eagleCount: 2,
+    eagleHealth: 5,
+    eagleSpeed: 100,
+    eagleThrowIntervalMin: 1.4,
+    eagleThrowIntervalMax: 2.4,
+    eagleThrowSpeedMin: -160,
+    eagleThrowSpeedMax: 160,
+  },
+  // Level 8 — eagle-only level: 3 eagles, 5 HP each, no ground gunmen
+  {
+    level: 8,
+    enemyCount: 0,
+
+    hasEagle: true,
+    eagleCount: 3,
+    eagleHealth: 5,
+    eagleSpeed: 110,
+    eagleThrowIntervalMin: 1.2,
+    eagleThrowIntervalMax: 2.1,
+    eagleThrowSpeedMin: -170,
+    eagleThrowSpeedMax: 170,
+  },
+  // Level 9 — what Level 7 used to be: 2 gunmen behind a wall, plus one eagle
+  {
+    level: 9,
     hasObstacle: true,
     enemyCount: 2,
     health: 10,
@@ -135,34 +172,6 @@ export const LEVELS = [
     eagleThrowIntervalMax: 2.4,
     eagleThrowSpeedMin: -160,
     eagleThrowSpeedMax: 160,
-  },
-  // Level 8 — 2 gunmen, tougher
-  {
-    level: 8,
-    enemyCount: 2,
-    health: 2,
-    moveSpeed: 165,
-    bulletSpeed: 280,
-    actionIntervalMin: 1.6,
-    actionIntervalMax: 2.3,
-    reactionDelayMin: 0.45,
-    reactionDelayMax: 0.8,
-    fireSequence: [1, 2, 1, 2],
-    burstGap: 0.15,
-  },
-  // Level 9 — 2 gunmen, near-max aggression
-  {
-    level: 9,
-    enemyCount: 2,
-    health: 3,
-    moveSpeed: 180,
-    bulletSpeed: 300,
-    actionIntervalMin: 1.4,
-    actionIntervalMax: 2.0,
-    reactionDelayMin: 0.35,
-    reactionDelayMax: 0.65,
-    fireSequence: [1, 2, 2],
-    burstGap: 0.13,
   },
   // Level 10 — final boss pace: 2 gunmen, fastest, toughest
   {
