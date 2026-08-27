@@ -11,8 +11,8 @@ const FRAME_DURATIONS = [0.6, 0.6, 0.35, 0.35, 0.25, 0.45]; // idle,idle,charge,
 const FIRE_FRAME = 4;
 const SPAWN_FRAME = 5;
 
-const SPRITE_DRAW_HEIGHT = 180; // sheet cells are 418x627 — scale height, keep aspect
-const SPRITE_ASPECT = 418 / 627;
+const SPRITE_DRAW_HEIGHT = 180; // sheet cells are ~166.67x250 (tall portrait) — scale height, keep aspect
+const SPRITE_ASPECT = (500 / 3) / 250;
 const SPRITE_DRAW_WIDTH = SPRITE_DRAW_HEIGHT * SPRITE_ASPECT;
 
 export class Boss {
