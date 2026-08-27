@@ -519,7 +519,9 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
       }
       bulletsRef.current = bulletsRef.current.filter((b) => !b.hit);
 
-           const allEnemiesDead = enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && (!bossRef.current || !bossRef.current.alive);
+          const allEnemiesDead = bossRef.current
+  ? !bossRef.current.alive
+  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';

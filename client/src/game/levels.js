@@ -155,7 +155,7 @@ export const LEVELS = [
     level: 9,
     hasObstacle: true,
     enemyCount: 2,
-    health: 1,
+    health: 10,
     moveSpeed: 185,
     bulletSpeed: 260,
     actionIntervalMin: 1.4,
@@ -182,6 +182,7 @@ export const LEVELS = [
     hasBoss: true,
     bossHealth: 20,
     health: 2,          // HP of each shield gunman the boss spawns
+    eagleHealth: 1,      // HP of the shield eagle the boss spawns
     moveSpeed: 190,
     bulletSpeed: 260,   // also reused for the boss's own bullets
     actionIntervalMin: 1.3,
