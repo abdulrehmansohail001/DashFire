@@ -19,7 +19,7 @@ import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
 import { SpriteSheet } from './entities/SpriteSheet';
-import { LEVELS } from './levels';
+import { WORLDS } from './worlds';
 import { Background } from './entities/Background';
 import { Eagle } from './entities/Eagle';
 import { EagleProjectile } from './entities/EagleProjectile';
@@ -57,14 +57,32 @@ const MAX_BOSS_SHIELD_ENEMIES = 2;
 const SHIELD_PATROL_MIN_X = 480;
 const SHIELD_PATROL_MAX_X = 620;
 
-const playerSheet = new SpriteSheet('/sprites/player.png', 313, 313, 4, 4);
-const playerExtraSheet = new SpriteSheet('/sprites/player_extra.png', 125, 125, 4, 4);
-const enemySheet = new SpriteSheet('/sprites/enemy.png', 313, 313, 4, 4);
-const eagleSheet = new SpriteSheet('/sprites/eagle.png', 180, 180, 8, 1);
-const bossSheet = new SpriteSheet('/sprites/boss.png', 500 / 3, 250, 3, 2);
-const moonBgSheet = new SpriteSheet('/sprites/moon_bg.jpg', 366, 352, 8, 1);
-const obstacleImage = new Image();
-obstacleImage.src = '/sprites/obstacle.png';
+// Sheets/images are cached by path+dimensions so switching worlds never
+// reloads or recreates an asset that's shared across worlds (e.g. the
+// player sprite), while still giving each world its own enemy/eagle/boss/
+// background art. A world can pass `null` for any sprite it doesn't have
+// yet (e.g. World 2 has no eagle/boss) — every draw call downstream
+// already handles a null sheet gracefully (falls back to a placeholder).
+const spriteSheetCache = {};
+function getSheet(spec) {
+  if (!spec) return null;
+  const key = `${spec.path}|${spec.frameWidth}|${spec.frameHeight}|${spec.columns}|${spec.rows}`;
+  if (!spriteSheetCache[key]) {
+    spriteSheetCache[key] = new SpriteSheet(spec.path, spec.frameWidth, spec.frameHeight, spec.columns, spec.rows);
+  }
+  return spriteSheetCache[key];
+}
+
+const imageCache = {};
+function getImage(path) {
+  if (!path) return null;
+  if (!imageCache[path]) {
+    const img = new Image();
+    img.src = path;
+    imageCache[path] = img;
+  }
+  return imageCache[path];
+}
 // Builds N enemies for a level config, splitting the arena into N
 // non-overlapping patrol slots and starting each enemy in the middle of its slot.
 function buildEnemiesForLevel(levelConfig) {
@@ -208,7 +226,18 @@ function drawTopCenterHud(ctx, levelDisplay) {
 
   ctx.restore();
 }
-export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onExitToMenu }) {
+export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLevelComplete, onExitToMenu }) {
+  const world = WORLDS[worldIndex] ?? WORLDS[0];
+  const LEVELS = world.levels; // every existing LEVELS[...] reference below now resolves per-world, unchanged
+
+  const playerSheet = getSheet(world.sprites.player);
+  const playerExtraSheet = getSheet(world.sprites.playerExtra);
+  const enemySheet = getSheet(world.sprites.enemy);
+  const eagleSheet = getSheet(world.sprites.eagle);
+  const bossSheet = getSheet(world.sprites.boss);
+  const moonBgSheet = getSheet(world.sprites.background);
+  const obstacleImage = getImage(world.sprites.obstacle);
+
   const canvasRef = useRef(null);
     const [health, setHealth] = useState(10);
   const [levelNumber, setLevelNumber] = useState(LEVELS[initialLevelIndex].level);

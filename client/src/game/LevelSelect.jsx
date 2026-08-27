@@ -5,9 +5,8 @@
 // are dimmed with a lock icon; unlocked levels are clickable.
 
 import './LevelSelect.css';
-import { LEVELS } from './levels';
 import { PixelLock, PixelCheck } from './PixelIcon';
-export default function LevelSelect({ unlockedCount, onSelectLevel, onBack }) {
+export default function LevelSelect({ levels, unlockedCount, onSelectLevel, onBack }) {
   return (
             <div className="level-select">
       <div className="level-select__backdrop-anim" />
@@ -24,7 +23,7 @@ export default function LevelSelect({ unlockedCount, onSelectLevel, onBack }) {
       <p className="level-select__subtitle">SELECT A LEVEL</p>
 
       <div className="level-select__grid">
-        {LEVELS.map((levelConfig, index) => {
+        {levels.map((levelConfig, index) => {
           const isUnlocked = index < unlockedCount;
           const isCleared = index < unlockedCount - 1;
 

@@ -6,9 +6,7 @@
 
 import './WorldSelect.css';
 import { PixelLock } from './PixelIcon';
-
-const WORLD_COUNT = 5;
-const UNLOCKED_WORLD_COUNT = 1; // only World 1 exists/is playable for now
+import { WORLDS } from './worlds';
 
 export default function WorldSelect({ onSelectWorld }) {
   return (
@@ -21,18 +19,20 @@ export default function WorldSelect({ onSelectWorld }) {
       <p className="world-select__subtitle">SELECT A WORLD</p>
 
       <div className="world-select__grid">
-        {Array.from({ length: WORLD_COUNT }, (_, index) => {
-          const isUnlocked = index < UNLOCKED_WORLD_COUNT;
+        {WORLDS.map((worldConfig, index) => {
+          // A world is playable once it actually has level data — no
+          // separate constant to remember to bump when a new world ships.
+          const isUnlocked = worldConfig.levels && worldConfig.levels.length > 0;
 
           return (
             <button
-              key={index}
+              key={worldConfig.id}
               className={
                 'world-node' + (isUnlocked ? ' world-node--unlocked' : ' world-node--locked')
               }
               disabled={!isUnlocked}
               onClick={() => isUnlocked && onSelectWorld(index)}
-              aria-label={isUnlocked ? `Play world ${index + 1}` : `World ${index + 1} locked`}
+              aria-label={isUnlocked ? `Play ${worldConfig.name}` : `${worldConfig.name} locked`}
             >
               {isUnlocked ? (
                 <span className="world-node__number">{index + 1}</span>
