@@ -7,8 +7,7 @@
 // `wantsToFire`) to know when to actually spawn an EagleProjectile.
 const FRAME_COUNT = 8;
 const FRAME_DURATION = 0.09; // seconds per wing-flap frame
-const SPRITE_DRAW_WIDTH = 90;
-const SPRITE_DRAW_HEIGHT = 90 * (724 / 272); // preserve the sheet's own aspect ratio
+const SPRITE_DRAW_SIZE = 100; // frames are now square, one size covers both dimensions
 export class Eagle {
   constructor(y, config) {
     this.x = 400; // starts centered; patrol immediately carries it outward
@@ -87,12 +86,12 @@ export class Eagle {
     draw(ctx, spriteSheet) {
     if (!this.alive) return;
 
-    if (spriteSheet && spriteSheet.loaded) {
+        if (spriteSheet && spriteSheet.loaded) {
       const flip = this.vx < 0;
-      const drawX = this.x + this.width / 2 - SPRITE_DRAW_WIDTH / 2;
-      const drawY = this.y + this.height / 2 - SPRITE_DRAW_HEIGHT / 2;
+      const drawX = this.x + this.width / 2 - SPRITE_DRAW_SIZE / 2;
+      const drawY = this.y + this.height / 2 - SPRITE_DRAW_SIZE / 2;
       const drew = spriteSheet.draw(
-        ctx, 0, this.frameIndex, drawX, drawY, SPRITE_DRAW_WIDTH, SPRITE_DRAW_HEIGHT, flip
+        ctx, 0, this.frameIndex, drawX, drawY, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE, flip
       );
       if (drew) return;
     }
