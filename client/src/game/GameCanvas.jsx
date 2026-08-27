@@ -24,6 +24,7 @@ import { Background } from './entities/Background';
 import { Eagle } from './entities/Eagle';
 import { EagleProjectile } from './entities/EagleProjectile';
 import { Boss } from './entities/Boss';
+import { BossFireball } from './entities/BossFireball';
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
@@ -50,8 +51,8 @@ const EAGLE_WIDTH = 60;
 
 // Boss sits fixed near the right edge; the shield gunmen it spawns patrol
 // a lane in front of it so they never overlap the boss's own hitbox.
-const BOSS_X = 680;
-const BOSS_Y = 260; // feet at y=400, same ground line as everything else
+const BOSS_X = 640;
+const BOSS_Y = 200; // feet at y=400, same ground line as everything else
 const MAX_BOSS_SHIELD_ENEMIES = 2;
 const SHIELD_PATROL_MIN_X = 480;
 const SHIELD_PATROL_MAX_X = 620;
@@ -431,11 +432,11 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
       if (boss && boss.alive) {
         boss.update(dt);
 
-        if (boss.wantsToFire) {
+                if (boss.wantsToFire) {
           boss.wantsToFire = false;
           const bulletY = boss.y + boss.height * 0.3 - 2;
           enemyBulletsRef.current.push(
-            new EnemyBullet(boss.x, bulletY, 'left', levelConfigRef.current.bulletSpeed ?? 320)
+            new BossFireball(boss.x, bulletY, 'left', levelConfigRef.current.bulletSpeed ?? 320)
           );
         }
 

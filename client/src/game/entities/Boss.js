@@ -11,7 +11,7 @@ const FRAME_DURATIONS = [0.6, 0.6, 0.35, 0.35, 0.25, 0.45]; // idle,idle,charge,
 const FIRE_FRAME = 4;
 const SPAWN_FRAME = 5;
 
-const SPRITE_DRAW_HEIGHT = 180; // sheet cells are ~166.67x250 (tall portrait) — scale height, keep aspect
+const SPRITE_DRAW_HEIGHT = 260; // sheet cells are ~166.67x250 (tall portrait) — scale height, keep aspect
 const SPRITE_ASPECT = (500 / 3) / 250;
 const SPRITE_DRAW_WIDTH = SPRITE_DRAW_HEIGHT * SPRITE_ASPECT;
 
@@ -19,8 +19,8 @@ export class Boss {
   constructor(x, y, config = {}) {
     this.x = x;
     this.y = y;
-    this.width = 90;
-    this.height = 140;
+    this.width = 130;
+    this.height = 200;
     this.facing = 'left'; // never turns — always faces the player's side
 
     this.health = config.bossHealth ?? 25;

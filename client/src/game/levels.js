@@ -180,7 +180,7 @@ export const LEVELS = [
     level: 10,
     enemyCount: 0,
     hasBoss: true,
-    bossHealth: 25,
+    bossHealth: 20,
     health: 2,          // HP of each shield gunman the boss spawns
     moveSpeed: 190,
     bulletSpeed: 320,   // also reused for the boss's own bullets
