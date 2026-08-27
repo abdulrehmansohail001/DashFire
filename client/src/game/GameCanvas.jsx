@@ -60,7 +60,7 @@ const playerSheet = new SpriteSheet('/sprites/player.png', 313, 313, 4, 4);
 const playerExtraSheet = new SpriteSheet('/sprites/player_extra.png', 125, 125, 4, 4);
 const enemySheet = new SpriteSheet('/sprites/enemy.png', 313, 313, 4, 4);
 const eagleSheet = new SpriteSheet('/sprites/eagle.png', 180, 180, 8, 1);
-const bossSheet = new SpriteSheet('/sprites/boss.png', 418, 627, 6, 1);
+const bossSheet = new SpriteSheet('/sprites/boss.png', 418, 627, 3, 2);
 const moonBgSheet = new SpriteSheet('/sprites/moon_bg.jpg', 366, 352, 8, 1);
 const obstacleImage = new Image();
 obstacleImage.src = '/sprites/obstacle.png';
@@ -564,33 +564,38 @@ export default function GameCanvas({ initialLevelIndex = 0, onLevelComplete, onE
       const barWidth = 150;
       const barX = enemyCircleX - circleRadius - 12 - barWidth;
 
-      enemies.forEach((enemy, i) => {
-        if (!enemy.maxHealth) return;
-        const rowCircleY = 34 + i * ENEMY_ROW_HEIGHT;
-        const label = enemies.length > 1 ? `ENEMY ${i + 1} HP` : 'ENEMY HP';
-        const pct = Math.max(enemy.health, 0) / enemy.maxHealth;
-        drawHpBar(ctx, barX, rowCircleY - 8, barWidth, 16, pct, label, 'right');
-        drawHudPortrait(ctx, enemySheet, enemyCircleX, rowCircleY, circleRadius, '#a83232', 'E');
-      });
+            if (!bossRef.current) {
+        enemies.forEach((enemy, i) => {
+          if (!enemy.maxHealth) return;
+          const rowCircleY = 34 + i * ENEMY_ROW_HEIGHT;
+          const label = enemies.length > 1 ? `ENEMY ${i + 1} HP` : 'ENEMY HP';
+          const pct = Math.max(enemy.health, 0) / enemy.maxHealth;
+          drawHpBar(ctx, barX, rowCircleY - 8, barWidth, 16, pct, label, 'right');
+          drawHudPortrait(ctx, enemySheet, enemyCircleX, rowCircleY, circleRadius, '#a83232', 'E');
+        });
+      }
 
             // Eagles get their own stacked rows below the ground enemies, same
       // pattern — independent bars, not merged/summed into one.
-      eaglesRef.current.forEach((eagle, i) => {
-        if (!eagle.maxHealth) return;
-        const eagleRowY = 34 + (enemies.length + i) * ENEMY_ROW_HEIGHT;
-        const label = eaglesRef.current.length > 1 ? `EAGLE ${i + 1} HP` : 'EAGLE HP';
-        const pct = Math.max(eagle.health, 0) / eagle.maxHealth;
-        drawHpBar(ctx, barX, eagleRowY - 8, barWidth, 16, pct, label, 'right');
-                drawHudPortrait(ctx, eagleSheet, enemyCircleX, eagleRowY, circleRadius, '#2a2a35', 'B', {
-          cropRatio: 0.30,
-          cropTopRatio: 0.139,
-          cropLeftRatio: 0.294,
+            if (!bossRef.current) {
+        eaglesRef.current.forEach((eagle, i) => {
+          if (!eagle.maxHealth) return;
+          const eagleRowY = 34 + (enemies.length + i) * ENEMY_ROW_HEIGHT;
+          const label = eaglesRef.current.length > 1 ? `EAGLE ${i + 1} HP` : 'EAGLE HP';
+          const pct = Math.max(eagle.health, 0) / eagle.maxHealth;
+          drawHpBar(ctx, barX, eagleRowY - 8, barWidth, 16, pct, label, 'right');
+          drawHudPortrait(ctx, eagleSheet, enemyCircleX, eagleRowY, circleRadius, '#2a2a35', 'B', {
+            cropRatio: 0.30,
+            cropTopRatio: 0.139,
+            cropLeftRatio: 0.294,
+          });
         });
-      });
+      }
 
-      // Boss gets the last row in the stack, same pattern as everything else.
+      // Boss level: only its own bar shows, at the top row — no gunman/eagle
+      // rows to clutter it, even though shield gunmen exist under the hood.
       if (bossRef.current && bossRef.current.maxHealth) {
-        const bossRowY = 34 + (enemies.length + eaglesRef.current.length) * ENEMY_ROW_HEIGHT;
+        const bossRowY = 34;
         const pct = Math.max(bossRef.current.health, 0) / bossRef.current.maxHealth;
         drawHpBar(ctx, barX, bossRowY - 8, barWidth, 16, pct, 'BOSS HP', 'right');
         drawHudPortrait(ctx, bossSheet, enemyCircleX, bossRowY, circleRadius, '#3a0a0a', 'X');

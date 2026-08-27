@@ -71,11 +71,13 @@ export class Boss {
 
     const bob = Math.sin(this.bobTimer * 2) * 3; // barely-there hover motion
 
-    if (spriteSheet && spriteSheet.loaded) {
+        if (spriteSheet && spriteSheet.loaded) {
+      const col = this.frameIndex % 3;
+      const row = Math.floor(this.frameIndex / 3);
       const drawX = this.x + this.width / 2 - SPRITE_DRAW_WIDTH / 2;
       const drawY = this.y + this.height - SPRITE_DRAW_HEIGHT + bob;
       const drew = spriteSheet.draw(
-        ctx, 0, this.frameIndex, drawX, drawY, SPRITE_DRAW_WIDTH, SPRITE_DRAW_HEIGHT, false
+        ctx, row, col, drawX, drawY, SPRITE_DRAW_WIDTH, SPRITE_DRAW_HEIGHT, false
       );
       if (drew) return;
     }
