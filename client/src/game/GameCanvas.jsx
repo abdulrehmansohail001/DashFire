@@ -26,7 +26,7 @@ import { EagleProjectile } from './entities/EagleProjectile';
 import { Boss } from './entities/Boss';
 import { playSound } from './sound';
 import { BossFireball } from './entities/BossFireball';
-
+import { Frog } from './entities/Frog';
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
 const ENEMY_GROUND_Y = 340;
@@ -49,6 +49,12 @@ const ARENA_MAX_X = 750;
 const EAGLE_ARENA_MIN_X = 60;
 const EAGLE_ARENA_MAX_X = 740;
 const EAGLE_WIDTH = 60;
+
+// Full-width patrol span frogs are allowed to hop within.
+const FROG_GROUND_Y = 340; // same baseline as gunmen — feet land on the same ground line
+const FROG_ARENA_MIN_X = 60;
+const FROG_ARENA_MAX_X = 740;
+const FROG_WIDTH = 44;
 
 // Boss sits fixed near the right edge; the shield gunmen it spawns patrol
 // a lane in front of it so they never overlap the boss's own hitbox.
@@ -144,7 +150,34 @@ function buildEaglesForLevel(levelConfig) {
 
   return eagles;
 }
+// Builds N frogs for a level config, same staggered-full-width approach as
+// eagles (start positions spread across the patrol span, each with a
+// small speed/pause jitter so multiple frogs don't hop in lockstep).
+function buildFrogsForLevel(levelConfig) {
+  if (!levelConfig.hasFrog) return [];
+  const frogCount = levelConfig.frogCount ?? 1;
+  const span = FROG_ARENA_MAX_X - FROG_ARENA_MIN_X - FROG_WIDTH;
+  const frogs = [];
 
+  for (let i = 0; i < frogCount; i++) {
+    const startX = FROG_ARENA_MIN_X + (span * (i + 0.5)) / frogCount;
+    const jitterConfig = {
+      ...levelConfig,
+      frogHopSpeed: (levelConfig.frogHopSpeed ?? 130) * (0.85 + Math.random() * 0.3),
+      frogPauseMin: (levelConfig.frogPauseMin ?? 0.4) * (0.85 + Math.random() * 0.3),
+    };
+
+    frogs.push(
+      new Frog(FROG_GROUND_Y, jitterConfig, {
+        startX,
+        minX: FROG_ARENA_MIN_X,
+        maxX: FROG_ARENA_MAX_X - FROG_WIDTH,
+      })
+    );
+  }
+
+  return frogs;
+}
 // Draws a circular HUD portrait — sprite sheet's idle frame if loaded,
 // otherwise a flat-color circle with a single-letter fallback so the HUD
 // never shows a blank gap while art is loading.
@@ -238,6 +271,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const bossSheet = getSheet(world.sprites.boss);
   const moonBgSheet = getSheet(world.sprites.background);
   const obstacleImage = getImage(world.sprites.obstacle);
+  const frogSheet = getSheet(world.sprites.frog);
 
   const canvasRef = useRef(null);
     const [health, setHealth] = useState(10);
@@ -256,6 +290,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
       const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
   const eagleProjectilesRef = useRef([]);
+  const frogsRef = useRef(buildFrogsForLevel(LEVELS[initialLevelIndex]));
   const bossRef = useRef(LEVELS[initialLevelIndex].hasBoss ? new Boss(BOSS_X, BOSS_Y, LEVELS[initialLevelIndex]) : null);
   const levelConfigRef = useRef(LEVELS[initialLevelIndex]);
   const keysRef = useRef({});
@@ -283,6 +318,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
         eaglesRef.current = buildEaglesForLevel(config);
     eagleProjectilesRef.current = [];
+    frogsRef.current = buildFrogsForLevel(config);
     bossRef.current = config.hasBoss ? new Boss(BOSS_X, BOSS_Y, config) : null;
     levelConfigRef.current = config;
 
@@ -462,6 +498,20 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         return !p.hasLanded(400); // 400 = ground line; despawn once it lands, hit or not
       });
 
+      // Frogs: no projectiles at all — the only "attack" is contact. Each
+      // frog just hops around on its own physics; touching the player
+      // calls takeHit() directly, which is safe from multi-frame drain
+      // because Player.js already has its own invulnerability window.
+      const frogs = frogsRef.current;
+      for (const frog of frogs) {
+        if (!frog.alive) continue;
+        frog.update(dt);
+        if (isColliding(playerBounds, frog.getBounds())) {
+          player.takeHit();
+          playSound('hit', 0.6);
+        }
+      }
+
       // Boss: mostly stationary, cycles its own animation and just signals
       // when to fire or summon a shield gunman — GameCanvas enforces the
       // shield cap since Boss itself has no visibility into how many of
@@ -535,6 +585,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           }
         }
                 if (hitEagle) continue;
+        let hitFrog = false;
+        for (const frog of frogs) {
+          if (!frog.alive) continue;
+          if (isColliding(bullet.getBounds(), frog.getBounds())) {
+            frog.takeHit();
+            bullet.hit = true;
+            hitFrog = true;
+            break;
+          }
+        }
+        if (hitFrog) continue;
         if (bossRef.current && bossRef.current.alive && isColliding(bullet.getBounds(), bossRef.current.getBounds())) {
           bossRef.current.takeHit();
           bullet.hit = true;
@@ -555,7 +616,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
           const allEnemiesDead = bossRef.current
   ? !bossRef.current.alive
-  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive);
+  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && frogs.every((f) => !f.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
@@ -596,6 +657,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       bulletsRef.current.forEach((b) => b.draw(ctx));
                         eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
+      frogsRef.current.forEach((frog) => frog.draw(ctx, frogSheet));
       if (bossRef.current) bossRef.current.draw(ctx, bossSheet);
 
       // --- HUD: player HP top-left ---
@@ -650,6 +712,18 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
             cropTopRatio: 0.139,
             cropLeftRatio: 0.294,
           });
+        });
+      }
+
+      // Frogs get their own stacked rows too, below eagles, same pattern.
+            if (!bossRef.current) {
+        frogsRef.current.forEach((frog, i) => {
+          if (!frog.maxHealth) return;
+          const frogRowY = 34 + (enemies.length + eaglesRef.current.length + i) * ENEMY_ROW_HEIGHT;
+          const label = frogsRef.current.length > 1 ? `FROG ${i + 1} HP` : 'FROG HP';
+          const pct = Math.max(frog.health, 0) / frog.maxHealth;
+          drawHpBar(ctx, barX, frogRowY - 8, barWidth, 16, pct, label, 'right');
+          drawHudPortrait(ctx, frogSheet, enemyCircleX, frogRowY, circleRadius, '#5a2a12', 'F');
         });
       }
 
