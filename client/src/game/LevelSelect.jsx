@@ -7,10 +7,13 @@
 import './LevelSelect.css';
 import { playSound } from './sound';
 import { PixelLock, PixelCheck } from './PixelIcon';
-export default function LevelSelect({ levels, unlockedCount, onSelectLevel, onBack }) {
+export default function LevelSelect({ levels, unlockedCount, missionTitle, backgroundPath, onSelectLevel, onBack }) {
   return (
             <div className="level-select">
-      <div className="level-select__backdrop-anim" />
+      <div
+        className="level-select__backdrop-anim"
+        style={{ backgroundImage: `url(${backgroundPath || '/sprites/moon_bg.jpg'})` }}
+      />
       <div className="level-select__backdrop" />
       <div className="level-select__scanlines" />
 
@@ -20,7 +23,7 @@ export default function LevelSelect({ levels, unlockedCount, onSelectLevel, onBa
         </button>
       )}
 
-      <h1 className="level-select__title">MISSION-MOON</h1>
+      <h1 className="level-select__title">{missionTitle || 'MISSION'}</h1>
       <p className="level-select__subtitle">SELECT A LEVEL</p>
 
       <div className="level-select__grid">

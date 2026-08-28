@@ -151,7 +151,7 @@ export const LEVELS = [
     level: 10,
     enemyCount: 0,
     hasBossFrog: true,
-    bossHealth: 30,
+    bossHealth: 20,
     bulletSpeed: 260,          // reused for the boss's fireball
     bossFireIntervalMin: 2.5,
     bossFireIntervalMax: 4.5,

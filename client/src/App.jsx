@@ -74,6 +74,8 @@ function App() {
         <LevelSelect
           levels={currentWorld.levels}
           unlockedCount={unlockedByWorld[selectedWorldIndex] ?? 1}
+          missionTitle={currentWorld.missionTitle}
+          backgroundPath={currentWorld.sprites.background?.path}
           onSelectLevel={handleSelectLevel}
           onBack={handleBackToWorlds}
         />

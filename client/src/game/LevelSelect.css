@@ -16,7 +16,6 @@
 .level-select__backdrop-anim {
   position: absolute;
   inset: 0;
-  background-image: url('/sprites/moon_bg.jpg');
   background-repeat: no-repeat;
   background-size: 800vw 100vh;
   animation: moon-menu-cycle 1.6s steps(7) infinite;

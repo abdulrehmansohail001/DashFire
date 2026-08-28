@@ -19,6 +19,7 @@ export const WORLDS = [
   {
     id: 0,
     name: 'Lunar Front',
+    missionTitle: 'MISSION-MOON',
     sprites: {
       player: { path: '/sprites/player.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
       playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
@@ -34,6 +35,7 @@ export const WORLDS = [
   {
     id: 1,
     name: 'Mars Invasion',
+    missionTitle: 'MARS INVASION',
     sprites: {
       player: { path: '/sprites/player.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
       playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
