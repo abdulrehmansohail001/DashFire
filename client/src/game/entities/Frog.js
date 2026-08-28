@@ -98,7 +98,17 @@ export class Frog {
       return; // grounded and waiting — no movement this frame
     }
 
-    // airborne physics apply to launch/rise/peak/fall
+    if (this.state === 'land') {
+      this.frameIndex = 5;
+      if (this.stateTimer > LAND_PHASE_DURATION) {
+        this.state = 'pause';
+        this.stateTimer = 0;
+        this.frameIndex = 0;
+      }
+      return; // grounded and settling — no physics, same as 'pause'
+    }
+
+    // airborne physics apply to launch/rise/peak/fall only
     this.vy += this.gravity * dt;
     this.y += this.vy * dt;
     this.x += this.direction * this.hopSpeed * dt;
@@ -132,12 +142,6 @@ export class Frog {
       this.stateTimer = 0;
       this.frameIndex = 5;
       this.pauseDuration = this.randomPause();
-    }
-
-    if (this.state === 'land' && this.stateTimer > LAND_PHASE_DURATION) {
-      this.state = 'pause';
-      this.stateTimer = 0;
-      this.frameIndex = 0;
     }
   }
 
