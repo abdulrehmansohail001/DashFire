@@ -72,7 +72,7 @@ const SHIELD_PATROL_MAX_X = 620;
 // has the boss's own width subtracted so its hop never clips past the
 // right edge of the canvas.
 const BOSSFROG_ARENA_MIN_X = 0;
-const BOSSFROG_ARENA_MAX_X = 800 - 110; // 110 = BossFrog's own width, matches player's full reachable range
+const BOSSFROG_HOP_MAX_X = 800 - 110; // boss's OWN right hop bound (110 = BossFrog's width) — do not reuse this for babies, it's already width-adjusted for the boss specifically
 const MAX_BOSSFROG_BABIES = 5;
 
 // Sheets/images are cached by path+dimensions so switching worlds never
@@ -311,7 +311,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       ? new BossFrog(FROG_GROUND_Y, {
           ...LEVELS[initialLevelIndex],
           arenaMinX: BOSSFROG_ARENA_MIN_X,
-          arenaMaxX: BOSSFROG_ARENA_MAX_X,
+          arenaMaxX: BOSSFROG_HOP_MAX_X,
         })
       : null
   );
@@ -346,7 +346,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         bossRef.current = config.hasBoss
       ? new Boss(BOSS_X, BOSS_Y, config)
       : config.hasBossFrog
-      ? new BossFrog(FROG_GROUND_Y, { ...config, arenaMinX: BOSSFROG_ARENA_MIN_X, arenaMaxX: BOSSFROG_ARENA_MAX_X })
+      ? new BossFrog(FROG_GROUND_Y, { ...config, arenaMinX: BOSSFROG_ARENA_MIN_X, arenaMaxX: BOSSFROG_HOP_MAX_X })
       : null;
     levelConfigRef.current = config;
 
@@ -584,7 +584,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
               new Frog(FROG_GROUND_Y, { ...levelConfigRef.current, frogHealth: 2 }, {
                 startX: boss.x + boss.width / 2,
                 minX: BOSSFROG_ARENA_MIN_X,
-                maxX: BOSSFROG_ARENA_MAX_X - FROG_WIDTH,
+                maxX: 800 - FROG_WIDTH, // babies get their OWN full-width bound, independent of the boss's already-width-adjusted range
               })
             );
           }
