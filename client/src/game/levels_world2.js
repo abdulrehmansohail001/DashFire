@@ -1,24 +1,15 @@
-// src/game/levels.js
-// Data-driven level definitions. Each entry configures how many enemies
-// spawn and how tough/aggressive they are. Enemy.js reads these fields
-// directly — add/tune levels here only, never touch Enemy.js again.
-//
-// enemyCount: how many gunmen spawn this level (patrol zones auto-split
-//             across the arena so they don't overlap)
-// health: hits required to kill each enemy
-// moveSpeed: px/s for step-move actions
-// bulletSpeed: px/s for bullets this enemy fires
-// actionIntervalMin/Max: seconds between the enemy's autonomous actions
-//   (lower = more aggressive/frequent jump-move-fire)
-// reactionDelayMin/Max: how fast it reacts to the player jumping
-// fireSequence: burst pattern, e.g. [1,1,2] = single, single, double, repeat
-// burstGap: seconds between shots within one burst
+// src/game/levels_world2.js
+// World 2 (Mars Invasion) level definitions. Same shape as World 1's
+// levels.js — enemyCount/health/etc drive the "cat" (Enemy class, reskinned
+// via worlds.js sprite mapping), hasFrog/frogCount/frogHealth drive Frog,
+// hasCactus is a fixed-position hazard with no health (can't be killed,
+// doesn't block a win). No eagles in this world.
 
 export const LEVELS = [
-    // Level 1 — tutorial pace, 10 HP so the health bar has room to show progress
+  // Level 1 — 2 cats, 10 HP each
   {
     level: 1,
-    enemyCount: 1,
+    enemyCount: 2,
     health: 10,
     moveSpeed: 120,
     bulletSpeed: 260,
@@ -26,155 +17,133 @@ export const LEVELS = [
     actionIntervalMax: 2.4,
     reactionDelayMin: 0.7,
     reactionDelayMax: 1.1,
-    fireSequence: [1,1,2],
+    fireSequence: [1, 1, 2],
     burstGap: 0.2,
   },
-  // Level 2 — slightly faster, still single shots
-   {
+  // Level 2 — 3 cats, 10 HP each
+  {
     level: 2,
-    enemyCount: 2,
-    health: 5,
+    enemyCount: 3,
+    health: 10,
     moveSpeed: 120,
     bulletSpeed: 260,
     actionIntervalMin: 1.4,
     actionIntervalMax: 2.4,
     reactionDelayMin: 0.7,
     reactionDelayMax: 1.1,
-    fireSequence: [1,1,2],
+    fireSequence: [1, 1, 2],
     burstGap: 0.2,
   },
-  // Level 3 — introduces occasional double-bursts
-   {
+  // Level 3 — first frog: 1 frog (5 HP) + 2 cats (10 HP)
+  {
     level: 3,
     enemyCount: 2,
     health: 10,
-    moveSpeed: 120,
-    bulletSpeed: 260,
-    actionIntervalMin: 1.4,
-    actionIntervalMax: 2.4,
-    reactionDelayMin: 0.7,
-    reactionDelayMax: 1.1,
-    fireSequence: [1,1,2],
-    burstGap: 0.2,
-  },
-    // Level 4 — takes 2 hits now, bullets faster, wall obstacle introduced
-  {
-    level: 4,
-    enemyCount: 1,
-    hasObstacle: true,
-    health: 10,
-    moveSpeed: 120,
-    bulletSpeed: 260,
-    actionIntervalMin: 1.4,
-    actionIntervalMax: 2.4,
-    reactionDelayMin: 0.7,
-    reactionDelayMax: 1.1,
-    fireSequence: [1,1,2],
-    burstGap: 0.2,
-  },
-    // Level 5 — more frequent bursts, wall obstacle
-  {
-    level: 5,
-    enemyCount: 2,
-    hasObstacle: true,
-    health: 10,
-    moveSpeed: 120,
-    bulletSpeed: 260,
-    actionIntervalMin: 1.4,
-    actionIntervalMax: 2.4,
-    reactionDelayMin: 0.7,
-    reactionDelayMax: 1.1,
-    fireSequence: [1,1,2],
-    burstGap: 0.2,
-  },
-    // Level 6 — first eagle level: 2 gunmen at 10 HP each, PLUS a flying eagle
-  // that patrols at a fixed height and lobs arcing bombs. hasEagle: true is
-  // the switch GameCanvas checks to actually spawn it — everything else
-  // (Eagle.js, EagleProjectile.js, the throw/arc/collision logic in
-  // GameCanvas) was already correct, it just never had a level flip it on.
-  {
-    level: 6,
-    enemyCount: 2,
-    health: 10,
-    moveSpeed: 185,
-    bulletSpeed: 260,
-    actionIntervalMin: 1.4,
-    actionIntervalMax: 2.1,
-    reactionDelayMin: 0.4,
-    reactionDelayMax: 0.7,
-    fireSequence: [1, 2, 1, 2],
-    burstGap: 0.14,
+    moveSpeed: 130,
+    bulletSpeed: 270,
+    actionIntervalMin: 1.3,
+    actionIntervalMax: 2.2,
+    reactionDelayMin: 0.6,
+    reactionDelayMax: 1.0,
+    fireSequence: [1, 1, 2],
+    burstGap: 0.18,
 
     hasFrog: true,
     frogCount: 1,
-    frogHealth: 4,
-
+    frogHealth: 5,
   },
-    // Level 7 — one gunman + two eagles patrolling separate lanes
+  // Level 4 — 2 frogs (5 HP each) + 1 cat (10 HP)
   {
-    level: 7,
+    level: 4,
     enemyCount: 1,
     health: 10,
-    moveSpeed: 185,
-    bulletSpeed: 260,
-    actionIntervalMin: 1.4,
+    moveSpeed: 140,
+    bulletSpeed: 280,
+    actionIntervalMin: 1.3,
     actionIntervalMax: 2.1,
-    reactionDelayMin: 0.4,
-    reactionDelayMax: 0.7,
-    fireSequence: [1, 2, 1, 2],
-    burstGap: 0.14,
-    
-    hasCactus: true,
+    reactionDelayMin: 0.55,
+    reactionDelayMax: 0.95,
+    fireSequence: [1, 1, 2],
+    burstGap: 0.17,
 
-    hasEagle: true,
-    eagleCount: 2,
-    eagleHealth: 5,
-    eagleSpeed: 100,
-    eagleThrowIntervalMin: 1.4,
-    eagleThrowIntervalMax: 2.4,
-    eagleThrowSpeedMin: -160,
-    eagleThrowSpeedMax: 160,
+    hasFrog: true,
+    frogCount: 2,
+    frogHealth: 5,
   },
-  // Level 8 — eagle-only level: 3 eagles, 5 HP each, no ground gunmen
+  // Level 5 — frogs only: 3 frogs, 5 HP each
+  {
+    level: 5,
+    enemyCount: 0,
+
+    hasFrog: true,
+    frogCount: 3,
+    frogHealth: 5,
+  },
+  // Level 6 — first cactus: cactus + 1 frog (5 HP) + 1 cat (10 HP)
+  {
+    level: 6,
+    enemyCount: 1,
+    health: 10,
+    moveSpeed: 150,
+    bulletSpeed: 290,
+    actionIntervalMin: 1.2,
+    actionIntervalMax: 2.0,
+    reactionDelayMin: 0.5,
+    reactionDelayMax: 0.85,
+    fireSequence: [1, 2, 1, 2],
+    burstGap: 0.16,
+
+    hasCactus: true,
+    hasFrog: true,
+    frogCount: 1,
+    frogHealth: 5,
+  },
+  // Level 7 — cactus + 2 cats (10 HP each)
+  {
+    level: 7,
+    enemyCount: 2,
+    health: 10,
+    moveSpeed: 160,
+    bulletSpeed: 300,
+    actionIntervalMin: 1.1,
+    actionIntervalMax: 1.9,
+    reactionDelayMin: 0.45,
+    reactionDelayMax: 0.8,
+    fireSequence: [1, 2, 1, 2],
+    burstGap: 0.15,
+
+    hasCactus: true,
+  },
+  // Level 8 — cactus + 3 frogs (5 HP each), no cats
   {
     level: 8,
     enemyCount: 0,
 
-    hasEagle: true,
-    eagleCount: 3,
-    eagleHealth: 5,
-    eagleSpeed: 110,
-    eagleThrowIntervalMin: 1.2,
-    eagleThrowIntervalMax: 2.1,
-    eagleThrowSpeedMin: -170,
-    eagleThrowSpeedMax: 170,
+    hasCactus: true,
+    hasFrog: true,
+    frogCount: 3,
+    frogHealth: 5,
   },
-  // Level 9 — what Level 7 used to be: 2 gunmen behind a wall, plus one eagle
+  // Level 9 — cactus + 1 frog (5 HP) + 2 cats (10 HP each)
   {
     level: 9,
-    hasObstacle: true,
     enemyCount: 2,
     health: 10,
-    moveSpeed: 185,
-    bulletSpeed: 260,
-    actionIntervalMin: 1.4,
-    actionIntervalMax: 2.1,
+    moveSpeed: 170,
+    bulletSpeed: 310,
+    actionIntervalMin: 1.0,
+    actionIntervalMax: 1.8,
     reactionDelayMin: 0.4,
-    reactionDelayMax: 0.7,
-    fireSequence: [1, 2, 1, 2],
+    reactionDelayMax: 0.75,
+    fireSequence: [2, 1, 2],
     burstGap: 0.14,
 
-    hasEagle: true,
-    eagleHealth: 6,
-    eagleSpeed: 100,
-    eagleThrowIntervalMin: 1.4,
-    eagleThrowIntervalMax: 2.4,
-    eagleThrowSpeedMin: -160,
-    eagleThrowSpeedMax: 160,
+    hasCactus: true,
+    hasFrog: true,
+    frogCount: 1,
+    frogHealth: 5,
   },
-  // Level 10 — final boss: mostly-stationary war machine that fires at
-  // you and periodically summons a basic gunman (up to 2 alive at once)
-  // to shield itself. No static gunmen this level — the boss spawns them.
+  // Level 10 — left as-is, will revisit later
   {
     level: 10,
     enemyCount: 0,
