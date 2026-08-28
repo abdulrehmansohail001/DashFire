@@ -29,6 +29,7 @@ import { playSound } from './sound';
 import { BossFireball } from './entities/BossFireball';
 import { Frog } from './entities/Frog';
 import { BossFrog } from './entities/BossFrog';
+import { ENEMY_GROUND_Y as GUNMAN_REST_Y } from './entities/Enemy'; // Enemy.js's OWN ground constant (310) — different from this file's local ENEMY_GROUND_Y (340), which is only the pre-physics spawn y
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
 const ENEMY_GROUND_Y = 340;
@@ -75,7 +76,7 @@ const SHIELD_PATROL_MAX_X = 620;
 // own height=90, same 0.35 ratio Enemy.js uses) — boss fire anchors to
 // this absolute height instead of its own much-taller hitbox ratio, so
 // all fire attacks sit in the same visual lane.
-const GUNMEN_FIRE_HEIGHT_Y = ENEMY_GROUND_Y + 90 * 0.35 - 2;
+const GUNMEN_FIRE_HEIGHT_Y = GUNMAN_REST_Y + 90 * 0.35 - 2; // matches the actual settled y gunmen fire from, not the pre-physics spawn constant
 
 const BOSSFROG_ARENA_MIN_X = 0;
 const BOSSFROG_HOP_MAX_X = 800 - 110; // boss's OWN right hop bound (110 = BossFrog's width) — do not reuse this for babies, it's already width-adjusted for the boss specifically
