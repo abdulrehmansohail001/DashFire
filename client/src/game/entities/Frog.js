@@ -38,8 +38,8 @@ export class Frog {
     this.hopSpeed = config.frogHopSpeed ?? 130;       // px/s horizontal during a hop
     this.hopVelocity = config.frogHopVelocity ?? 480; // initial upward speed of a hop
     this.gravity = config.frogGravity ?? 1400;
-    this.pauseMin = config.frogPauseMin ?? 0.4;
-    this.pauseMax = config.frogPauseMax ?? 0.9;
+    this.pauseMin = config.frogPauseMin ?? 0.08; // was 0.4 — near-continuous hopping instead of stop-and-go
+    this.pauseMax = config.frogPauseMax ?? 0.18; // was 0.9
 
     this.health = config.frogHealth ?? 4;
     this.maxHealth = this.health;
