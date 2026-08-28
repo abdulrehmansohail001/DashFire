@@ -182,7 +182,10 @@ export class BossFrog {
       this.state = 'land';
       this.stateTimer = 0;
       this.frameIndex = 4;
-      this.wantsToSpawnFrog = true; // GameCanvas enforces the 5-alive cap
+      // No wantsToSpawnFrog set here — that decision belongs solely to the
+      // 'land' state handler above, gated by nextAction. Setting it here
+      // too was a leftover from an earlier version and caused spawn to
+      // fire on every hop while fire correctly only fired every other one.
     }
   }
 
