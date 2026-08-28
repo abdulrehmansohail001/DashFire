@@ -48,14 +48,14 @@ const ARENA_MAX_X = 750;
 
 // Full-width patrol span eagles are allowed to fly within, split evenly
 // per eagle when a level has more than one.
-const EAGLE_ARENA_MIN_X = 60;
-const EAGLE_ARENA_MAX_X = 740;
+const EAGLE_ARENA_MIN_X = 0;
+const EAGLE_ARENA_MAX_X = 800; // matches player's full reachable range (x: 0 to 760) — no dead corner
 const EAGLE_WIDTH = 60;
 
 // Full-width patrol span frogs are allowed to hop within.
 const FROG_GROUND_Y = 340; // same baseline as gunmen — feet land on the same ground line
-const FROG_ARENA_MIN_X = 60;
-const FROG_ARENA_MAX_X = 740;
+const FROG_ARENA_MIN_X = 0;
+const FROG_ARENA_MAX_X = 800; // matches player's full reachable range — no dead corner
 const FROG_WIDTH = 44;
 
 // Boss sits fixed near the right edge; the shield gunmen it spawns patrol
@@ -71,8 +71,8 @@ const SHIELD_PATROL_MAX_X = 620;
 // boxed into the right half) and a swarm cap for its babies. Max bound
 // has the boss's own width subtracted so its hop never clips past the
 // right edge of the canvas.
-const BOSSFROG_ARENA_MIN_X = 60;
-const BOSSFROG_ARENA_MAX_X = 740 - 110; // 110 = BossFrog's own width
+const BOSSFROG_ARENA_MIN_X = 0;
+const BOSSFROG_ARENA_MAX_X = 800 - 110; // 110 = BossFrog's own width, matches player's full reachable range
 const MAX_BOSSFROG_BABIES = 5;
 
 // Sheets/images are cached by path+dimensions so switching worlds never
