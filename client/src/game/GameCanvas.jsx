@@ -67,9 +67,12 @@ const SHIELD_PATROL_MIN_X = 480;
 const SHIELD_PATROL_MAX_X = 620;
 
 // World 2 boss (BossFrog) actually hops around, unlike World 1's
-// stationary Boss — give it its own wide lane and swarm cap.
-const BOSSFROG_ARENA_MIN_X = 420;
-const BOSSFROG_ARENA_MAX_X = 740;
+// stationary Boss — give it a wide lane across most of the canvas (not
+// boxed into the right half) and a swarm cap for its babies. Max bound
+// has the boss's own width subtracted so its hop never clips past the
+// right edge of the canvas.
+const BOSSFROG_ARENA_MIN_X = 60;
+const BOSSFROG_ARENA_MAX_X = 740 - 110; // 110 = BossFrog's own width
 const MAX_BOSSFROG_BABIES = 5;
 
 // Sheets/images are cached by path+dimensions so switching worlds never

@@ -37,8 +37,8 @@ export class BossFrog {
     this.hopSpeed = config.bossHopSpeed ?? 90;
     this.hopVelocity = config.bossHopVelocity ?? 520;
     this.gravity = config.bossGravity ?? 1300;
-    this.pauseMin = config.bossPauseMin ?? 0.5;
-    this.pauseMax = config.bossPauseMax ?? 1.0;
+    this.pauseMin = config.bossPauseMin ?? 0.08; // matches Frog.js's near-continuous hop cadence
+    this.pauseMax = config.bossPauseMax ?? 0.18;
 
     this.health = config.bossHealth ?? 30;
     this.maxHealth = this.health;
