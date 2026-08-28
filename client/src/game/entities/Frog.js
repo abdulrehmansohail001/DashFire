@@ -158,11 +158,17 @@ export class Frog {
     }
 
     if (spriteSheet && spriteSheet.loaded) {
-      const drawSize = 70;
-      const drawX = this.x + this.width / 2 - drawSize / 2;
-      const drawY = this.y + this.height - drawSize;
+      // Derive box dimensions from the sheet's own cell aspect ratio rather
+      // than a fixed square — frog.png's cells are naturally taller than
+      // wide (220x340, portrait, since a mid-air hop needs vertical room),
+      // so forcing a square destination would squash the art. Same pattern
+      // as Player.js's draw().
+      const drawHeight = 90;
+      const drawWidth = drawHeight * (spriteSheet.frameWidth / spriteSheet.frameHeight);
+      const drawX = this.x + this.width / 2 - drawWidth / 2;
+      const drawY = this.y + this.height - drawHeight;
       const flip = this.direction < 0;
-      const drew = spriteSheet.draw(ctx, 0, this.frameIndex, drawX, drawY, drawSize, drawSize, flip);
+      const drew = spriteSheet.draw(ctx, 0, this.frameIndex, drawX, drawY, drawWidth, drawHeight, flip);
       if (drew) return;
     }
 

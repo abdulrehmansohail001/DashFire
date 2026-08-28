@@ -41,7 +41,7 @@ export const WORLDS = [
       boss: null,
       background: { path: '/sprites/mars_bg.jpg', frameWidth: 366, frameHeight: 352, columns: 8, rows: 1 },
       obstacle: '/sprites/obstacle.png',
-      frog: null, // TODO: martian_frog.png once generated
+      frog: { path: '/sprites/frog.png', frameWidth: 220, frameHeight: 311, columns: 8, rows: 1 },
     },
     levels: WORLD_2_LEVELS,
   },
