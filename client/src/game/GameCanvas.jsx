@@ -71,6 +71,12 @@ const SHIELD_PATROL_MAX_X = 620;
 // boxed into the right half) and a swarm cap for its babies. Max bound
 // has the boss's own width subtracted so its hop never clips past the
 // right edge of the canvas.
+// Muzzle height gunmen/martian cats fire from (ENEMY_GROUND_Y=310, their
+// own height=90, same 0.35 ratio Enemy.js uses) — boss fire anchors to
+// this absolute height instead of its own much-taller hitbox ratio, so
+// all fire attacks sit in the same visual lane.
+const GUNMEN_FIRE_HEIGHT_Y = ENEMY_GROUND_Y + 90 * 0.35 - 2;
+
 const BOSSFROG_ARENA_MIN_X = 0;
 const BOSSFROG_HOP_MAX_X = 800 - 110; // boss's OWN right hop bound (110 = BossFrog's width) — do not reuse this for babies, it's already width-adjusted for the boss specifically
 const MAX_BOSSFROG_BABIES = 5;
@@ -573,7 +579,10 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
                 if (boss.wantsToFire) {
           boss.wantsToFire = false;
-          const bulletY = boss.y + boss.height * 0.3 - 2;
+          // Anchored to the same muzzle height gunmen/cats fire from,
+          // not boss.height-derived — the boss's hitbox is much taller,
+          // so that ratio put its fire noticeably lower on screen.
+          const bulletY = GUNMEN_FIRE_HEIGHT_Y;
           // BossFrog fires from whichever way it's actually facing (it
           // hops back and forth); World 1's Boss has no .direction and
           // always fires left, so that stays the fallback.

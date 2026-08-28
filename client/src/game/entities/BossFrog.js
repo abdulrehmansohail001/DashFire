@@ -58,6 +58,7 @@ export class BossFrog {
 
     this.wantsToSpawnFrog = false;
     this.wantsToFire = false;
+    this.nextAction = 'fire'; // alternates 'fire' <-> 'spawn' every landing
   }
 
   randomPause() {
@@ -116,9 +117,19 @@ export class BossFrog {
     if (this.state === 'land') {
       this.frameIndex = 4;
       if (this.stateTimer >= LAND_PHASE_DURATION) {
-        this.state = 'fireCharge';
-        this.stateTimer = 0;
-        this.frameIndex = 5;
+        if (this.nextAction === 'spawn') {
+          this.wantsToSpawnFrog = true;
+          this.nextAction = 'fire'; // next landing does the fire sequence instead
+          this.state = 'pause';
+          this.stateTimer = 0;
+          this.idlePulseTimer = 0;
+          this.frameIndex = 0;
+          this.pauseDuration = this.randomPause();
+        } else {
+          this.state = 'fireCharge';
+          this.stateTimer = 0;
+          this.frameIndex = 5;
+        }
       }
       return;
     }
@@ -147,6 +158,7 @@ export class BossFrog {
     if (this.state === 'fireRecover') {
       this.frameIndex = 7;
       if (this.stateTimer >= FIRE_RECOVER_DURATION) {
+        this.nextAction = 'spawn'; // next landing spawns a frog instead
         this.state = 'pause';
         this.stateTimer = 0;
         this.idlePulseTimer = 0;
