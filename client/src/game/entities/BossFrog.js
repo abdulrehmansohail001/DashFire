@@ -1,12 +1,12 @@
 // src/game/entities/BossFrog.js
-// World 2 boss — an enraged giant frog. Unlike World 1's stationary Boss,
-// this one actually hops around the arena using the same physics-driven
-// hop cycle as Frog.js (pause -> crouch -> airborne -> land -> pause),
-// just bigger/heavier. Every landing spawns one 2-HP baby frog (via
-// GameCanvas, capped at 5 alive — same "GameCanvas enforces the cap"
-// pattern as World 1's Boss spawning gunmen). Fire attacks run on their
-// own independent random timer, gated to only trigger while grounded and
-// idle, so hopping and firing never visually collide.
+// World 2 boss — an enraged giant frog. Hops around the arena using the
+// same physics-driven hop cycle as Frog.js. Unlike the earlier version,
+// this is now ONE strict linear sequence through all 8 sprite frames per
+// jump cycle — no independent/random fire timer. Every single hop does,
+// in order: crouch -> airborne -> land (spawns a baby frog) -> fire
+// charge -> fire spit (fires a fireball) -> fire recover -> brief idle
+// pause -> crouch again. Spawn always happens before the fireball, once
+// per jump, exactly as specified.
 //
 // Frame map (4 cols x 2 rows, row-major): 0 idle, 1 idle-pulse,
 // 2 crouch/windup, 3 airborne (both rise and fall), 4 landing slam
@@ -17,11 +17,10 @@ const HIT_FLASH_DURATION = 0.18;
 const HIT_FLASH_INTERVAL = 0.06;
 const CROUCH_PHASE_DURATION = 0.16;
 const LAND_PHASE_DURATION = 0.16;
-const IDLE_PULSE_INTERVAL = 0.5; // how often frame flips 0<->1 while grounded/idle
-
 const FIRE_CHARGE_DURATION = 0.5;
 const FIRE_SPIT_DURATION = 0.25;
 const FIRE_RECOVER_DURATION = 0.3;
+const IDLE_PULSE_INTERVAL = 0.5; // how often frame flips 0<->1 while paused between jumps
 
 export class BossFrog {
   constructor(groundY, config = {}) {
@@ -47,15 +46,12 @@ export class BossFrog {
     this.vy = 0;
     this.direction = Math.random() < 0.5 ? -1 : 1;
 
-    this.mode = 'hop'; // 'hop' | 'firing'
-    this.state = 'pause'; // hop sub-state: 'pause' | 'crouch' | 'rise' | 'fall' | 'land'
+    // Single linear sequence: pause -> crouch -> rise -> fall -> land ->
+    // fireCharge -> fireSpit -> fireRecover -> pause -> ...
+    this.state = 'pause';
     this.stateTimer = 0;
     this.pauseDuration = this.randomPause();
     this.idlePulseTimer = 0;
-
-    this.fireState = null; // null | 'charge' | 'spit' | 'recover'
-    this.fireStateTimer = 0;
-    this.fireTimer = this.randomFireInterval(config);
 
     this.frameIndex = 0;
     this.hitFlashTimer = 0;
@@ -66,12 +62,6 @@ export class BossFrog {
 
   randomPause() {
     return this.pauseMin + Math.random() * (this.pauseMax - this.pauseMin);
-  }
-
-  randomFireInterval(config) {
-    const min = config.bossFireIntervalMin ?? 2.5;
-    const max = config.bossFireIntervalMax ?? 4.5;
-    return min + Math.random() * (max - min);
   }
 
   takeHit() {
@@ -93,52 +83,15 @@ export class BossFrog {
     this.stateTimer = 0;
   }
 
+  getBounds() {
+    return { x: this.x, y: this.y, width: this.width, height: this.height };
+  }
+
   update(dt) {
     if (!this.alive) return;
 
     if (this.hitFlashTimer > 0) this.hitFlashTimer -= dt;
 
-    // Fire attack only starts while grounded and idle, so it never
-    // interrupts a hop mid-air — visually it always reads as "stops,
-    // rears back, fires, resumes hopping."
-    if (this.mode === 'hop' && this.state === 'pause') {
-      this.fireTimer -= dt;
-      if (this.fireTimer <= 0) {
-        this.mode = 'firing';
-        this.fireState = 'charge';
-        this.fireStateTimer = 0;
-      }
-    }
-
-    if (this.mode === 'firing') {
-      this.fireStateTimer += dt;
-
-      if (this.fireState === 'charge') {
-        this.frameIndex = 5;
-        if (this.fireStateTimer >= FIRE_CHARGE_DURATION) {
-          this.fireState = 'spit';
-          this.fireStateTimer = 0;
-          this.wantsToFire = true;
-        }
-      } else if (this.fireState === 'spit') {
-        this.frameIndex = 6;
-        if (this.fireStateTimer >= FIRE_SPIT_DURATION) {
-          this.fireState = 'recover';
-          this.fireStateTimer = 0;
-        }
-      } else if (this.fireState === 'recover') {
-        this.frameIndex = 7;
-        if (this.fireStateTimer >= FIRE_RECOVER_DURATION) {
-          this.mode = 'hop';
-          this.fireState = null;
-          this.frameIndex = 0;
-          this.fireTimer = this.randomFireInterval({});
-        }
-      }
-      return; // grounded and busy firing — no hop physics this frame
-    }
-
-    // --- hop cycle (only runs while mode === 'hop') ---
     this.stateTimer += dt;
 
     if (this.state === 'pause') {
@@ -163,6 +116,37 @@ export class BossFrog {
     if (this.state === 'land') {
       this.frameIndex = 4;
       if (this.stateTimer >= LAND_PHASE_DURATION) {
+        this.state = 'fireCharge';
+        this.stateTimer = 0;
+        this.frameIndex = 5;
+      }
+      return;
+    }
+
+    if (this.state === 'fireCharge') {
+      this.frameIndex = 5;
+      if (this.stateTimer >= FIRE_CHARGE_DURATION) {
+        this.state = 'fireSpit';
+        this.stateTimer = 0;
+        this.frameIndex = 6;
+        this.wantsToFire = true;
+      }
+      return;
+    }
+
+    if (this.state === 'fireSpit') {
+      this.frameIndex = 6;
+      if (this.stateTimer >= FIRE_SPIT_DURATION) {
+        this.state = 'fireRecover';
+        this.stateTimer = 0;
+        this.frameIndex = 7;
+      }
+      return;
+    }
+
+    if (this.state === 'fireRecover') {
+      this.frameIndex = 7;
+      if (this.stateTimer >= FIRE_RECOVER_DURATION) {
         this.state = 'pause';
         this.stateTimer = 0;
         this.idlePulseTimer = 0;
@@ -172,7 +156,8 @@ export class BossFrog {
       return;
     }
 
-    // airborne physics: rise/fall
+    // airborne physics: rise/fall (state === 'rise' the whole time in the
+    // air — frame stays 3 throughout, matching the single "airborne" cell)
     this.vy += this.gravity * dt;
     this.y += this.vy * dt;
     this.x += this.direction * this.hopSpeed * dt;
@@ -187,10 +172,6 @@ export class BossFrog {
       this.frameIndex = 4;
       this.wantsToSpawnFrog = true; // GameCanvas enforces the 5-alive cap
     }
-  }
-
-  getBounds() {
-    return { x: this.x, y: this.y, width: this.width, height: this.height };
   }
 
   draw(ctx, spriteSheet) {

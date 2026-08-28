@@ -563,6 +563,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       if (boss && boss.alive) {
         boss.update(dt);
 
+        // Contact damage, same as a frog — player.takeHit() already has
+        // its own invulnerability window, so standing against it doesn't
+        // drain HP every frame.
+        if (isColliding(playerBounds, boss.getBounds())) {
+          player.takeHit();
+          playSound('hit', 0.6);
+        }
+
                 if (boss.wantsToFire) {
           boss.wantsToFire = false;
           const bulletY = boss.y + boss.height * 0.3 - 2;
@@ -581,7 +589,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           const aliveBabyCount = frogsRef.current.filter((f) => f.alive).length;
           if (aliveBabyCount < MAX_BOSSFROG_BABIES) {
             frogsRef.current.push(
-              new Frog(FROG_GROUND_Y, { ...levelConfigRef.current, frogHealth: 2 }, {
+              new Frog(FROG_GROUND_Y, { ...levelConfigRef.current, frogHealth: 1 }, {
                 startX: boss.x + boss.width / 2,
                 minX: BOSSFROG_ARENA_MIN_X,
                 maxX: 800 - FROG_WIDTH, // babies get their OWN full-width bound, independent of the boss's already-width-adjusted range
