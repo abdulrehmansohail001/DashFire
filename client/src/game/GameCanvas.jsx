@@ -290,7 +290,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
       const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
-      const cactusRef = useRef(LEVELS[initialLevelIndex].hasCactus ? new Cactus(380, 260) : null);
+      const cactusRef = useRef(LEVELS[initialLevelIndex].hasCactus ? new Cactus(380, 310) : null);
       const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
   const eagleProjectilesRef = useRef([]);
   const frogsRef = useRef(buildFrogsForLevel(LEVELS[initialLevelIndex]));
@@ -319,7 +319,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     enemyBulletsRef.current = [];
     bulletsRef.current = [];
         obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
-        cactusRef.current = config.hasCactus ? new Cactus(380, 260) : null;
+        cactusRef.current = config.hasCactus ? new Cactus(380, 310) : null;
         eaglesRef.current = buildEaglesForLevel(config);
     eagleProjectilesRef.current = [];
     frogsRef.current = buildFrogsForLevel(config);
