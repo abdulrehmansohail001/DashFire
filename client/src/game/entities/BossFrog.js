@@ -198,10 +198,11 @@ export class BossFrog {
     }
 
     if (spriteSheet && spriteSheet.loaded) {
-      const drawHeight = 220;
+      const drawHeight = 260; // bigger than before (was 220)
       const drawWidth = drawHeight * (spriteSheet.frameWidth / spriteSheet.frameHeight);
       const drawX = this.x + this.width / 2 - drawWidth / 2;
-      const drawY = this.y + this.height - drawHeight;
+      const Y_NUDGE = 40; // sits it higher than the raw ground-anchored math would
+      const drawY = this.y + this.height - drawHeight - Y_NUDGE;
       const row = Math.floor(this.frameIndex / 4);
       const col = this.frameIndex % 4;
       const flip = this.direction < 0;
