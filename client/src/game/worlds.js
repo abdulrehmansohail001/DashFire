@@ -36,7 +36,7 @@ export const WORLDS = [
     sprites: {
       player: { path: '/sprites/player.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
       playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
-            enemy: { path: '/sprites/martian_cat.png', frameWidth: 328, frameHeight: 1199 / 4, columns: 4, rows: 4 },
+      enemy: { path: '/sprites/martian_cat.png', frameWidth: 328, frameHeight: 300, columns: 4, rows: 4 },
       eagle: null,   // World 2 has no eagle — replaced by Frog (separate entity, not built yet)
       boss: null,
       background: null, // TODO: mars_bg.jpg
