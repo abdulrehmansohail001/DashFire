@@ -15,6 +15,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Player } from './entities/Player';
 import { isColliding, Obstacle } from './entities/Obstacle';
+import { Cactus } from './entities/Cactus';
 import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
@@ -271,6 +272,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const bossSheet = getSheet(world.sprites.boss);
   const moonBgSheet = getSheet(world.sprites.background);
   const obstacleImage = getImage(world.sprites.obstacle);
+  const cactusImage = getImage(world.sprites.cactus);
   const frogSheet = getSheet(world.sprites.frog);
 
   const canvasRef = useRef(null);
@@ -288,6 +290,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
       const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
+      const cactusRef = useRef(LEVELS[initialLevelIndex].hasCactus ? new Cactus(380, 260) : null);
       const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
   const eagleProjectilesRef = useRef([]);
   const frogsRef = useRef(buildFrogsForLevel(LEVELS[initialLevelIndex]));
@@ -316,6 +319,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     enemyBulletsRef.current = [];
     bulletsRef.current = [];
         obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
+        cactusRef.current = config.hasCactus ? new Cactus(380, 260) : null;
         eaglesRef.current = buildEaglesForLevel(config);
     eagleProjectilesRef.current = [];
     frogsRef.current = buildFrogsForLevel(config);
@@ -433,6 +437,21 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         } else {
           player.x = obstacle.x + obstacle.width;
         }
+      }
+
+      // Cactus: Obstacle/Frog hybrid — same solid push-back as the wall
+      // above, PLUS contact damage like a frog. player.takeHit() already
+      // has its own invulnerability window, so standing against it doesn't
+      // drain HP every frame.
+      const cactus = cactusRef.current;
+      if (cactus && isColliding(player.getBounds(), cactus.getBounds())) {
+        if (prevPlayerX < cactus.x) {
+          player.x = cactus.x - player.width;
+        } else {
+          player.x = cactus.x + cactus.width;
+        }
+        player.takeHit();
+        playSound('hit', 0.6);
       }
 
       const enemies = enemiesRef.current;
@@ -574,6 +593,10 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           bullet.hit = true; // player bullets can't pass through the wall
           continue;
         }
+        if (cactusRef.current && isColliding(bullet.getBounds(), cactusRef.current.getBounds())) {
+          bullet.hit = true; // solid like the wall — blocks bullets too
+          continue;
+        }
                 let hitEagle = false;
         for (const eagle of eagles) {
           if (!eagle.alive) continue;
@@ -643,6 +666,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
       if (obstacleRef.current) {
         obstacleRef.current.draw(ctx, obstacleImage);
+      }
+      if (cactusRef.current) {
+        cactusRef.current.draw(ctx, cactusImage);
       }
 
       ctx.strokeStyle = '#666';

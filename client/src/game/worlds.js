@@ -27,6 +27,7 @@ export const WORLDS = [
       boss: { path: '/sprites/boss.png', frameWidth: 500 / 3, frameHeight: 250, columns: 3, rows: 2 },
       background: { path: '/sprites/moon_bg.jpg', frameWidth: 366, frameHeight: 352, columns: 8, rows: 1 },
       obstacle: '/sprites/obstacle.png', // plain Image, not a SpriteSheet grid
+      cactus: null, // TODO: cactus.png once generated — falls back to placeholder art
     },
     levels: WORLD_1_LEVELS,
   },
@@ -41,6 +42,7 @@ export const WORLDS = [
       boss: null,
       background: { path: '/sprites/mars_bg.jpg', frameWidth: 366, frameHeight: 352, columns: 8, rows: 1 },
       obstacle: '/sprites/obstacle.png',
+      cactus: null, // TODO: cactus.png once generated
       frog: { path: '/sprites/frog.png', frameWidth: 220, frameHeight: 311, columns: 8, rows: 1 },
     },
     levels: WORLD_2_LEVELS,

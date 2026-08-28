@@ -106,8 +106,8 @@ export const LEVELS = [
     burstGap: 0.14,
 
     hasFrog: true,
-frogCount: 1,
-frogHealth: 4,
+    frogCount: 1,
+    frogHealth: 4,
 
   },
     // Level 7 — one gunman + two eagles patrolling separate lanes
@@ -123,6 +123,8 @@ frogHealth: 4,
     reactionDelayMax: 0.7,
     fireSequence: [1, 2, 1, 2],
     burstGap: 0.14,
+    
+    hasCactus: true,
 
     hasEagle: true,
     eagleCount: 2,
