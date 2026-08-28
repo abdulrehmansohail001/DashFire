@@ -39,7 +39,7 @@ export const WORLDS = [
       playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
       enemy: { path: '/sprites/martian_cat.png', frameWidth: 310, frameHeight: 310, columns: 4, rows: 4 },
       eagle: null,   // World 2 has no eagle — replaced by Frog
-      boss: null,
+            boss: { path: '/sprites/bossfrog.png', frameWidth: 1254 / 4, frameHeight: 1254 / 2, columns: 4, rows: 2 },
       background: { path: '/sprites/mars_bg.jpg', frameWidth: 366, frameHeight: 352, columns: 8, rows: 1 },
       obstacle: '/sprites/obstacle.png',
       cactus: '/sprites/cactus.png',

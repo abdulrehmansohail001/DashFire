@@ -28,6 +28,7 @@ import { Boss } from './entities/Boss';
 import { playSound } from './sound';
 import { BossFireball } from './entities/BossFireball';
 import { Frog } from './entities/Frog';
+import { BossFrog } from './entities/BossFrog';
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
 const ENEMY_GROUND_Y = 340;
@@ -64,6 +65,12 @@ const BOSS_Y = 200; // feet at y=400, same ground line as everything else
 const MAX_BOSS_SHIELD_ENEMIES = 2;
 const SHIELD_PATROL_MIN_X = 480;
 const SHIELD_PATROL_MAX_X = 620;
+
+// World 2 boss (BossFrog) actually hops around, unlike World 1's
+// stationary Boss — give it its own wide lane and swarm cap.
+const BOSSFROG_ARENA_MIN_X = 420;
+const BOSSFROG_ARENA_MAX_X = 740;
+const MAX_BOSSFROG_BABIES = 5;
 
 // Sheets/images are cached by path+dimensions so switching worlds never
 // reloads or recreates an asset that's shared across worlds (e.g. the
@@ -294,7 +301,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
   const eagleProjectilesRef = useRef([]);
   const frogsRef = useRef(buildFrogsForLevel(LEVELS[initialLevelIndex]));
-  const bossRef = useRef(LEVELS[initialLevelIndex].hasBoss ? new Boss(BOSS_X, BOSS_Y, LEVELS[initialLevelIndex]) : null);
+  const bossRef = useRef(
+    LEVELS[initialLevelIndex].hasBoss
+      ? new Boss(BOSS_X, BOSS_Y, LEVELS[initialLevelIndex])
+      : LEVELS[initialLevelIndex].hasBossFrog
+      ? new BossFrog(FROG_GROUND_Y, {
+          ...LEVELS[initialLevelIndex],
+          arenaMinX: BOSSFROG_ARENA_MIN_X,
+          arenaMaxX: BOSSFROG_ARENA_MAX_X,
+        })
+      : null
+  );
   const levelConfigRef = useRef(LEVELS[initialLevelIndex]);
   const keysRef = useRef({});
   const gameStateRef = useRef('playing');
@@ -323,7 +340,11 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         eaglesRef.current = buildEaglesForLevel(config);
     eagleProjectilesRef.current = [];
     frogsRef.current = buildFrogsForLevel(config);
-    bossRef.current = config.hasBoss ? new Boss(BOSS_X, BOSS_Y, config) : null;
+        bossRef.current = config.hasBoss
+      ? new Boss(BOSS_X, BOSS_Y, config)
+      : config.hasBossFrog
+      ? new BossFrog(FROG_GROUND_Y, { ...config, arenaMinX: BOSSFROG_ARENA_MIN_X, arenaMaxX: BOSSFROG_ARENA_MAX_X })
+      : null;
     levelConfigRef.current = config;
 
     gameStateRef.current = 'playing';
@@ -542,9 +563,28 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
                 if (boss.wantsToFire) {
           boss.wantsToFire = false;
           const bulletY = boss.y + boss.height * 0.3 - 2;
+          // BossFrog fires from whichever way it's actually facing (it
+          // hops back and forth); World 1's Boss has no .direction and
+          // always fires left, so that stays the fallback.
+          const fireDirection = typeof boss.direction === 'number' ? (boss.direction < 0 ? 'left' : 'right') : 'left';
+          const bulletX = fireDirection === 'right' ? boss.x + boss.width : boss.x;
           enemyBulletsRef.current.push(
-            new BossFireball(boss.x, bulletY, 'left', levelConfigRef.current.bulletSpeed ?? 260)
+            new BossFireball(bulletX, bulletY, fireDirection, levelConfigRef.current.bulletSpeed ?? 260)
           );
+        }
+
+        if (boss.wantsToSpawnFrog) {
+          boss.wantsToSpawnFrog = false;
+          const aliveBabyCount = frogsRef.current.filter((f) => f.alive).length;
+          if (aliveBabyCount < MAX_BOSSFROG_BABIES) {
+            frogsRef.current.push(
+              new Frog(FROG_GROUND_Y, { ...levelConfigRef.current, frogHealth: 2 }, {
+                startX: boss.x + boss.width / 2,
+                minX: BOSSFROG_ARENA_MIN_X,
+                maxX: BOSSFROG_ARENA_MAX_X - FROG_WIDTH,
+              })
+            );
+          }
         }
 
         if (boss.wantsToSpawn) {

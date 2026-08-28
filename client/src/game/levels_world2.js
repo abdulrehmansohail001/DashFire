@@ -144,20 +144,16 @@ export const LEVELS = [
     frogHealth: 5,
   },
   // Level 10 — left as-is, will revisit later
+    // Level 10 — Bloat King: enraged hopping frog boss. Hops around instead
+  // of sitting still, spawns a 2-HP baby frog on every landing (capped at
+  // 5 alive), and fires on its own independent random timer.
   {
     level: 10,
     enemyCount: 0,
-    hasBoss: true,
-    bossHealth: 20,
-    health: 2,          // HP of each shield gunman the boss spawns
-    eagleHealth: 1,      // HP of the shield eagle the boss spawns
-    moveSpeed: 190,
-    bulletSpeed: 260,   // also reused for the boss's own bullets
-    actionIntervalMin: 1.3,
-    actionIntervalMax: 2.0,
-    reactionDelayMin: 0.35,
-    reactionDelayMax: 0.65,
-    fireSequence: [1, 2],
-    burstGap: 0.15,
+    hasBossFrog: true,
+    bossHealth: 30,
+    bulletSpeed: 260,          // reused for the boss's fireball
+    bossFireIntervalMin: 2.5,
+    bossFireIntervalMax: 4.5,
   },
 ];
