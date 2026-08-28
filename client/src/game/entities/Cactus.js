@@ -21,7 +21,17 @@ export class Cactus {
 
   draw(ctx, image) {
     if (image && image.complete && image.naturalWidth > 0) {
-      ctx.drawImage(image, this.x, this.y, this.width, this.height);
+      // Draw at a size derived from the image's own aspect ratio, not the
+      // collision hitbox — the art has arms that spread well beyond the
+      // hitbox's width, so stretching it to fit the hitbox exactly would
+      // squash it. Anchored bottom-center on the hitbox so the base still
+      // lines up with where collision/ground actually is.
+      const aspect = image.naturalWidth / image.naturalHeight;
+      const drawHeight = 140;
+      const drawWidth = drawHeight * aspect;
+      const drawX = this.x + this.width / 2 - drawWidth / 2;
+      const drawY = this.y + this.height - drawHeight;
+      ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
       return;
     }
     // Placeholder: a simple green cactus silhouette until real art exists
