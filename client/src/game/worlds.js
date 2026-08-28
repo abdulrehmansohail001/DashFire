@@ -14,6 +14,7 @@
 
 import { LEVELS as WORLD_1_LEVELS } from './levels';
 import { LEVELS as WORLD_2_LEVELS } from './levels_world2';
+import { LEVELS as WORLD_3_LEVELS } from './levels_world3';
 
 export const WORLDS = [
   {
@@ -49,7 +50,22 @@ export const WORLDS = [
     },
     levels: WORLD_2_LEVELS,
   },
-  { id: 2, name: 'World 3', sprites: {}, levels: [] },
+  {
+    id: 2,
+    name: 'Neon Tundra',
+    missionTitle: 'NEON TUNDRA',
+    sprites: {
+      player: { path: '/sprites/player.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
+      playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
+      enemy: null,    // TODO: Yeti — not built yet, placeholder art from Enemy.js applies
+      eagle: null,    // World 3 has no plain eagle — replaced by the Spaceship/Bee system
+      boss: null,     // TBD later
+      background: null, // TODO: neon_tundra_bg.jpg
+      obstacle: '/sprites/obstacle.png',
+      cactus: null,   // TODO: freezing cactus art, separate from World 2's cactus.png
+    },
+    levels: WORLD_3_LEVELS,
+  },
   { id: 3, name: 'World 4', sprites: {}, levels: [] },
   { id: 4, name: 'World 5', sprites: {}, levels: [] },
 ];

@@ -77,6 +77,16 @@ export class Player {
     this.invulnerableTimer = 0;
     this.shootCooldown = 0;
 
+    // Freeze status (World 3+): a freeze-capable hit damages AND locks all
+    // input (move/jump/shoot) for frozenTimer seconds. Deliberately
+    // independent of invulnerableTimer — freeze duration (1-1.5s) is
+    // randomized to run slightly LONGER than the 1s invulnerability window,
+    // so there's a real gap where the player is frozen but no longer
+    // invulnerable, and a second qualifying hit in that gap lands fresh
+    // damage + its own new freeze. That's the intended risk, not a bug.
+    this.frozen = false;
+    this.frozenTimer = 0;
+
     this.isSitting = false; // set every frame from GameCanvas based on ArrowDown held
 
     // Animation state
@@ -90,6 +100,10 @@ export class Player {
 
   // Movement only — held-key state, safe to read every frame.
   handleInput(keys) {
+    if (this.frozen) {
+      this.vx = 0;
+      return;
+    }
     if (keys['ArrowLeft'] || keys['a']) {
       this.vx = -MOVE_SPEED;
       this.facing = 'left';
@@ -112,6 +126,7 @@ export class Player {
   // Allows MAX_JUMPS total jumps before landing (MAX_JUMPS=2 -> one ground
   // jump + one real mid-air double-jump).
   jump() {
+    if (this.frozen) return;
     if (this.jumpsUsed < MAX_JUMPS) {
       this.vy = this.jumpsUsed === 0 ? JUMP_VELOCITY : DOUBLE_JUMP_VELOCITY;
       this.isGrounded = false;
@@ -125,7 +140,7 @@ export class Player {
   }
 
   canShoot() {
-    return this.shootCooldown <= 0;
+    return this.shootCooldown <= 0 && !this.frozen;
   }
 
   // Locks the player into the death sequence: freezes physics, plays the
@@ -177,6 +192,13 @@ export class Player {
       }
     }
 
+    if (this.frozen) {
+      this.frozenTimer -= dt;
+      if (this.frozenTimer <= 0) {
+        this.frozen = false;
+      }
+    }
+
     if (this.shootCooldown > 0) {
       this.shootCooldown -= dt;
     }
@@ -189,6 +211,8 @@ export class Player {
   }
 
   updateAnimation(dt) {
+    if (this.frozen) return; // pose holds entirely — no state change, no frame advance
+
     if (!this.outroLocked) {
       // Priority: airborne > shooting > sitting > running > idle.
       let nextState;
@@ -238,6 +262,19 @@ export class Player {
     this.invulnerableTimer = 1.0;
   }
 
+  // Freeze-capable hit — same invulnerability gate as a normal hit (so this
+  // doesn't stack/double-dip during the 1s post-hit window), but ALSO locks
+  // the player for a randomized 1-1.5s. Used by Yeti, icy bees, and the
+  // freezing cactus.
+  takeFreezeHit(freezeMin = 1.0, freezeMax = 1.5) {
+    if (this.invulnerable) return;
+    this.health -= 1;
+    this.invulnerable = true;
+    this.invulnerableTimer = 1.0;
+    this.frozen = true;
+    this.frozenTimer = freezeMin + Math.random() * (freezeMax - freezeMin);
+  }
+
   // Shield pickup — reuses the same invulnerable/flicker system as the
   // post-hit grace period, just for a longer duration and without a health
   // change.
@@ -253,16 +290,14 @@ export class Player {
   // mainSheet/extraSheet are optional — if the one this animState needs
   // isn't loaded yet, falls back to the original placeholder rectangle so
   // there's never a blank gap.
-  draw(ctx, mainSheet, extraSheet) {
-    // Skip the hit-flicker while an outro is playing — invulnerable is
-    // often still true from the hit that triggered death, and flickering
-    // through the death animation looks glitchy rather than intentional.
+   draw(ctx, mainSheet, extraSheet) {
     if (!this.outroLocked && this.invulnerable && Math.floor(this.invulnerableTimer * 10) % 2 === 0) {
       return;
     }
 
     const config = ANIM_CONFIG[this.animState];
     const sheet = config.sheet === 'extra' ? extraSheet : mainSheet;
+    let drew = false;
 
     if (sheet && sheet.loaded) {
       let row, col;
@@ -280,16 +315,29 @@ export class Player {
       const drawY = this.y + this.height - drawHeight;
       const flip = this.facing === 'left';
 
-      const drew = sheet.draw(ctx, row, col, drawX, drawY, drawWidth, drawHeight, flip);
-      if (drew) return;
+      drew = sheet.draw(ctx, row, col, drawX, drawY, drawWidth, drawHeight, flip);
     }
 
-    // Placeholder rectangle fallback (sheet missing/not loaded yet)
-    ctx.fillStyle = this.facing === 'right' ? '#3ad1ff' : '#3affb0';
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    if (!drew) {
+      // Placeholder rectangle fallback (sheet missing/not loaded yet)
+      ctx.fillStyle = this.facing === 'right' ? '#3ad1ff' : '#3affb0';
+      ctx.fillRect(this.x, this.y, this.width, this.height);
 
-    ctx.fillStyle = '#111';
-    const noseX = this.facing === 'right' ? this.x + this.width - 6 : this.x;
-    ctx.fillRect(noseX, this.y + 10, 6, 6);
+      ctx.fillStyle = '#111';
+      const noseX = this.facing === 'right' ? this.x + this.width - 6 : this.x;
+      ctx.fillRect(noseX, this.y + 10, 6, 6);
+    }
+
+    if (this.frozen) {
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      ctx.fillStyle = '#8fe9ff';
+      ctx.fillRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
+      ctx.restore();
+
+      ctx.strokeStyle = '#d6faff';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
+    }
   }
 }
