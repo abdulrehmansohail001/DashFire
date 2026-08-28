@@ -24,6 +24,8 @@ import { WORLDS } from './worlds';
 import { Background } from './entities/Background';
 import { Eagle } from './entities/Eagle';
 import { EagleProjectile } from './entities/EagleProjectile';
+import { Yeti } from './entities/Yeti';
+import { YetiProjectile } from './entities/YetiProjectile';
 import { Boss } from './entities/Boss';
 import { playSound } from './sound';
 import { BossFireball } from './entities/BossFireball';
@@ -139,6 +141,22 @@ function buildEnemiesForLevel(levelConfig) {
   }
 
   return enemies;
+}
+// Builds N yetis for a level config. Unlike Enemy/Eagle, yetis never move —
+// "standing" is the whole point — so this just spreads their fixed spots
+// across the arena when there's more than one.
+function buildYetisForLevel(levelConfig) {
+  if (!levelConfig.hasYeti) return [];
+  const yetiCount = levelConfig.yetiCount ?? 1;
+  const slotWidth = (ARENA_MAX_X - ARENA_MIN_X) / yetiCount;
+  const yetis = [];
+
+  for (let i = 0; i < yetiCount; i++) {
+    const startX = ARENA_MIN_X + slotWidth * (i + 0.5);
+    yetis.push(new Yeti(startX, ENEMY_GROUND_Y, levelConfig));
+  }
+
+  return yetis;
 }
 // Builds N eagles for a level config. All eagles now share the FULL patrol
 // width instead of being locked into non-overlapping lanes — only their
@@ -286,6 +304,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const playerExtraSheet = getSheet(world.sprites.playerExtra);
   const enemySheet = getSheet(world.sprites.enemy);
   const eagleSheet = getSheet(world.sprites.eagle);
+  const yetiSheet = getSheet(world.sprites.yeti);
   const bossSheet = getSheet(world.sprites.boss);
   const moonBgSheet = getSheet(world.sprites.background);
   const obstacleImage = getImage(world.sprites.obstacle);
@@ -309,6 +328,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
       const cactusRef = useRef(LEVELS[initialLevelIndex].hasCactus ? new Cactus(380, 310) : null);
       const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
+      const yetisRef = useRef(buildYetisForLevel(LEVELS[initialLevelIndex]));
+      const yetiProjectilesRef = useRef([]);
   const eagleProjectilesRef = useRef([]);
   const frogsRef = useRef(buildFrogsForLevel(LEVELS[initialLevelIndex]));
   const bossRef = useRef(
@@ -348,6 +369,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
         cactusRef.current = config.hasCactus ? new Cactus(380, 310) : null;
         eaglesRef.current = buildEaglesForLevel(config);
+        yetisRef.current = buildYetisForLevel(config);
+        yetiProjectilesRef.current = [];
     eagleProjectilesRef.current = [];
     frogsRef.current = buildFrogsForLevel(config);
         bossRef.current = config.hasBoss
@@ -548,6 +571,35 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         return !p.hasLanded(400); // 400 = ground line; despawn once it lands, hit or not
       });
 
+      // Yetis: standing (never move), throw one big ice projectile at a
+      // time toward whichever side the player is currently on. Contact
+      // uses takeFreezeHit() instead of takeHit() — damages AND locks the
+      // player's input for 1-1.5s, per the World 3 freeze mechanic.
+      const yetis = yetisRef.current;
+      for (const yeti of yetis) {
+        if (!yeti.alive) continue;
+
+        yeti.update(dt, player.x);
+        if (yeti.wantsToThrow) {
+          yeti.wantsToThrow = false;
+          const throwY = yeti.y + yeti.height * 0.35;
+          const throwX = yeti.facing === 'right' ? yeti.x + yeti.width : yeti.x;
+          yetiProjectilesRef.current.push(
+            new YetiProjectile(throwX, throwY, yeti.facing, yeti.projectileSpeed)
+          );
+        }
+      }
+
+      yetiProjectilesRef.current.forEach((p) => p.update(dt));
+      yetiProjectilesRef.current = yetiProjectilesRef.current.filter((p) => {
+        if (isColliding(playerBounds, p.getBounds())) {
+          player.takeFreezeHit();
+          playSound('hit', 0.6);
+          return false; // consumed on hit
+        }
+        return !p.isOffScreen(CANVAS_WIDTH);
+      });
+
       // Frogs: no projectiles at all — the only "attack" is contact. Each
       // frog just hops around on its own physics; touching the player
       // calls takeHit() directly, which is safe from multi-frame drain
@@ -669,6 +721,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           }
         }
                 if (hitEagle) continue;
+        let hitYeti = false;
+        for (const yeti of yetis) {
+          if (!yeti.alive) continue;
+          if (isColliding(bullet.getBounds(), yeti.getBounds())) {
+            yeti.takeHit();
+            bullet.hit = true;
+            hitYeti = true;
+            break;
+          }
+        }
+        if (hitYeti) continue;
         let hitFrog = false;
         for (const frog of frogs) {
           if (!frog.alive) continue;
@@ -700,7 +763,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
           const allEnemiesDead = bossRef.current
   ? !bossRef.current.alive
-  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && frogs.every((f) => !f.alive);
+  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
@@ -744,6 +807,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       bulletsRef.current.forEach((b) => b.draw(ctx));
                         eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
+      yetisRef.current.forEach((yeti) => yeti.draw(ctx, yetiSheet));
+      yetiProjectilesRef.current.forEach((p) => p.draw(ctx));
       frogsRef.current.forEach((frog) => frog.draw(ctx, frogSheet));
       if (bossRef.current) bossRef.current.draw(ctx, bossSheet);
 
@@ -802,11 +867,23 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         });
       }
 
+      // Yetis get their own stacked rows below eagles, same pattern.
+      if (!bossRef.current) {
+        yetisRef.current.forEach((yeti, i) => {
+          if (!yeti.maxHealth) return;
+          const yetiRowY = 34 + (enemies.length + eaglesRef.current.length + i) * ENEMY_ROW_HEIGHT;
+          const label = yetisRef.current.length > 1 ? `YETI ${i + 1} HP` : 'YETI HP';
+          const pct = Math.max(yeti.health, 0) / yeti.maxHealth;
+          drawHpBar(ctx, barX, yetiRowY - 8, barWidth, 16, pct, label, 'right');
+          drawHudPortrait(ctx, yetiSheet, enemyCircleX, yetiRowY, circleRadius, '#4a90a4', 'Y');
+        });
+      }
+
       // Frogs get their own stacked rows too, below eagles, same pattern.
             if (!bossRef.current) {
         frogsRef.current.forEach((frog, i) => {
           if (!frog.maxHealth) return;
-          const frogRowY = 34 + (enemies.length + eaglesRef.current.length + i) * ENEMY_ROW_HEIGHT;
+          const frogRowY = 34 + (enemies.length + eaglesRef.current.length + yetisRef.current.length + i) * ENEMY_ROW_HEIGHT;
           const label = frogsRef.current.length > 1 ? `FROG ${i + 1} HP` : 'FROG HP';
           const pct = Math.max(frog.health, 0) / frog.maxHealth;
           drawHpBar(ctx, barX, frogRowY - 8, barWidth, 16, pct, label, 'right');

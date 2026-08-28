@@ -6,7 +6,9 @@
 // doesn't block a win). No eagles in this world.
 
 export const LEVELS = [
-  // Level 1 — 2 cats, 10 HP each
+  // Level 1 — introduces the Yeti: standing, throws freezing ice chunks.
+  // Everything else copied from World 2 for now (per plan, to be redesigned
+  // level-by-level once the core Neon Tundra mechanics are all built).
   {
     level: 1,
     enemyCount: 2,
@@ -19,6 +21,13 @@ export const LEVELS = [
     reactionDelayMax: 1.1,
     fireSequence: [1, 1, 2],
     burstGap: 0.2,
+
+    hasYeti: true,
+    yetiCount: 1,
+    yetiHealth: 8,
+    yetiThrowIntervalMin: 1.8,
+    yetiThrowIntervalMax: 2.8,
+    yetiProjectileSpeed: 220,
   },
   // Level 2 — 3 cats, 10 HP each
   {
