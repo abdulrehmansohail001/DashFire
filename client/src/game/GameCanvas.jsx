@@ -26,6 +26,8 @@ import { Eagle } from './entities/Eagle';
 import { EagleProjectile } from './entities/EagleProjectile';
 import { Yeti } from './entities/Yeti';
 import { YetiProjectile } from './entities/YetiProjectile';
+import { Spaceship } from './entities/Spaceship';
+import { IcyBee } from './entities/IcyBee';
 import { Boss } from './entities/Boss';
 import { playSound } from './sound';
 import { BossFireball } from './entities/BossFireball';
@@ -54,6 +56,15 @@ const ARENA_MAX_X = 750;
 const EAGLE_ARENA_MIN_X = 0;
 const EAGLE_ARENA_MAX_X = 800; // matches player's full reachable range (x: 0 to 760) — no dead corner
 const EAGLE_WIDTH = 60;
+
+// World 3 nested enemy: ship flies at eagle height, bees fly a bit lower.
+const SHIP_HEIGHT_Y = 90;
+const ICEBEE_HEIGHT_Y = SHIP_HEIGHT_Y + 70;
+
+function buildSpaceshipsForLevel(levelConfig) {
+  if (!levelConfig.hasSpaceship) return [];
+  return [new Spaceship(SHIP_HEIGHT_Y, levelConfig, { startX: 400, minX: EAGLE_ARENA_MIN_X, maxX: EAGLE_ARENA_MAX_X - 90 })];
+}
 
 // Full-width patrol span frogs are allowed to hop within.
 const FROG_GROUND_Y = 340; // same baseline as gunmen — feet land on the same ground line
@@ -320,7 +331,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const playerExtraSheet = getSheet(world.sprites.playerExtra);
   const enemySheet = getSheet(world.sprites.enemy);
   const eagleSheet = getSheet(world.sprites.eagle);
-  const yetiSheet = getSheet(world.sprites.yeti);
+     const yetiSheet = getSheet(world.sprites.yeti);
+    const shipSheet = getSheet(world.sprites.spaceship);
+    const iceBeeSheet = getSheet(world.sprites.iceBee);
   const bossSheet = getSheet(world.sprites.boss);
   const moonBgSheet = getSheet(world.sprites.background);
   const obstacleImage = getImage(world.sprites.obstacle);
@@ -344,8 +357,10 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
       const cactusRef = useRef(LEVELS[initialLevelIndex].hasCactus ? new Cactus(380, 310) : null);
       const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
-      const yetisRef = useRef(buildYetisForLevel(LEVELS[initialLevelIndex]));
-      const yetiProjectilesRef = useRef([]);
+  const yetisRef = useRef(buildYetisForLevel(LEVELS[initialLevelIndex]));
+  const yetiProjectilesRef = useRef([]);
+  const spaceshipsRef = useRef(buildSpaceshipsForLevel(LEVELS[initialLevelIndex]));
+  const iceBeesRef = useRef([]); // spawned dynamically at runtime by the spaceship, never built up front
   const eagleProjectilesRef = useRef([]);
   const frogsRef = useRef(buildFrogsForLevel(LEVELS[initialLevelIndex]));
   const bossRef = useRef(
@@ -386,7 +401,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         cactusRef.current = config.hasCactus ? new Cactus(380, 310) : null;
         eaglesRef.current = buildEaglesForLevel(config);
         yetisRef.current = buildYetisForLevel(config);
-        yetiProjectilesRef.current = [];
+    yetiProjectilesRef.current = [];
+    spaceshipsRef.current = buildSpaceshipsForLevel(config);
+    iceBeesRef.current = [];
     eagleProjectilesRef.current = [];
     frogsRef.current = buildFrogsForLevel(config);
         bossRef.current = config.hasBoss
@@ -606,6 +623,53 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         }
       }
 
+      // Spaceships: fly, spawn bees while under cap, and once GameCanvas
+      // confirms all 3 spawned bees are dead, switch to aggressor mode
+      // and start firing (BossFireball reused — "slow projectiles").
+      const spaceships = spaceshipsRef.current;
+      const iceBees = iceBeesRef.current;
+      for (const ship of spaceships) {
+        if (!ship.alive) continue;
+        ship.update(dt);
+
+        if (ship.wantsToSpawnBee) {
+          ship.wantsToSpawnBee = false;
+          iceBeesRef.current.push(
+            new IcyBee(ICEBEE_HEIGHT_Y, levelConfigRef.current, {
+              startX: ship.x + ship.width / 2,
+              minX: EAGLE_ARENA_MIN_X,
+              maxX: EAGLE_ARENA_MAX_X - 34,
+            })
+          );
+        }
+
+        if (ship.beesSpawned >= 3 && iceBeesRef.current.every((b) => !b.alive)) {
+          ship.activateAggressor();
+        }
+
+        if (ship.wantsToFire) {
+          ship.wantsToFire = false;
+          const bulletY = ship.y + ship.height * 0.5 - 2;
+          const bulletX = ship.vx < 0 ? ship.x : ship.x + ship.width;
+          enemyBulletsRef.current.push(
+            new BossFireball(bulletX, bulletY, ship.vx < 0 ? 'left' : 'right', ship.fireSpeed)
+          );
+        }
+      }
+
+      for (const bee of iceBees) {
+        if (!bee.alive) continue;
+        bee.update(dt, player.x);
+        if (bee.wantsToThrow) {
+          bee.wantsToThrow = false;
+          const throwY = bee.y + bee.height * 0.3;
+          const throwX = bee.facing === 'right' ? bee.x + bee.width : bee.x;
+          yetiProjectilesRef.current.push(
+            new YetiProjectile(throwX, throwY, bee.facing, bee.projectileSpeed)
+          );
+        }
+      }
+
       yetiProjectilesRef.current.forEach((p) => p.update(dt));
       yetiProjectilesRef.current = yetiProjectilesRef.current.filter((p) => {
         if (isColliding(playerBounds, p.getBounds())) {
@@ -738,6 +802,27 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         }
                 if (hitEagle) continue;
         let hitYeti = false;
+        let hitShipOrBee = false;
+        for (const ship of spaceships) {
+          if (!ship.alive) continue;
+          if (isColliding(bullet.getBounds(), ship.getBounds())) {
+            ship.takeHit();
+            bullet.hit = true;
+            hitShipOrBee = true;
+            break;
+          }
+        }
+        if (hitShipOrBee) continue;
+        for (const bee of iceBees) {
+          if (!bee.alive) continue;
+          if (isColliding(bullet.getBounds(), bee.getBounds())) {
+            bee.takeHit();
+            bullet.hit = true;
+            hitShipOrBee = true;
+            break;
+          }
+        }
+        if (hitShipOrBee) continue;
         for (const yeti of yetis) {
           if (!yeti.alive) continue;
           if (isColliding(bullet.getBounds(), yeti.getBounds())) {
@@ -779,7 +864,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
           const allEnemiesDead = bossRef.current
   ? !bossRef.current.alive
-  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive);
+  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && spaceshipsRef.current.every((s) => !s.alive) && iceBeesRef.current.every((b) => !b.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
@@ -825,6 +910,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
       yetisRef.current.forEach((yeti) => yeti.draw(ctx, yetiSheet));
       yetiProjectilesRef.current.forEach((p) => p.draw(ctx));
+      spaceshipsRef.current.forEach((ship) => ship.draw(ctx, shipSheet));
+      iceBeesRef.current.forEach((bee) => bee.draw(ctx, iceBeeSheet));
       frogsRef.current.forEach((frog) => frog.draw(ctx, frogSheet));
       if (bossRef.current) bossRef.current.draw(ctx, bossSheet);
 
@@ -892,6 +979,25 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           const pct = Math.max(yeti.health, 0) / yeti.maxHealth;
           drawHpBar(ctx, barX, yetiRowY - 8, barWidth, 16, pct, label, 'right');
           drawHudPortrait(ctx, yetiSheet, enemyCircleX, yetiRowY, circleRadius, '#4a90a4', 'Y');
+        });
+
+        const preShipRows = enemies.length + eaglesRef.current.length + yetisRef.current.length;
+        spaceshipsRef.current.forEach((ship, i) => {
+          if (!ship.maxHealth) return;
+          const shipRowY = 34 + (preShipRows + i) * ENEMY_ROW_HEIGHT;
+          const pct = Math.max(ship.health, 0) / ship.maxHealth;
+          drawHpBar(ctx, barX, shipRowY - 8, barWidth, 16, pct, 'SHIP HP', 'right');
+          drawHudPortrait(ctx, shipSheet, enemyCircleX, shipRowY, circleRadius, '#2a3a4a', 'S');
+        });
+
+        const preBeeRows = preShipRows + spaceshipsRef.current.length;
+        iceBeesRef.current.forEach((bee, i) => {
+          if (!bee.maxHealth) return;
+          const beeRowY = 34 + (preBeeRows + i) * ENEMY_ROW_HEIGHT;
+          const label = iceBeesRef.current.length > 1 ? `BEE ${i + 1} HP` : 'BEE HP';
+          const pct = Math.max(bee.health, 0) / bee.maxHealth;
+          drawHpBar(ctx, barX, beeRowY - 8, barWidth, 16, pct, label, 'right');
+          drawHudPortrait(ctx, iceBeeSheet, enemyCircleX, beeRowY, circleRadius, '#c9e8f5', 'B');
         });
       }
 

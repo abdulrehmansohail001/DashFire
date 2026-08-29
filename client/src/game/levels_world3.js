@@ -32,7 +32,9 @@ export const LEVELS = [
   // Level 2 — 3 cats, 10 HP each
   {
     level: 2,
-    enemyCount: 3,
+    enemyCount: 0,
+    hasSpaceship: true,
+    shipHealth: 15,
     health: 10,
     moveSpeed: 120,
     bulletSpeed: 260,
@@ -42,6 +44,12 @@ export const LEVELS = [
     reactionDelayMax: 1.1,
     fireSequence: [1, 1, 2],
     burstGap: 0.2,
+    hasYeti: true,
+    yetiCount: 1,
+    yetiHealth: 15,
+    yetiThrowIntervalMin: 1.3, // was 1.8 — a bit more frequent
+    yetiThrowIntervalMax: 2.0, // was 2.8
+    yetiProjectileSpeed: 220,
   },
   // Level 3 — first frog: 1 frog (5 HP) + 2 cats (10 HP)
   {
