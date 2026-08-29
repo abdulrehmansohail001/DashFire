@@ -310,41 +310,45 @@ export class Player {
   // isn't loaded yet, falls back to the original placeholder rectangle so
   // there's never a blank gap.
    draw(ctx, mainSheet, extraSheet, freezeSheet) {
-    if (!this.outroLocked && this.invulnerable && Math.floor(this.invulnerableTimer * 10) % 2 === 0) {
-      return;
-    }
+    // Only the player's OWN sprite should flicker during invulnerability —
+    // the freeze crystal overlay is drawn unconditionally further down, so
+    // it no longer blinks in sync with this.
+    const skipSpriteThisFrame =
+      !this.outroLocked && this.invulnerable && Math.floor(this.invulnerableTimer * 10) % 2 === 0;
 
-    const config = ANIM_CONFIG[this.animState];
-    const sheet = config.sheet === 'extra' ? extraSheet : mainSheet;
-    let drew = false;
+    if (!skipSpriteThisFrame) {
+      const config = ANIM_CONFIG[this.animState];
+      const sheet = config.sheet === 'extra' ? extraSheet : mainSheet;
+      let drew = false;
 
-    if (sheet && sheet.loaded) {
-      let row, col;
-      if (config.cells) {
-        [row, col] = config.cells[this.frameIndex];
-      } else {
-        row = config.row;
-        col = this.frameIndex;
+      if (sheet && sheet.loaded) {
+        let row, col;
+        if (config.cells) {
+          [row, col] = config.cells[this.frameIndex];
+        } else {
+          row = config.row;
+          col = this.frameIndex;
+        }
+
+        const aspect = sheet.frameWidth / sheet.frameHeight;
+        const drawHeight = SPRITE_DRAW_HEIGHT;
+        const drawWidth = SPRITE_DRAW_HEIGHT * aspect;
+        const drawX = this.x + this.width / 2 - drawWidth / 2;
+        const drawY = this.y + this.height - drawHeight;
+        const flip = this.facing === 'left';
+
+        drew = sheet.draw(ctx, row, col, drawX, drawY, drawWidth, drawHeight, flip);
       }
 
-      const aspect = sheet.frameWidth / sheet.frameHeight;
-      const drawHeight = SPRITE_DRAW_HEIGHT;
-      const drawWidth = SPRITE_DRAW_HEIGHT * aspect;
-      const drawX = this.x + this.width / 2 - drawWidth / 2;
-      const drawY = this.y + this.height - drawHeight;
-      const flip = this.facing === 'left';
+      if (!drew) {
+        // Placeholder rectangle fallback (sheet missing/not loaded yet)
+        ctx.fillStyle = this.facing === 'right' ? '#3ad1ff' : '#3affb0';
+        ctx.fillRect(this.x, this.y, this.width, this.height);
 
-      drew = sheet.draw(ctx, row, col, drawX, drawY, drawWidth, drawHeight, flip);
-    }
-
-    if (!drew) {
-      // Placeholder rectangle fallback (sheet missing/not loaded yet)
-      ctx.fillStyle = this.facing === 'right' ? '#3ad1ff' : '#3affb0';
-      ctx.fillRect(this.x, this.y, this.width, this.height);
-
-      ctx.fillStyle = '#111';
-      const noseX = this.facing === 'right' ? this.x + this.width - 6 : this.x;
-      ctx.fillRect(noseX, this.y + 10, 6, 6);
+        ctx.fillStyle = '#111';
+        const noseX = this.facing === 'right' ? this.x + this.width - 6 : this.x;
+        ctx.fillRect(noseX, this.y + 10, 6, 6);
+      }
     }
 
     if (this.frozen) {

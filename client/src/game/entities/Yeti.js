@@ -18,6 +18,9 @@ const IDLE_FRAME_DURATION = 0.22;
 const THROW_FRAME_DURATION = 0.09; // faster — windup/release should read as snappy, not sluggish
 const THROW_POSE_DURATION = THROW_FRAME_DURATION * FRAME_COUNT; // pose holds exactly as long as its 4 frames take
 
+const HIT_FLASH_DURATION = 0.18; // same blink timing as Enemy/Eagle/Frog
+const HIT_FLASH_INTERVAL = 0.06;
+
 export class Yeti {
   constructor(x, y, config = {}) {
     this.x = x;
@@ -39,6 +42,8 @@ export class Yeti {
     this.throwInterval = this.randomThrowInterval();
     this.wantsToThrow = false;
 
+    this.hitFlashTimer = 0; // >0 while blinking from a recent hit
+
     // Animation state
     this.animState = 'idle'; // 'idle' | 'throw'
     this.frameIndex = 0;
@@ -53,6 +58,7 @@ export class Yeti {
   takeHit() {
     if (!this.alive) return;
     this.health -= 1;
+    this.hitFlashTimer = HIT_FLASH_DURATION;
     if (this.health <= 0) {
       this.alive = false;
     }
@@ -65,6 +71,10 @@ export class Yeti {
 
     if (this.throwPoseTimer > 0) {
       this.throwPoseTimer -= dt;
+    }
+
+    if (this.hitFlashTimer > 0) {
+      this.hitFlashTimer -= dt;
     }
 
     this.throwTimer += dt;
@@ -107,6 +117,11 @@ export class Yeti {
   // spriteSheet optional — falls back to a placeholder icy silhouette.
   draw(ctx, spriteSheet) {
     if (!this.alive) return;
+
+    if (this.hitFlashTimer > 0) {
+      const step = Math.floor(this.hitFlashTimer / HIT_FLASH_INTERVAL);
+      if (step % 2 === 0) return; // blink: skip this frame
+    }
 
     if (spriteSheet && spriteSheet.loaded) {
       // Visual size independent of the (deliberately narrow, 50x90)
