@@ -9,7 +9,7 @@
 
 export class Iceberg {
   constructor(y, config = {}) {
-    this.y = y;
+    this.y = y + 12; // nudged lower than the passed-in y
     this.width = 26;  // smaller than Cactus's 40
     this.height = 55; // smaller than Cactus's 90
 
