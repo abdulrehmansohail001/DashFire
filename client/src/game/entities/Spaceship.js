@@ -129,9 +129,18 @@ export class Spaceship {
 
     if (spriteSheet && spriteSheet.loaded) {
       const flip = this.vx < 0;
-      const drawX = this.x + this.width / 2 - SPRITE_DRAW_SIZE / 2;
-      const drawY = this.y + this.height / 2 - SPRITE_DRAW_SIZE / 2;
-      const drew = spriteSheet.draw(ctx, 0, this.frameIndex, drawX, drawY, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE, flip);
+      const row = Math.floor(this.frameIndex / 4);
+      const col = this.frameIndex % 4;
+      // Derive box from the sheet's own aspect ratio — its cells aren't
+      // square (wider ship/explosion frames vs. more elongated bee
+      // frames), so forcing SPRITE_DRAW_SIZE x SPRITE_DRAW_SIZE would
+      // squash it.
+      const aspect = spriteSheet.frameWidth / spriteSheet.frameHeight;
+      const drawHeight = SPRITE_DRAW_SIZE;
+      const drawWidth = drawHeight * aspect;
+      const drawX = this.x + this.width / 2 - drawWidth / 2;
+      const drawY = this.y + this.height / 2 - drawHeight / 2;
+      const drew = spriteSheet.draw(ctx, row, col, drawX, drawY, drawWidth, drawHeight, flip);
       if (drew) return;
     }
 
