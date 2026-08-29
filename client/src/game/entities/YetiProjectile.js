@@ -30,13 +30,39 @@ export class YetiProjectile {
   }
 
   draw(ctx) {
-    // Placeholder: a chunky pale-blue ice shard until real art exists
+    // Glowing icy diamond <> shape instead of a plain circle — reads more
+    // clearly as "ice magic" and matches the shield pickup's glow style.
+    const cx = this.x + this.width / 2;
+    const cy = this.y + this.height / 2;
+    const r = this.width / 2;
+
+    ctx.save();
+    ctx.shadowColor = '#8fe0ff';
+    ctx.shadowBlur = 12;
+
+    // outer diamond — pale icy fill
     ctx.fillStyle = '#aee4f5';
     ctx.beginPath();
-    ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, 0, Math.PI * 2);
+    ctx.moveTo(cx, cy - r);       // top point
+    ctx.lineTo(cx + r * 0.65, cy); // right point
+    ctx.lineTo(cx, cy + r);        // bottom point
+    ctx.lineTo(cx - r * 0.65, cy); // left point
+    ctx.closePath();
     ctx.fill();
+
     ctx.strokeStyle = '#4a90a4';
     ctx.lineWidth = 2;
     ctx.stroke();
+    ctx.restore();
+
+    // inner bright core — no shadow, just a small solid highlight
+    ctx.fillStyle = '#e8faff';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r * 0.45);
+    ctx.lineTo(cx + r * 0.28, cy);
+    ctx.lineTo(cx, cy + r * 0.45);
+    ctx.lineTo(cx - r * 0.28, cy);
+    ctx.closePath();
+    ctx.fill();
   }
 }

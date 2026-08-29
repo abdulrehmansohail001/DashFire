@@ -117,7 +117,8 @@ export class Yeti {
       const drawHeight = 150;
       const drawWidth = drawHeight * (spriteSheet.frameWidth / spriteSheet.frameHeight);
       const drawX = this.x + this.width / 2 - drawWidth / 2;
-      const drawY = this.y + this.height - drawHeight;
+      const Y_NUDGE = 12; // small upward tuning offset — increase to sit it even higher
+      const drawY = this.y + this.height - drawHeight - Y_NUDGE;
       const flip = this.facing === 'left';
       const row = this.animState === 'throw' ? 1 : 0;
       const drew = spriteSheet.draw(ctx, row, this.frameIndex, drawX, drawY, drawWidth, drawHeight, flip);
