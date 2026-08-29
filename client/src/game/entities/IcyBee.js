@@ -111,7 +111,7 @@ export class IcyBee {
     }
 
     if (spriteSheet && spriteSheet.loaded) {
-      const flip = this.vx < 0;
+      const flip = this.vx >= 0; // source art faces left by default — mirror only when moving right
       const drawX = this.x + this.width / 2 - SPRITE_DRAW_SIZE / 2;
       const drawY = this.y + this.height / 2 - SPRITE_DRAW_SIZE / 2;
       const drew = spriteSheet.draw(ctx, 0, this.frameIndex, drawX, drawY, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE, flip);
