@@ -33,7 +33,12 @@ export class IcyBee {
 
     this.throwIntervalMin = config.iceBeeThrowIntervalMin ?? 1.4;
     this.throwIntervalMax = config.iceBeeThrowIntervalMax ?? 2.2;
-    this.projectileSpeed = config.iceBeeProjectileSpeed ?? 200;
+    // Arc throw (like Eagle), but the MAGNITUDE is aimed toward whichever
+    // way `facing` currently points (tracks the player), unlike Eagle's
+    // fully random vx — keeps it reliably reaching the player rather than
+    // a coin-flip on direction.
+    this.throwSpeedMin = config.iceBeeThrowSpeedMin ?? 90;
+    this.throwSpeedMax = config.iceBeeThrowSpeedMax ?? 150;
     this.throwTimer = 0;
     this.throwInterval = this.randomThrowInterval();
     this.wantsToThrow = false;
@@ -45,6 +50,11 @@ export class IcyBee {
 
   randomThrowInterval() {
     return this.throwIntervalMin + Math.random() * (this.throwIntervalMax - this.throwIntervalMin);
+  }
+
+  throwVx() {
+    const magnitude = this.throwSpeedMin + Math.random() * (this.throwSpeedMax - this.throwSpeedMin);
+    return this.facing === 'right' ? magnitude : -magnitude;
   }
 
   takeHit() {

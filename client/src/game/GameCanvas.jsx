@@ -30,6 +30,8 @@ import { Spaceship } from './entities/Spaceship';
 import { IcyBee } from './entities/IcyBee';
 import { Boss } from './entities/Boss';
 import { playSound } from './sound';
+import { IceBeeProjectile } from './entities/IceBeeProjectile';
+import { ShipProjectile } from './entities/ShipProjectile';
 import { BossFireball } from './entities/BossFireball';
 import { Frog } from './entities/Frog';
 import { BossFrog } from './entities/BossFrog';
@@ -361,6 +363,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const yetiProjectilesRef = useRef([]);
   const spaceshipsRef = useRef(buildSpaceshipsForLevel(LEVELS[initialLevelIndex]));
   const iceBeesRef = useRef([]); // spawned dynamically at runtime by the spaceship, never built up front
+  const iceBeeProjectilesRef = useRef([]);
+  const shipProjectilesRef = useRef([]);
   const eagleProjectilesRef = useRef([]);
   const frogsRef = useRef(buildFrogsForLevel(LEVELS[initialLevelIndex]));
   const bossRef = useRef(
@@ -404,6 +408,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     yetiProjectilesRef.current = [];
     spaceshipsRef.current = buildSpaceshipsForLevel(config);
     iceBeesRef.current = [];
+    iceBeeProjectilesRef.current = [];
+    shipProjectilesRef.current = [];
     eagleProjectilesRef.current = [];
     frogsRef.current = buildFrogsForLevel(config);
         bossRef.current = config.hasBoss
@@ -649,10 +655,13 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
         if (ship.wantsToFire) {
           ship.wantsToFire = false;
-          const bulletY = ship.y + ship.height * 0.5 - 2;
-          const bulletX = ship.vx < 0 ? ship.x : ship.x + ship.width;
-          enemyBulletsRef.current.push(
-            new BossFireball(bulletX, bulletY, ship.vx < 0 ? 'left' : 'right', ship.fireSpeed)
+          // Aims toward whichever side the player is currently on, same
+          // idea as the bee's throwVx — not a random direction.
+          const facingRight = player.x > ship.x;
+          const throwX = ship.x + ship.width / 2;
+          const throwY = ship.y + ship.height / 2;
+          shipProjectilesRef.current.push(
+            new ShipProjectile(throwX, throwY, ship.throwVx(facingRight))
           );
         }
       }
@@ -662,13 +671,31 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         bee.update(dt, player.x);
         if (bee.wantsToThrow) {
           bee.wantsToThrow = false;
-          const throwY = bee.y + bee.height * 0.3;
-          const throwX = bee.facing === 'right' ? bee.x + bee.width : bee.x;
-          yetiProjectilesRef.current.push(
-            new YetiProjectile(throwX, throwY, bee.facing, bee.projectileSpeed)
+          const throwX = bee.x + bee.width / 2;
+          const throwY = bee.y + bee.height / 2;
+          iceBeeProjectilesRef.current.push(
+            new IceBeeProjectile(throwX, throwY, bee.throwVx())
           );
         }
       }
+
+      iceBeeProjectilesRef.current.forEach((p) => p.update(dt));
+      iceBeeProjectilesRef.current = iceBeeProjectilesRef.current.filter((p) => {
+        if (isColliding(playerBounds, p.getBounds())) {
+          player.takeFreezeHit(); // same freeze effect as the Yeti's own throw
+          return false;
+        }
+        return !p.hasLanded(400);
+      });
+
+      shipProjectilesRef.current.forEach((p) => p.update(dt));
+      shipProjectilesRef.current = shipProjectilesRef.current.filter((p) => {
+        if (isColliding(playerBounds, p.getBounds())) {
+          player.takeHit(); // no freeze — that's the bee's thing, not the ship's
+          return false;
+        }
+        return !p.hasLanded(400);
+      });
 
       yetiProjectilesRef.current.forEach((p) => p.update(dt));
       yetiProjectilesRef.current = yetiProjectilesRef.current.filter((p) => {
@@ -912,6 +939,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       yetiProjectilesRef.current.forEach((p) => p.draw(ctx));
       spaceshipsRef.current.forEach((ship) => ship.draw(ctx, shipSheet));
       iceBeesRef.current.forEach((bee) => bee.draw(ctx, iceBeeSheet));
+      iceBeeProjectilesRef.current.forEach((p) => p.draw(ctx));
+      shipProjectilesRef.current.forEach((p) => p.draw(ctx));
       frogsRef.current.forEach((frog) => frog.draw(ctx, frogSheet));
       if (bossRef.current) bossRef.current.draw(ctx, bossSheet);
 
@@ -990,15 +1019,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           drawHudPortrait(ctx, shipSheet, enemyCircleX, shipRowY, circleRadius, '#2a3a4a', 'S');
         });
 
-        const preBeeRows = preShipRows + spaceshipsRef.current.length;
-        iceBeesRef.current.forEach((bee, i) => {
-          if (!bee.maxHealth) return;
-          const beeRowY = 34 + (preBeeRows + i) * ENEMY_ROW_HEIGHT;
-          const label = iceBeesRef.current.length > 1 ? `BEE ${i + 1} HP` : 'BEE HP';
-          const pct = Math.max(bee.health, 0) / bee.maxHealth;
-          drawHpBar(ctx, barX, beeRowY - 8, barWidth, 16, pct, label, 'right');
-          drawHudPortrait(ctx, iceBeeSheet, enemyCircleX, beeRowY, circleRadius, '#c9e8f5', 'B');
-        });
+        // Bees deliberately have no HUD bar — they're simple 2-hit fodder,
+        // only the ship's own bar is shown.
       }
 
       // Frogs get their own stacked rows too, below eagles, same pattern.

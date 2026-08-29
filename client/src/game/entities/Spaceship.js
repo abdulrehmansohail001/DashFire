@@ -41,7 +41,10 @@ export class Spaceship {
     this.aggressor = false;
     this.fireIntervalMin = config.shipFireIntervalMin ?? 1.6;
     this.fireIntervalMax = config.shipFireIntervalMax ?? 2.6;
-    this.fireSpeed = config.shipFireSpeed ?? 130; // slow, per design
+    // Arc throw magnitude — slower than the bee's (90-150), matching "bigger
+    // and slower" than the icy bee shots.
+    this.throwSpeedMin = config.shipThrowSpeedMin ?? 50;
+    this.throwSpeedMax = config.shipThrowSpeedMax ?? 90;
     this.fireTimer = 0;
     this.fireInterval = this.randomFireInterval();
     this.wantsToFire = false;
@@ -53,6 +56,11 @@ export class Spaceship {
 
   randomFireInterval() {
     return this.fireIntervalMin + Math.random() * (this.fireIntervalMax - this.fireIntervalMin);
+  }
+
+  throwVx(facingRight) {
+    const magnitude = this.throwSpeedMin + Math.random() * (this.throwSpeedMax - this.throwSpeedMin);
+    return facingRight ? magnitude : -magnitude;
   }
 
   activateAggressor() {
