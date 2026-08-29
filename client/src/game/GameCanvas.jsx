@@ -66,7 +66,18 @@ const ICEBEE_HEIGHT_Y = SHIP_HEIGHT_Y + 100; // was +70 — bees sit noticeably 
 
 function buildSpaceshipsForLevel(levelConfig) {
   if (!levelConfig.hasSpaceship) return [];
-  return [new Spaceship(SHIP_HEIGHT_Y, levelConfig, { startX: 400, minX: EAGLE_ARENA_MIN_X, maxX: EAGLE_ARENA_MAX_X - 90 })];
+  const shipCount = levelConfig.shipCount ?? 1;
+  const minX = EAGLE_ARENA_MIN_X;
+  const maxX = EAGLE_ARENA_MAX_X - 90;
+  const slotWidth = (maxX - minX) / shipCount;
+  const ships = [];
+
+  for (let i = 0; i < shipCount; i++) {
+    const startX = minX + slotWidth * (i + 0.5);
+    ships.push(new Spaceship(SHIP_HEIGHT_Y, levelConfig, { startX, minX, maxX }));
+  }
+
+  return ships;
 }
 
 // Full-width patrol span frogs are allowed to hop within.
