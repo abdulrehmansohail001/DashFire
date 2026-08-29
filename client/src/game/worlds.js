@@ -58,7 +58,7 @@ export const WORLDS = [
       player: { path: '/sprites/player.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
       playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
       enemy: null,    // TODO: Yeti — not built yet, placeholder art from Enemy.js applies
-      yeti: null,     // TODO: yeti.png once generated — falls back to placeholder art
+      yeti: { path: '/sprites/yeti.png', frameWidth: 431, frameHeight: 431, columns: 4, rows: 2 },
       eagle: null,    // World 3 has no plain eagle — replaced by the Spaceship/Bee system
       boss: null,     // TBD later
       background: null, // TODO: neon_tundra_bg.jpg
