@@ -56,6 +56,15 @@ const SHOOT_ANIM_DURATION = 0.25; // how long the "shoot" pose holds after firin
 // automatically instead of being squished into a square box).
 const SPRITE_DRAW_HEIGHT = 100;
 
+// Freeze-crystal overlay: a 4-frame sheet where each frame's own artwork
+// is bottom-aligned within its (identical-sized) frame slot — smallest
+// crystal near the bottom, tallest filling most of it. Because the
+// destination draw box stays the SAME size every frame, cycling through
+// the 4 frames alone produces the "grows up from the ground" effect with
+// no extra scaling logic needed here.
+const FREEZE_FRAME_COUNT = 4;
+const FREEZE_FRAME_DURATION = 0.09; // quick growth — reaches full height in ~0.36s, then holds
+
 export class Player {
   constructor(x, y) {
     this.x = x;
@@ -86,6 +95,7 @@ export class Player {
     // damage + its own new freeze. That's the intended risk, not a bug.
     this.frozen = false;
     this.frozenTimer = 0;
+    this.freezeAnimTimer = 0; // resets to 0 every fresh freeze hit; drives the crystal growth frame
 
     this.isSitting = false; // set every frame from GameCanvas based on ArrowDown held
 
@@ -194,6 +204,7 @@ export class Player {
 
     if (this.frozen) {
       this.frozenTimer -= dt;
+      this.freezeAnimTimer += dt;
       if (this.frozenTimer <= 0) {
         this.frozen = false;
       }
@@ -280,6 +291,7 @@ export class Player {
     this.invulnerableTimer = 1.0;
     this.frozen = true;
     this.frozenTimer = freezeMin + Math.random() * (freezeMax - freezeMin);
+    this.freezeAnimTimer = 0;
   }
 
   // Shield pickup — reuses the same invulnerable/flicker system as the
@@ -297,7 +309,7 @@ export class Player {
   // mainSheet/extraSheet are optional — if the one this animState needs
   // isn't loaded yet, falls back to the original placeholder rectangle so
   // there's never a blank gap.
-   draw(ctx, mainSheet, extraSheet) {
+   draw(ctx, mainSheet, extraSheet, freezeSheet) {
     if (!this.outroLocked && this.invulnerable && Math.floor(this.invulnerableTimer * 10) % 2 === 0) {
       return;
     }
@@ -336,15 +348,34 @@ export class Player {
     }
 
     if (this.frozen) {
-      ctx.save();
-      ctx.globalAlpha = 0.4;
-      ctx.fillStyle = '#8fe9ff';
-      ctx.fillRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
-      ctx.restore();
+      let drewCrystals = false;
 
-      ctx.strokeStyle = '#d6faff';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
+      if (freezeSheet && freezeSheet.loaded) {
+        const frameIdx = Math.min(
+          FREEZE_FRAME_COUNT - 1,
+          Math.floor(this.freezeAnimTimer / FREEZE_FRAME_DURATION)
+        );
+        const aspect = freezeSheet.frameWidth / freezeSheet.frameHeight;
+        const crystalHeight = this.height * 1.1; // slight overshoot above the head at full growth
+        const crystalWidth = crystalHeight * aspect;
+        const crystalX = this.x + this.width / 2 - crystalWidth / 2;
+        const crystalY = this.y + this.height - crystalHeight; // bottom-anchored to the feet
+
+        drewCrystals = freezeSheet.draw(ctx, 0, frameIdx, crystalX, crystalY, crystalWidth, crystalHeight, false);
+      }
+
+      if (!drewCrystals) {
+        // Fallback rectangle overlay (sheet missing/not loaded yet)
+        ctx.save();
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = '#8fe9ff';
+        ctx.fillRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
+        ctx.restore();
+
+        ctx.strokeStyle = '#d6faff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
+      }
     }
   }
 }

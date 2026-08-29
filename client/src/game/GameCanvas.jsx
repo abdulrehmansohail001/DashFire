@@ -110,6 +110,17 @@ function getImage(path) {
   }
   return imageCache[path];
 }
+
+// Freeze-crystal overlay is a universal player-status effect, not a
+// per-world reskin, so it's a fixed global asset rather than something
+// declared in worlds.js.
+const freezeCrystalSheet = getSheet({
+  path: '/sprites/freeze_crystals.png',
+  frameWidth: 200,
+  frameHeight: 760,
+  columns: 4,
+  rows: 1,
+});
 // Builds N enemies for a level config, splitting the arena into N
 // non-overlapping patrol slots and starting each enemy in the middle of its slot.
 function buildEnemiesForLevel(levelConfig) {
@@ -806,7 +817,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       ctx.lineTo(800, 400);
       ctx.stroke();
 
-            playerRef.current.draw(ctx, playerSheet, playerExtraSheet);
+            playerRef.current.draw(ctx, playerSheet, playerExtraSheet, freezeCrystalSheet);
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
