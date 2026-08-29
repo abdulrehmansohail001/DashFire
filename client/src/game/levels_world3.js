@@ -80,7 +80,7 @@ export const LEVELS = [
     reactionDelayMax: 0.95,
     fireSequence: [1, 1, 2],
     burstGap: 0.17,
-
+    hasIceberg: true,
     hasFrog: true,
     frogCount: 2,
     frogHealth: 5,

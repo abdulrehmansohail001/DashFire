@@ -558,12 +558,18 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       if (iceberg) {
         iceberg.update(dt);
         if (isColliding(player.getBounds(), iceberg.getBounds())) {
+          // Extra clearance (not just flush) plus a flat 1s freeze (matching
+          // the normal 1s invulnerability window exactly, same as fire hits)
+          // — without this, the still-drifting iceberg could close the gap
+          // again right as invulnerability lapsed, causing a freeze/unfreeze
+          // loop while still in contact.
+          const ICEBERG_PUSHBACK_MARGIN = 45;
           if (prevPlayerX < iceberg.x) {
-            player.x = iceberg.x - player.width;
+            player.x = iceberg.x - player.width - ICEBERG_PUSHBACK_MARGIN;
           } else {
-            player.x = iceberg.x + iceberg.width;
+            player.x = iceberg.x + iceberg.width + ICEBERG_PUSHBACK_MARGIN;
           }
-          player.freezeOnly();
+          player.freezeOnly(1.0, 1.0);
         }
       }
 
