@@ -10,11 +10,14 @@ export class Background {
     this.frameDuration = frameDuration; // seconds each background frame holds
     this.timer = 0;
 
-    // Cycles through all 8 cells of the 1x8 horizontal strip.
-    // Row is always 0 because all frames are in a single line.
+    // Cycles through every cell of the sheet, row-major, regardless of
+    // grid shape — a 1x8 horizontal strip and a 4x2 grid both just work,
+    // reading whatever columns/rows the sheet was actually built with.
     this.sequence = [];
-    for (let col = 0; col < 8; col++) {
-      this.sequence.push({ row: 0, col });
+    for (let row = 0; row < sheet.rows; row++) {
+      for (let col = 0; col < sheet.columns; col++) {
+        this.sequence.push({ row, col });
+      }
     }
     this.index = 0;
   }

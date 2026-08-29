@@ -362,7 +362,7 @@ export class Player {
         const aspect = freezeSheet.frameWidth / freezeSheet.frameHeight;
         // Single centered cluster, not a flanking pair — size off height
         // like a normal overlay, growing from the feet up.
-        const crystalHeight = this.height * 1.15;
+        const crystalHeight = this.height * 0.9;
         const crystalWidth = crystalHeight * aspect;
         const crystalX = this.x + this.width / 2 - crystalWidth / 2;
         const crystalY = this.y + this.height - crystalHeight; // bottom-anchored to the feet

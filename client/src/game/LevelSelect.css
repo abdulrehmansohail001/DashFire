@@ -17,13 +17,9 @@
   position: absolute;
   inset: 0;
   background-repeat: no-repeat;
-  background-size: 800vw 100vh;
-  animation: moon-menu-cycle 1.6s steps(7) infinite;
-}
-
-@keyframes moon-menu-cycle {
-  from { background-position-x: 0vw; }
-  to { background-position-x: -700vw; }
+  /* backgroundSize/backgroundPosition are now set inline via JS, computed
+     from the world's actual columns/rows — grid-shape-agnostic, unlike
+     the old fixed 1x8 keyframe animation this replaced. */
 }
 
 .level-select__backdrop {

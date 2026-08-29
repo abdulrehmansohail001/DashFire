@@ -61,7 +61,7 @@ export const WORLDS = [
       yeti: { path: '/sprites/yeti.png', frameWidth: 431, frameHeight: 431, columns: 4, rows: 2 },
       eagle: null,    // World 3 has no plain eagle — replaced by the Spaceship/Bee system
       boss: null,     // TBD later
-      background: null, // TODO: neon_tundra_bg.jpg
+           background: { path: '/sprites/aurora_bg.png', frameWidth: 1586 / 4, frameHeight: 496, columns: 4, rows: 2 },
       obstacle: '/sprites/obstacle.png',
       cactus: null,   // TODO: freezing cactus art, separate from World 2's cactus.png
     },

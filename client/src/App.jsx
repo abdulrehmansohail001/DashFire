@@ -76,6 +76,8 @@ function App() {
           unlockedCount={unlockedByWorld[selectedWorldIndex] ?? 1}
           missionTitle={currentWorld.missionTitle}
           backgroundPath={currentWorld.sprites.background?.path}
+          backgroundColumns={currentWorld.sprites.background?.columns ?? 8}
+          backgroundRows={currentWorld.sprites.background?.rows ?? 1}
           onSelectLevel={handleSelectLevel}
           onBack={handleBackToWorlds}
         />

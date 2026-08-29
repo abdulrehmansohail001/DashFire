@@ -4,16 +4,47 @@
 // accent palette as the in-game HP bars and player suit). Locked levels
 // are dimmed with a lock icon; unlocked levels are clickable.
 
+import { useEffect, useState } from 'react';
 import './LevelSelect.css';
 import { playSound } from './sound';
 import { PixelLock, PixelCheck } from './PixelIcon';
-export default function LevelSelect({ levels, unlockedCount, missionTitle, backgroundPath, onSelectLevel, onBack }) {
+
+const BACKDROP_FRAME_INTERVAL = 200; // ms per frame — matches the old 1.6s/8-step cycle
+
+export default function LevelSelect({
+  levels,
+  unlockedCount,
+  missionTitle,
+  backgroundPath,
+  backgroundColumns = 8,
+  backgroundRows = 1,
+  onSelectLevel,
+  onBack,
+}) {
+  const [frameIndex, setFrameIndex] = useState(0);
+  const frameCount = backgroundColumns * backgroundRows;
+
+  useEffect(() => {
+    setFrameIndex(0);
+    const id = setInterval(() => {
+      setFrameIndex((i) => (i + 1) % frameCount);
+    }, BACKDROP_FRAME_INTERVAL);
+    return () => clearInterval(id);
+  }, [frameCount, backgroundPath]);
+
+  const col = frameIndex % backgroundColumns;
+  const row = Math.floor(frameIndex / backgroundColumns);
+  const backdropStyle = {
+    backgroundImage: `url(${backgroundPath || '/sprites/moon_bg.jpg'})`,
+    backgroundSize: `${backgroundColumns * 100}% ${backgroundRows * 100}%`,
+    backgroundPosition: `${backgroundColumns > 1 ? (col / (backgroundColumns - 1)) * 100 : 0}% ${
+      backgroundRows > 1 ? (row / (backgroundRows - 1)) * 100 : 0
+    }%`,
+  };
+
   return (
             <div className="level-select">
-      <div
-        className="level-select__backdrop-anim"
-        style={{ backgroundImage: `url(${backgroundPath || '/sprites/moon_bg.jpg'})` }}
-      />
+      <div className="level-select__backdrop-anim" style={backdropStyle} />
       <div className="level-select__backdrop" />
       <div className="level-select__scanlines" />
 
