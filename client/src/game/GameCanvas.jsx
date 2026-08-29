@@ -674,7 +674,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           const throwX = bee.x + bee.width / 2;
           const throwY = bee.y + bee.height / 2;
           iceBeeProjectilesRef.current.push(
-            new IceBeeProjectile(throwX, throwY, bee.throwVx())
+            new IceBeeProjectile(throwX, throwY, bee.throwVx(player.x))
           );
         }
       }

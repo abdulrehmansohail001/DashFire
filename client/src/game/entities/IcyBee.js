@@ -6,7 +6,7 @@
 // YetiProjectile directly and calls player.takeFreezeHit() on contact,
 // identical to the Yeti's own freeze behavior.
 
-const FRAME_COUNT = 8;
+const FRAME_COUNT = 4; // matches icebee.png's actual 4-column sheet
 const FRAME_DURATION = 0.08;
 const SPRITE_DRAW_SIZE = 60;
 
@@ -24,8 +24,6 @@ export class IcyBee {
     this.maxX = placement.maxX ?? (800 - this.width);
     this.speed = config.iceBeeSpeed ?? 110;
     this.vx = Math.random() < 0.5 ? this.speed : -this.speed;
-
-    this.facing = 'left'; // independent of flight direction — tracks the player, like Yeti
 
     this.health = config.iceBeeHealth ?? 2;
     this.maxHealth = this.health;
@@ -52,9 +50,15 @@ export class IcyBee {
     return this.throwIntervalMin + Math.random() * (this.throwIntervalMax - this.throwIntervalMin);
   }
 
-  throwVx() {
+  // Aim direction is computed fresh at throw time from wherever the player
+  // actually is — decoupled from the sprite's visual facing, which now
+  // always matches flight direction (vx) instead. This is what fixes the
+  // "flying one way while visually facing the other" look, without
+  // breaking the throw's accuracy.
+  throwVx(playerX) {
     const magnitude = this.throwSpeedMin + Math.random() * (this.throwSpeedMax - this.throwSpeedMin);
-    return this.facing === 'right' ? magnitude : -magnitude;
+    const aimRight = typeof playerX === 'number' ? playerX >= this.x : this.vx >= 0;
+    return aimRight ? magnitude : -magnitude;
   }
 
   takeHit() {
@@ -76,10 +80,6 @@ export class IcyBee {
     } else if (this.x >= this.maxX) {
       this.x = this.maxX;
       this.vx = -this.speed;
-    }
-
-    if (typeof playerX === 'number') {
-      this.facing = playerX < this.x ? 'left' : 'right';
     }
 
     this.throwTimer += dt;
@@ -111,7 +111,7 @@ export class IcyBee {
     }
 
     if (spriteSheet && spriteSheet.loaded) {
-      const flip = this.facing === 'left';
+      const flip = this.vx < 0;
       const drawX = this.x + this.width / 2 - SPRITE_DRAW_SIZE / 2;
       const drawY = this.y + this.height / 2 - SPRITE_DRAW_SIZE / 2;
       const drew = spriteSheet.draw(ctx, 0, this.frameIndex, drawX, drawY, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE, flip);
