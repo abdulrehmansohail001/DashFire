@@ -60,8 +60,8 @@ const EAGLE_ARENA_MAX_X = 800; // matches player's full reachable range (x: 0 to
 const EAGLE_WIDTH = 60;
 
 // World 3 nested enemy: ship flies at eagle height, bees fly a bit lower.
-const SHIP_HEIGHT_Y = 90;
-const ICEBEE_HEIGHT_Y = SHIP_HEIGHT_Y + 70;
+const SHIP_HEIGHT_Y = 140; // was 90 — sits lower
+const ICEBEE_HEIGHT_Y = SHIP_HEIGHT_Y + 100; // was +70 — bees sit noticeably lower than the ship
 
 function buildSpaceshipsForLevel(levelConfig) {
   if (!levelConfig.hasSpaceship) return [];
@@ -691,7 +691,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       shipProjectilesRef.current.forEach((p) => p.update(dt));
       shipProjectilesRef.current = shipProjectilesRef.current.filter((p) => {
         if (isColliding(playerBounds, p.getBounds())) {
-          player.takeHit(); // no freeze — that's the bee's thing, not the ship's
+          player.takeFreezeHit(); // now an ice ball, matching the bees and the World 3 theme
           return false;
         }
         return !p.hasLanded(400);

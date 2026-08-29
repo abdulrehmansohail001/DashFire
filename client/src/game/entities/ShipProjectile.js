@@ -1,10 +1,9 @@
 // src/game/entities/ShipProjectile.js
 // Spaceship's aggressor-mode shot — same real gravity arc as
 // EagleProjectile/IceBeeProjectile (carries throw velocity, gravity pulls
-// it down over time), but bigger and slower than the bee's shot, and a
-// distinct fiery look befitting an aggressive ship weapon rather than an
-// icy bee sting. GameCanvas calls the normal player.takeHit() on contact
-// — no freeze effect, unlike the bees' shots.
+// it down over time), bigger and slower than the bee's shot. Now an icy
+// freezing ball matching the World 3 theme and the bees' own freeze
+// effect — GameCanvas calls player.takeFreezeHit() on contact.
 
 export const SHIP_PROJECTILE_GRAVITY = 700; // lower than the bee's 900 — slower fall reads as heavier/slower overall
 
@@ -12,7 +11,7 @@ export class ShipProjectile {
   constructor(x, y, vx, vy = -80) {
     this.x = x;
     this.y = y;
-    this.width = 30; // bigger than IceBeeProjectile's 18
+    this.width = 30;
     this.height = 30;
     this.vx = vx;
     this.vy = vy;
@@ -37,26 +36,36 @@ export class ShipProjectile {
   draw(ctx) {
     const cx = this.x + this.width / 2;
     const cy = this.y + this.height / 2;
-    const pulse = 1 + Math.sin(this.pulseTimer * 16) * 0.08;
+    const pulse = 1 + Math.sin(this.pulseTimer * 12) * 0.06;
+    const r = (this.width / 2) * pulse;
 
     ctx.save();
+    ctx.shadowColor = '#8fe0ff';
+    ctx.shadowBlur = 14;
+
+    // Outer icy glow ring.
     ctx.globalAlpha = 0.35;
-    ctx.fillStyle = '#ff5a3a';
+    ctx.fillStyle = '#8fe0ff';
     ctx.beginPath();
-    ctx.arc(cx, cy, (this.width / 2 + 5) * pulse, 0, Math.PI * 2);
+    ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
     ctx.fill();
 
+    // Frosted ball body.
     ctx.globalAlpha = 0.9;
-    ctx.fillStyle = '#ff7a3a';
+    ctx.fillStyle = '#aee4f5';
     ctx.beginPath();
-    ctx.arc(cx, cy, (this.width / 2) * pulse, 0, Math.PI * 2);
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
-
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = '#ffe0a0';
-    ctx.beginPath();
-    ctx.arc(cx, cy, this.width / 4, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.strokeStyle = '#4a90a4';
+    ctx.lineWidth = 2;
+    ctx.stroke();
     ctx.restore();
+
+    // Bright icy core.
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#e8faff';
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.4, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
