@@ -109,9 +109,18 @@ export class Yeti {
     if (!this.alive) return;
 
     if (spriteSheet && spriteSheet.loaded) {
+      // Visual size independent of the (deliberately narrow, 50x90)
+      // collision hitbox — drawing at hitbox size squashed the yeti into
+      // a thin sliver. Derive real size from the sheet's own aspect ratio
+      // (same pattern as Player/Frog/Cactus) and anchor bottom-center on
+      // the hitbox so feet still land on the actual ground line.
+      const drawHeight = 150;
+      const drawWidth = drawHeight * (spriteSheet.frameWidth / spriteSheet.frameHeight);
+      const drawX = this.x + this.width / 2 - drawWidth / 2;
+      const drawY = this.y + this.height - drawHeight;
       const flip = this.facing === 'left';
       const row = this.animState === 'throw' ? 1 : 0;
-      const drew = spriteSheet.draw(ctx, row, this.frameIndex, this.x, this.y, this.width, this.height, flip);
+      const drew = spriteSheet.draw(ctx, row, this.frameIndex, drawX, drawY, drawWidth, drawHeight, flip);
       if (drew) return;
     }
 

@@ -153,7 +153,12 @@ function buildYetisForLevel(levelConfig) {
 
   for (let i = 0; i < yetiCount; i++) {
     const startX = ARENA_MIN_X + slotWidth * (i + 0.5);
-    yetis.push(new Yeti(startX, ENEMY_GROUND_Y, levelConfig));
+    // NOT ENEMY_GROUND_Y (340) — that constant only looks right for the
+    // gunman because Enemy.js has its own gravity/ground-clamp physics
+    // that self-corrects it to 310 every frame. Yeti is stationary with
+    // no physics at all, so whatever y it spawns with is permanent —
+    // needs the real value (canvas ground line 400 - yeti height 90).
+    yetis.push(new Yeti(startX, 310, levelConfig));
   }
 
   return yetis;
