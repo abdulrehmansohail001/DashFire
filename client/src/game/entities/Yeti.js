@@ -7,6 +7,16 @@
 // Shootable — has health, counts toward the level's win condition,
 // GameCanvas polls `wantsToThrow` each frame the same way it polls
 // Eagle's `wantsToThrow` / Enemy's `wantsToFire`.
+//
+// Rendering: 2x4 sprite sheet — row 0: idle (4-frame breathing/sway loop),
+// row 1: throw (4-frame windup -> release -> follow-through, non-looping,
+// holds the final frame until throwPoseTimer expires and it drops back to
+// idle). Same frame-cycling pattern as Player/Enemy.
+
+const FRAME_COUNT = 4;
+const IDLE_FRAME_DURATION = 0.22;
+const THROW_FRAME_DURATION = 0.09; // faster — windup/release should read as snappy, not sluggish
+const THROW_POSE_DURATION = THROW_FRAME_DURATION * FRAME_COUNT; // pose holds exactly as long as its 4 frames take
 
 export class Yeti {
   constructor(x, y, config = {}) {
@@ -21,16 +31,19 @@ export class Yeti {
     this.maxHealth = this.health;
     this.alive = true;
 
-    this.throwIntervalMin = config.yetiThrowIntervalMin ?? 1.8;
-    this.throwIntervalMax = config.yetiThrowIntervalMax ?? 2.8;
+    this.throwIntervalMin = config.yetiThrowIntervalMin ?? 1.3;
+    this.throwIntervalMax = config.yetiThrowIntervalMax ?? 2.0;
     this.projectileSpeed = config.yetiProjectileSpeed ?? 220;
 
     this.throwTimer = 0;
     this.throwInterval = this.randomThrowInterval();
     this.wantsToThrow = false;
 
-    // Simple two-state animation until real art: idle vs throw pose.
-    this.throwPoseTimer = 0;
+    // Animation state
+    this.animState = 'idle'; // 'idle' | 'throw'
+    this.frameIndex = 0;
+    this.frameTimer = 0;
+    this.throwPoseTimer = 0; // >0 while the throw pose should be showing
   }
 
   randomThrowInterval() {
@@ -59,7 +72,31 @@ export class Yeti {
       this.throwTimer = 0;
       this.throwInterval = this.randomThrowInterval();
       this.wantsToThrow = true;
-      this.throwPoseTimer = 0.3;
+      this.throwPoseTimer = THROW_POSE_DURATION;
+    }
+
+    this.updateAnimation(dt);
+  }
+
+  updateAnimation(dt) {
+    const nextState = this.throwPoseTimer > 0 ? 'throw' : 'idle';
+    if (nextState !== this.animState) {
+      this.animState = nextState;
+      this.frameIndex = 0;
+      this.frameTimer = 0;
+    }
+
+    this.frameTimer += dt;
+    const duration = this.animState === 'throw' ? THROW_FRAME_DURATION : IDLE_FRAME_DURATION;
+    if (this.frameTimer >= duration) {
+      this.frameTimer = 0;
+      if (this.animState === 'throw') {
+        // Non-looping — advance toward the final frame and hold it; the
+        // pose itself ends via throwPoseTimer, not by looping back to idle.
+        if (this.frameIndex < FRAME_COUNT - 1) this.frameIndex += 1;
+      } else {
+        this.frameIndex = (this.frameIndex + 1) % FRAME_COUNT; // idle loops
+      }
     }
   }
 
@@ -73,8 +110,8 @@ export class Yeti {
 
     if (spriteSheet && spriteSheet.loaded) {
       const flip = this.facing === 'left';
-      const row = this.throwPoseTimer > 0 ? 1 : 0; // row 0 = idle, row 1 = throw (once art exists)
-      const drew = spriteSheet.draw(ctx, row, 0, this.x, this.y, this.width, this.height, flip);
+      const row = this.animState === 'throw' ? 1 : 0;
+      const drew = spriteSheet.draw(ctx, row, this.frameIndex, this.x, this.y, this.width, this.height, flip);
       if (drew) return;
     }
 
