@@ -356,13 +356,10 @@ export class Player {
           Math.floor(this.freezeAnimTimer / FREEZE_FRAME_DURATION)
         );
         const aspect = freezeSheet.frameWidth / freezeSheet.frameHeight;
-        // Sized off width now, not height — the crystal pair's combined
-        // width stays roughly constant across all 4 growth stages (only
-        // height grows), so scaling by width keeps the flanking crystals
-        // sitting close around the player instead of ballooning outward
-        // as the animation reaches full height.
-        const crystalWidth = this.width * 3.4;
-        const crystalHeight = crystalWidth / aspect;
+        // Single centered cluster, not a flanking pair — size off height
+        // like a normal overlay, growing from the feet up.
+        const crystalHeight = this.height * 1.15;
+        const crystalWidth = crystalHeight * aspect;
         const crystalX = this.x + this.width / 2 - crystalWidth / 2;
         const crystalY = this.y + this.height - crystalHeight; // bottom-anchored to the feet
 

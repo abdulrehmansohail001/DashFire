@@ -116,8 +116,8 @@ function getImage(path) {
 // declared in worlds.js.
 const freezeCrystalSheet = getSheet({
   path: '/sprites/freeze_crystals.png',
-  frameWidth: 400,
-  frameHeight: 760,
+  frameWidth: 300,
+  frameHeight: 700,
   columns: 4,
   rows: 1,
 });
