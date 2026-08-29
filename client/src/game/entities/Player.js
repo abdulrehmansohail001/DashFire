@@ -294,6 +294,19 @@ export class Player {
     this.freezeAnimTimer = 0;
   }
 
+  // Freeze WITHOUT damage — same frozen-state lock and the same
+  // invulnerable gate (to stop re-triggering every frame while standing
+  // in contact), but no health change. Used by hazards that immobilize
+  // without hurting, like World 3's moving iceberg.
+  freezeOnly(freezeMin = 1.0, freezeMax = 1.5) {
+    if (this.invulnerable) return;
+    this.invulnerable = true;
+    this.invulnerableTimer = 1.0;
+    this.frozen = true;
+    this.frozenTimer = freezeMin + Math.random() * (freezeMax - freezeMin);
+    this.freezeAnimTimer = 0;
+  }
+
   // Shield pickup — reuses the same invulnerable/flicker system as the
   // post-hit grace period, just for a longer duration and without a health
   // change.

@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Player } from './entities/Player';
 import { isColliding, Obstacle } from './entities/Obstacle';
 import { Cactus } from './entities/Cactus';
+import { Iceberg } from './entities/Iceberg';
 import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
@@ -339,7 +340,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const bossSheet = getSheet(world.sprites.boss);
   const moonBgSheet = getSheet(world.sprites.background);
   const obstacleImage = getImage(world.sprites.obstacle);
-  const cactusImage = getImage(world.sprites.cactus);
+    const cactusImage = getImage(world.sprites.cactus);
+    const icebergImage = getImage(world.sprites.iceberg);
   const frogSheet = getSheet(world.sprites.frog);
 
   const canvasRef = useRef(null);
@@ -358,6 +360,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const bulletsRef = useRef([]);
       const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
       const cactusRef = useRef(LEVELS[initialLevelIndex].hasCactus ? new Cactus(380, 310) : null);
+  const icebergRef = useRef(
+    LEVELS[initialLevelIndex].hasIceberg ? new Iceberg(345, { ...LEVELS[initialLevelIndex], minX: 0, maxX: 800 - 26 }) : null
+  );
       const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
   const yetisRef = useRef(buildYetisForLevel(LEVELS[initialLevelIndex]));
   const yetiProjectilesRef = useRef([]);
@@ -403,6 +408,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     bulletsRef.current = [];
         obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
         cactusRef.current = config.hasCactus ? new Cactus(380, 310) : null;
+    icebergRef.current = config.hasIceberg ? new Iceberg(345, { ...config, minX: 0, maxX: 800 - 26 }) : null;
         eaglesRef.current = buildEaglesForLevel(config);
         yetisRef.current = buildYetisForLevel(config);
     yetiProjectilesRef.current = [];
@@ -536,15 +542,29 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       // above, PLUS contact damage like a frog. player.takeHit() already
       // has its own invulnerability window, so standing against it doesn't
       // drain HP every frame.
-      const cactus = cactusRef.current;
+            const cactus = cactusRef.current;
       if (cactus && isColliding(player.getBounds(), cactus.getBounds())) {
         if (prevPlayerX < cactus.x) {
           player.x = cactus.x - player.width;
         } else {
           player.x = cactus.x + cactus.width;
         }
-        player.takeHit();
-        playSound('hit', 0.6);
+      }
+
+      // Iceberg: moves on its own every frame regardless of the player.
+      // Solid like the cactus (push-back), but freezes on contact instead
+      // of just blocking — and never deals damage.
+      const iceberg = icebergRef.current;
+      if (iceberg) {
+        iceberg.update(dt);
+        if (isColliding(player.getBounds(), iceberg.getBounds())) {
+          if (prevPlayerX < iceberg.x) {
+            player.x = iceberg.x - player.width;
+          } else {
+            player.x = iceberg.x + iceberg.width;
+          }
+          player.freezeOnly();
+        }
       }
 
       const enemies = enemiesRef.current;
@@ -817,6 +837,10 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           bullet.hit = true; // solid like the wall — blocks bullets too
           continue;
         }
+        if (icebergRef.current && isColliding(bullet.getBounds(), icebergRef.current.getBounds())) {
+          bullet.hit = true; // solid — blocks player bullets too
+          continue;
+        }
                 let hitEagle = false;
         for (const eagle of eagles) {
           if (!eagle.alive) continue;
@@ -921,6 +945,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       }
       if (cactusRef.current) {
         cactusRef.current.draw(ctx, cactusImage);
+      }
+      if (icebergRef.current) {
+        icebergRef.current.draw(ctx, icebergImage);
       }
 
       ctx.strokeStyle = '#666';
