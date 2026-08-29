@@ -294,14 +294,16 @@ export class Player {
     this.freezeAnimTimer = 0;
   }
 
-  // Freeze WITHOUT damage — same frozen-state lock and the same
-  // invulnerable gate (to stop re-triggering every frame while standing
-  // in contact), but no health change. Used by hazards that immobilize
-  // without hurting, like World 3's moving iceberg.
+  // Freeze WITHOUT damage — deliberately does NOT touch `invulnerable`.
+  // That flag also gates every OTHER damage source (takeHit/takeFreezeHit
+  // both bail out while invulnerable) and drives the hurt-blink render, so
+  // setting it here would wrongly make the player immune to real attacks
+  // AND blink as if hurt, while just standing frozen from a harmless
+  // obstacle. Re-trigger while still in contact is instead guarded by
+  // `frozen` itself — can't re-freeze while already frozen, and by the
+  // time it wears off the iceberg has drifted (see GameCanvas pushback).
   freezeOnly(freezeMin = 1.0, freezeMax = 1.5) {
-    if (this.invulnerable) return;
-    this.invulnerable = true;
-    this.invulnerableTimer = 1.0;
+    if (this.frozen) return;
     this.frozen = true;
     this.frozenTimer = freezeMin + Math.random() * (freezeMax - freezeMin);
     this.freezeAnimTimer = 0;
