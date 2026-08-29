@@ -211,7 +211,14 @@ export class Player {
   }
 
   updateAnimation(dt) {
-    if (this.frozen) return; // pose holds entirely — no state change, no frame advance
+    // outroLocked (death/victory) must always be allowed to play out, even
+    // if the player is also frozen — otherwise a freeze-hit that brings
+    // health to 0 permanently soft-locks the game: frozen would return
+    // here every frame, animComplete would never become true, and the
+    // frozenTimer countdown itself only lives in the physics block that
+    // outroLocked already skips, so frozen would never even expire on its
+    // own. Death/victory takes priority over the frozen pose-hold.
+    if (this.frozen && !this.outroLocked) return; // pose holds entirely — no state change, no frame advance
 
     if (!this.outroLocked) {
       // Priority: airborne > shooting > sitting > running > idle.

@@ -582,7 +582,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         yeti.update(dt, player.x);
         if (yeti.wantsToThrow) {
           yeti.wantsToThrow = false;
-          const throwY = yeti.y + yeti.height * 0.35;
+          const throwY = yeti.y + yeti.height * 0.22; // was 0.35 — spawns a bit higher
           const throwX = yeti.facing === 'right' ? yeti.x + yeti.width : yeti.x;
           yetiProjectilesRef.current.push(
             new YetiProjectile(throwX, throwY, yeti.facing, yeti.projectileSpeed)

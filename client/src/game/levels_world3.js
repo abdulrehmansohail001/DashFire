@@ -25,8 +25,8 @@ export const LEVELS = [
     hasYeti: true,
     yetiCount: 1,
     yetiHealth: 8,
-    yetiThrowIntervalMin: 1.8,
-    yetiThrowIntervalMax: 2.8,
+    yetiThrowIntervalMin: 1.3, // was 1.8 — a bit more frequent
+    yetiThrowIntervalMax: 2.0, // was 2.8
     yetiProjectileSpeed: 220,
   },
   // Level 2 — 3 cats, 10 HP each
