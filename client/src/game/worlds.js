@@ -60,7 +60,7 @@ export const WORLDS = [
       enemy: null,    // TODO: Yeti — not built yet, placeholder art from Enemy.js applies
       yeti: { path: '/sprites/yeti.png', frameWidth: 431, frameHeight: 431, columns: 4, rows: 2 },
             spaceship: null, // TODO: spaceship.png
-      iceBee: null,    // TODO: icebee.png
+      iceBee: { path: '/sprites/icebee.png', frameWidth: 420, frameHeight: 480, columns: 4, rows: 1 },
       eagle: null,    // World 3 has no plain eagle — replaced by the Spaceship/Bee system
       boss: null,     // TBD later
            background: { path: '/sprites/aurora_bg.png', frameWidth: 1586 / 4, frameHeight: 496, columns: 4, rows: 2 },
