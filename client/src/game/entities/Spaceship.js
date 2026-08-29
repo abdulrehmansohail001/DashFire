@@ -1,16 +1,29 @@
-// src/game/entities/Spaceship.js
+ //src/game/entities/Spaceship.js
 // World 3 "nested enemy" — flies an Eagle-style bounce patrol at a fixed
-// height. Passive at first: every 2s it signals GameCanvas to spawn one
-// IcyBee (via wantsToSpawnBee), capped at 3 total ever — no respawning
-// once that cap is hit, regardless of how many bees are still alive.
-// Never fires on its own. Once GameCanvas confirms all 3 bees have been
-// spawned AND are all dead, it calls activateAggressor() — from that
-// point on the ship switches to firing slow projectiles on its own timer
-// (wantsToFire), same signal pattern as Enemy/Eagle/Yeti.
+// height. Three-state lifecycle, driven by spaceship_beeform.png
+// (4 cols x 2 rows, read row-major as frames 0-7):
+//
+//   'nest'         frames 0-1 (loop) — active as long as ANY bee (spawned
+//                  and not yet dead) exists, OR before any have spawned
+//                  yet. Spawns up to 3 IcyBees on a timer
+//                  (wantsToSpawnBee), never fires itself.
+//   'transforming' frames 2-3 (plays ONCE) — triggers the instant
+//                  GameCanvas confirms all 3 bees have been spawned AND
+//                  the last one has died. Non-looping; once it finishes,
+//                  auto-advances to 'beeform'.
+//   'beeform'      frames 4-7 (loop FOREVER) — now fires its own slow
+//                  projectiles on a timer (wantsToFire), until the ship
+//                  itself is killed.
+//
+// activateAggressor() is the single entry point GameCanvas calls
+// (idempotent — safe to call every frame once triggered, does nothing if
+// already past 'nest'), it kicks off the transform sequence.
 
-const FRAME_COUNT = 8;
-const FRAME_DURATION = 0.09;
-const SPRITE_DRAW_SIZE = 130; // bigger than the eagle — reads as a ship, not a bird
+const NEST_FRAME_DURATION = 0.35;        // slow idle wobble
+const TRANSFORM_FRAME_DURATION = 0.25;   // 2 frames = 0.5s total transform time
+const BEEFORM_FRAME_DURATION = 0.09;     // normal flying pace
+
+const SPRITE_DRAW_SIZE = 150; // bigger than the eagle — reads as a real nested-boss enemy
 
 const HIT_FLASH_DURATION = 0.18;
 const HIT_FLASH_INTERVAL = 0.06;
@@ -38,7 +51,9 @@ export class Spaceship {
     this.spawnTimer = 0;
     this.wantsToSpawnBee = false;
 
-    this.aggressor = false;
+    // 'nest' | 'transforming' | 'beeform'
+    this.state = 'nest';
+
     this.fireIntervalMin = config.shipFireIntervalMin ?? 1.6;
     this.fireIntervalMax = config.shipFireIntervalMax ?? 2.6;
     // Arc throw magnitude — slower than the bee's (90-150), matching "bigger
@@ -49,6 +64,8 @@ export class Spaceship {
     this.fireInterval = this.randomFireInterval();
     this.wantsToFire = false;
 
+    // frameIndex is the flat 0-7 index into the sheet (row = floor(idx/4),
+    // col = idx%4); which sub-range it cycles through depends on `state`.
     this.frameIndex = 0;
     this.frameTimer = 0;
     this.hitFlashTimer = 0;
@@ -63,8 +80,13 @@ export class Spaceship {
     return facingRight ? magnitude : -magnitude;
   }
 
+  // Called by GameCanvas once all 3 spawned bees are dead. Idempotent —
+  // only actually does anything the first time (while still 'nest').
   activateAggressor() {
-    this.aggressor = true; // idempotent — safe for GameCanvas to call every frame once true
+    if (this.state !== 'nest') return;
+    this.state = 'transforming';
+    this.frameIndex = 2; // first transform frame
+    this.frameTimer = 0;
   }
 
   takeHit() {
@@ -88,7 +110,7 @@ export class Spaceship {
       this.vx = -this.speed;
     }
 
-    if (!this.aggressor && this.beesSpawned < MAX_BEES) {
+    if (this.state === 'nest' && this.beesSpawned < MAX_BEES) {
       this.spawnTimer += dt;
       if (this.spawnTimer >= BEE_SPAWN_INTERVAL) {
         this.spawnTimer = 0;
@@ -97,7 +119,7 @@ export class Spaceship {
       }
     }
 
-    if (this.aggressor) {
+    if (this.state === 'beeform') {
       this.fireTimer += dt;
       if (this.fireTimer >= this.fireInterval) {
         this.fireTimer = 0;
@@ -106,13 +128,41 @@ export class Spaceship {
       }
     }
 
-    this.frameTimer += dt;
-    if (this.frameTimer >= FRAME_DURATION) {
-      this.frameTimer = 0;
-      this.frameIndex = (this.frameIndex + 1) % FRAME_COUNT;
-    }
+    this.updateAnimation(dt);
 
     if (this.hitFlashTimer > 0) this.hitFlashTimer -= dt;
+  }
+
+  updateAnimation(dt) {
+    this.frameTimer += dt;
+
+    if (this.state === 'nest') {
+      if (this.frameTimer >= NEST_FRAME_DURATION) {
+        this.frameTimer = 0;
+        this.frameIndex = this.frameIndex === 0 ? 1 : 0; // loop 0<->1 forever
+      }
+      return;
+    }
+
+    if (this.state === 'transforming') {
+      if (this.frameTimer >= TRANSFORM_FRAME_DURATION) {
+        this.frameTimer = 0;
+        if (this.frameIndex < 3) {
+          this.frameIndex += 1; // 2 -> 3
+        } else {
+          // Transform finished — hand off to beeform, permanently.
+          this.state = 'beeform';
+          this.frameIndex = 4;
+        }
+      }
+      return;
+    }
+
+    // beeform — loops 4,5,6,7 forever, no exit condition except death
+    if (this.frameTimer >= BEEFORM_FRAME_DURATION) {
+      this.frameTimer = 0;
+      this.frameIndex = this.frameIndex >= 7 ? 4 : this.frameIndex + 1;
+    }
   }
 
   getBounds() {
@@ -133,8 +183,7 @@ export class Spaceship {
       const col = this.frameIndex % 4;
       // Derive box from the sheet's own aspect ratio — its cells aren't
       // square (wider ship/explosion frames vs. more elongated bee
-      // frames), so forcing SPRITE_DRAW_SIZE x SPRITE_DRAW_SIZE would
-      // squash it.
+      // frames), so forcing a square box would squash it.
       const aspect = spriteSheet.frameWidth / spriteSheet.frameHeight;
       const drawHeight = SPRITE_DRAW_SIZE;
       const drawWidth = drawHeight * aspect;
@@ -145,11 +194,11 @@ export class Spaceship {
     }
 
     // Placeholder: dark saucer body + glowing underside light
-    ctx.fillStyle = this.aggressor ? '#5a1e1e' : '#2a3a4a';
+    ctx.fillStyle = this.state === 'beeform' ? '#5a1e1e' : '#2a3a4a';
     ctx.beginPath();
     ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, this.height / 2.6, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = this.aggressor ? '#ff5a3a' : '#6fd8ff';
+    ctx.fillStyle = this.state === 'beeform' ? '#ff5a3a' : '#6fd8ff';
     ctx.beginPath();
     ctx.arc(this.x + this.width / 2, this.y + this.height * 0.7, 6, 0, Math.PI * 2);
     ctx.fill();
