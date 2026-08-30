@@ -772,7 +772,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
           if (glacier.wantsToFire) {
             glacier.wantsToFire = false;
-            const shotY = GUNMEN_FIRE_HEIGHT_Y; // anchored to the universal muzzle height, not a ratio of the golem's own (now larger) size
+            const shotY = GUNMEN_FIRE_HEIGHT_Y-40; // anchored to the universal muzzle height, not a ratio of the golem's own (now larger) size
             const shotX = glacier.facing === 'right' ? glacier.x + glacier.width : glacier.x;
             enemyBulletsRef.current.push(
               new GlacierProjectile(shotX, shotY, glacier.facing, glacier.fireSpeed)
