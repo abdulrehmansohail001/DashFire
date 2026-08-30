@@ -96,6 +96,7 @@ export class Player {
     this.frozen = false;
     this.frozenTimer = 0;
     this.freezeAnimTimer = 0; // resets to 0 every fresh freeze hit; drives the crystal growth frame
+    this.teleportCooldownTimer = 0; // guards Vortex's mirror-teleport from re-triggering instantly
 
     this.isSitting = false; // set every frame from GameCanvas based on ArrowDown held
 
@@ -210,6 +211,10 @@ export class Player {
       }
     }
 
+    if (this.teleportCooldownTimer > 0) {
+      this.teleportCooldownTimer -= dt;
+    }
+
     if (this.shootCooldown > 0) {
       this.shootCooldown -= dt;
     }
@@ -307,6 +312,12 @@ export class Player {
     this.frozen = true;
     this.frozenTimer = freezeMin + Math.random() * (freezeMax - freezeMin);
     this.freezeAnimTimer = 0;
+  }
+
+  teleportMirror(canvasWidth = 800) {
+    if (this.teleportCooldownTimer > 0) return;
+    this.x = canvasWidth - this.x - this.width;
+    this.teleportCooldownTimer = 0.75;
   }
 
   // Shield pickup — reuses the same invulnerable/flicker system as the

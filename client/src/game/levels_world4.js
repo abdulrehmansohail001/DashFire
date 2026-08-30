@@ -5,12 +5,11 @@
 // first copied from World 2).
 
 export const LEVELS = [
-  // Level 1 — 1 yeti, 15 HP
   {
     level: 1,
-    hasYeti: true,
-    yetiCount: 1,
-    yetiHealth: 15,
+    hasVortex: true,
+    vortexCount: 1,
+    vortexHealth: 6,
   },
   // Level 2 — 1 spaceship, 15 HP
   {

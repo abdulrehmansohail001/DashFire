@@ -19,6 +19,7 @@ import { Cactus } from './entities/Cactus';
 import { Iceberg } from './entities/Iceberg';
 import { Glacier } from './entities/Glacier';
 import { GlacierProjectile } from './entities/GlacierProjectile';
+import { Vortex } from './entities/Vortex';
 import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
@@ -237,6 +238,27 @@ function buildEaglesForLevel(levelConfig) {
 
   return eagles;
 }
+
+function buildVorticesForLevel(levelConfig) {
+  if (!levelConfig.hasVortex) return [];
+  const vortexCount = levelConfig.vortexCount ?? 1;
+  const width = 56;
+  const span = EAGLE_ARENA_MAX_X - EAGLE_ARENA_MIN_X - width;
+  const vortices = [];
+
+  for (let i = 0; i < vortexCount; i++) {
+    const startX = EAGLE_ARENA_MIN_X + (span * (i + 0.5)) / vortexCount;
+    vortices.push(
+      new Vortex(EAGLE_HEIGHT_Y, levelConfig, {
+        startX,
+        minX: EAGLE_ARENA_MIN_X,
+        maxX: EAGLE_ARENA_MAX_X - width,
+      })
+    );
+  }
+
+  return vortices;
+}
 // Builds N frogs for a level config, same staggered-full-width approach as
 // eagles (start positions spread across the patrol span, each with a
 // small speed/pause jitter so multiple frogs don't hop in lockstep).
@@ -364,6 +386,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const obstacleImage = getImage(world.sprites.obstacle);
     const cactusImage = getImage(world.sprites.cactus);
     const icebergImage = getImage(world.sprites.iceberg);
+    const vortexImage = getImage(world.sprites.vortex);
   const frogSheet = getSheet(world.sprites.frog);
 
   const canvasRef = useRef(null);
@@ -386,6 +409,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     LEVELS[initialLevelIndex].hasIceberg ? new Iceberg(345, { ...LEVELS[initialLevelIndex], minX: 0, maxX: 800 - 26 }) : null
   );
       const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
+      const vorticesRef = useRef(buildVorticesForLevel(LEVELS[initialLevelIndex]));
   const yetisRef = useRef(buildYetisForLevel(LEVELS[initialLevelIndex]));
   const yetiProjectilesRef = useRef([]);
   const spaceshipsRef = useRef(buildSpaceshipsForLevel(LEVELS[initialLevelIndex]));
@@ -437,6 +461,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         cactusRef.current = config.hasCactus ? new Cactus(380, 310) : null;
     icebergRef.current = config.hasIceberg ? new Iceberg(345, { ...config, minX: 0, maxX: 800 - 26 }) : null;
         eaglesRef.current = buildEaglesForLevel(config);
+        vorticesRef.current = buildVorticesForLevel(config);
         yetisRef.current = buildYetisForLevel(config);
     yetiProjectilesRef.current = [];
     spaceshipsRef.current = buildSpaceshipsForLevel(config);
@@ -667,6 +692,16 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         }
         return !p.hasLanded(400); // 400 = ground line; despawn once it lands, hit or not
       });
+
+      const vortices = vorticesRef.current;
+      for (const vortex of vortices) {
+        if (!vortex.alive) continue;
+        vortex.update(dt);
+        if (isColliding(playerBounds, vortex.getBounds())) {
+          player.takeHit();
+          player.teleportMirror(CANVAS_WIDTH);
+        }
+      }
 
       // Yetis: standing (never move), throw one big ice projectile at a
       // time toward whichever side the player is currently on. Contact
@@ -988,6 +1023,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           }
         }
         if (hitFrog) continue;
+        let hitVortex = false;
+        for (const vortex of vortices) {
+          if (!vortex.alive) continue;
+          if (isColliding(bullet.getBounds(), vortex.getBounds())) {
+            vortex.takeHit();
+            bullet.hit = true;
+            hitVortex = true;
+            break;
+          }
+        }
+        if (hitVortex) continue;
         if (bossRef.current && bossRef.current.alive && isColliding(bullet.getBounds(), bossRef.current.getBounds())) {
           bossRef.current.takeHit();
           bullet.hit = true;
@@ -1008,7 +1054,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
           const allEnemiesDead = bossRef.current
   ? !bossRef.current.alive
-  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && spaceshipsRef.current.every((s) => !s.alive) && (levelConfigRef.current.hasTwinGlaciers || iceBeesRef.current.every((b) => !b.alive)) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
+  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && vortices.every((v) => !v.alive) && spaceshipsRef.current.every((s) => !s.alive) && (levelConfigRef.current.hasTwinGlaciers || iceBeesRef.current.every((b) => !b.alive)) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
@@ -1054,6 +1100,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
                         eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
+      vorticesRef.current.forEach((vortex) => vortex.draw(ctx, vortexImage));
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
       yetisRef.current.forEach((yeti) => yeti.draw(ctx, yetiSheet));
       yetiProjectilesRef.current.forEach((p) => p.draw(ctx));
@@ -1164,6 +1211,15 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           const pct = Math.max(frog.health, 0) / frog.maxHealth;
           drawHpBar(ctx, barX, frogRowY - 8, barWidth, 16, pct, label, 'right');
           drawHudPortrait(ctx, frogSheet, enemyCircleX, frogRowY, circleRadius, '#5a2a12', 'F');
+        });
+
+        vorticesRef.current.forEach((vortex, i) => {
+          if (!vortex.maxHealth) return;
+          const vortexRowY = 34 + (enemies.length + eaglesRef.current.length + yetisRef.current.length + frogsRef.current.length + i) * ENEMY_ROW_HEIGHT;
+          const label = vorticesRef.current.length > 1 ? `VORTEX ${i + 1} HP` : 'VORTEX HP';
+          const pct = Math.max(vortex.health, 0) / vortex.maxHealth;
+          drawHpBar(ctx, barX, vortexRowY - 8, barWidth, 16, pct, label, 'right');
+          drawHudPortrait(ctx, null, enemyCircleX, vortexRowY, circleRadius, '#6a3aa0', 'V');
         });
       }
 
