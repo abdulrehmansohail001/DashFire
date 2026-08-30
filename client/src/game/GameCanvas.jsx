@@ -67,9 +67,9 @@ const SHIP_HEIGHT_Y = 140; // was 90 — sits lower
 const ICEBEE_HEIGHT_Y = SHIP_HEIGHT_Y + 100; // was +70 — bees sit noticeably lower than the ship
 
 // Twin Glaciers boss fight — fixed at opposite edges, stationary.
-const GLACIER_Y = 185; // 230-tall body, feet at y=400 ground line + ~15px nudge lower
-const GLACIER_LEFT_X = 0; // flush with the left corner — was 20, ate into the middle play space
-const GLACIER_RIGHT_X = 800 - 230; // flush with the right corner — 230 = glacier width
+const GLACIER_Y = 235; // 180-tall body, feet at y=400 ground line + ~15px nudge lower
+const GLACIER_LEFT_X = 0; // flush with the left corner
+const GLACIER_RIGHT_X = 800 - 180; // flush with the right corner — 180 = glacier width
 const GLACIER_FIGHT_GRACE_SECONDS = 1.5; // neither glacier fires for this long at fight start
 const GLACIER_STALL_BEE_INTERVAL = 2.5; // no hit on EITHER glacier for this long -> spawn a bee
 const MAX_GLACIER_STALL_BEES = 5; // cap so a bad run can't spiral into an unlimited swarm
@@ -772,7 +772,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
           if (glacier.wantsToFire) {
             glacier.wantsToFire = false;
-            const shotY = glacier.y + glacier.height * 0.35;
+            const shotY = GUNMEN_FIRE_HEIGHT_Y; // anchored to the universal muzzle height, not a ratio of the golem's own (now larger) size
             const shotX = glacier.facing === 'right' ? glacier.x + glacier.width : glacier.x;
             enemyBulletsRef.current.push(
               new GlacierProjectile(shotX, shotY, glacier.facing, glacier.fireSpeed)

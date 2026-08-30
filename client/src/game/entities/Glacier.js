@@ -24,8 +24,8 @@ export class Glacier {
   constructor(x, y, side, config = {}) {
     this.x = x;
     this.y = y;
-    this.width = 230;
-    this.height = 230; // matches the sprite's real square proportions — hitbox now equals what's actually drawn, no more invisible overhang
+    this.width = 180;
+    this.height = 180; // matches the sprite's real square proportions — hitbox now equals what's actually drawn, no more invisible overhang
     this.side = side; // 'left' | 'right' — which edge it's fixed at (position only, no longer fire direction)
     this.facing = side === 'left' ? 'right' : 'left'; // default: face inward until the first update() sets it from the player's real position
 
