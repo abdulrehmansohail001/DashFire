@@ -83,7 +83,7 @@ export const WORLDS = [
       eagle: null,      // TODO: World 4's flying enemy, if any
       vortex: null,     // TODO: vortex.png once generated — falls back to placeholder art
       boss: null,       // TODO: World 4 boss — not decided yet
-      background: null, // TODO: black-hole-themed background art
+      background: { path: '/sprites/blackhole_bg.jpg', frameWidth: 443, frameHeight: 443, columns: 4, rows: 2 },
       obstacle: '/sprites/obstacle.png', // reused placeholder wall until World 4 gets its own
       cactus: null,
     },
