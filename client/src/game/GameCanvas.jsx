@@ -70,7 +70,7 @@ const ICEBEE_HEIGHT_Y = SHIP_HEIGHT_Y + 100; // was +70 — bees sit noticeably 
 const GLACIER_Y = 250; // 150-tall body, feet at y=400 same ground line as everything else
 const GLACIER_LEFT_X = 20;
 const GLACIER_RIGHT_X = 800 - 90 - 20; // 90 = glacier width
-const GLACIER_FIGHT_GRACE_SECONDS = 3.0; // neither glacier fires for this long at fight start
+const GLACIER_FIGHT_GRACE_SECONDS = 1.5; // neither glacier fires for this long at fight start
 const GLACIER_STALL_BEE_INTERVAL = 3.0; // no hit on EITHER glacier for this long -> spawn a bee
 const MAX_GLACIER_STALL_BEES = 5; // cap so a bad run can't spiral into an unlimited swarm
 
