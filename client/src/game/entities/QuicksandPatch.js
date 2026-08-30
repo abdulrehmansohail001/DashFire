@@ -9,6 +9,16 @@
 //
 // Non-killable — no health field at all, same category as Iceberg/Cactus.
 // currently a placeholder glow; swap for a still sprite once art exists.
+//
+// Smoke animation state machine (8-frame sheet, 4 cols x 2 rows,
+// row-major 0-7): frames 0-2 play once when the player first gets stuck
+// (rising smoke), then loops frames 2-5 continuously while still stuck,
+// then plays frames 6-7 once when released (dissipating), then goes
+// fully idle (no smoke) until the next time the player gets stuck.
+
+const ENTER_FRAME_DURATION = 0.12;
+const STUCK_FRAME_DURATION = 0.15;
+const RELEASE_FRAME_DURATION = 0.15;
 
 export class QuicksandPatch {
   constructor(x, y, width = 90, height = 14) {
@@ -18,12 +28,57 @@ export class QuicksandPatch {
     this.height = height;
 
     this.pulseTimer = 0; // placeholder-only glow animation, purely cosmetic
-    this.playerStuck = false; // tracks whether to show smoke
+
+    this.playerStuck = false;
+    this.smokeState = 'idle'; // 'idle' | 'entering' | 'stuck' | 'releasing'
+    this.smokeFrame = 0;
+    this.smokeTimer = 0;
   }
 
   update(dt, playerStuck = false) {
     this.pulseTimer += dt;
-    this.playerStuck = playerStuck; // just toggle smoke on/off
+
+    const wasStuck = this.playerStuck;
+    this.playerStuck = playerStuck;
+
+    if (playerStuck && !wasStuck) {
+      this.smokeState = 'entering';
+      this.smokeFrame = 0;
+      this.smokeTimer = 0;
+    } else if (!playerStuck && wasStuck) {
+      this.smokeState = 'releasing';
+      this.smokeFrame = 6;
+      this.smokeTimer = 0;
+    }
+
+    if (this.smokeState === 'entering') {
+      this.smokeTimer += dt;
+      if (this.smokeTimer >= ENTER_FRAME_DURATION) {
+        this.smokeTimer = 0;
+        this.smokeFrame += 1;
+        if (this.smokeFrame > 2) {
+          this.smokeFrame = 2;
+          this.smokeState = 'stuck';
+        }
+      }
+    } else if (this.smokeState === 'stuck') {
+      this.smokeTimer += dt;
+      if (this.smokeTimer >= STUCK_FRAME_DURATION) {
+        this.smokeTimer = 0;
+        this.smokeFrame += 1;
+        if (this.smokeFrame > 5) this.smokeFrame = 2; // loops 2-3-4-5
+      }
+    } else if (this.smokeState === 'releasing') {
+      this.smokeTimer += dt;
+      if (this.smokeTimer >= RELEASE_FRAME_DURATION) {
+        this.smokeTimer = 0;
+        this.smokeFrame += 1;
+        if (this.smokeFrame > 7) {
+          this.smokeState = 'idle';
+          this.smokeFrame = 0;
+        }
+      }
+    }
   }
 
   // Horizontal-only overlap check — GameCanvas calls this against the
@@ -47,7 +102,7 @@ export class QuicksandPatch {
     return Math.max(minX, Math.min(maxX, pullTargetX));
   }
 
-  draw(ctx, image, smokeImage) {
+  draw(ctx, image, smokeSheet) {
     if (image && image.complete && image.naturalWidth > 0) {
       ctx.drawImage(image, this.x, this.y, this.width, this.height);
     } else {
@@ -81,13 +136,14 @@ export class QuicksandPatch {
       ctx.stroke();
     }
 
-    // Draw smoke when player is stuck
-    if (this.playerStuck && smokeImage && smokeImage.complete && smokeImage.naturalWidth > 0) {
+    if (this.smokeState !== 'idle' && smokeSheet && smokeSheet.loaded) {
       const smokeWidth = this.width * 1.5;
-      const smokeHeight = smokeWidth;
+      const smokeHeight = smokeWidth * (smokeSheet.frameHeight / smokeSheet.frameWidth);
       const smokeX = this.x + this.width / 2 - smokeWidth / 2;
-      const smokeY = this.y - smokeHeight * 0.6;
-      ctx.drawImage(smokeImage, smokeX, smokeY, smokeWidth, smokeHeight);
+      const smokeY = this.y - smokeHeight + this.height; // base anchored to the ground line, rising upward
+      const row = Math.floor(this.smokeFrame / 4);
+      const col = this.smokeFrame % 4;
+      smokeSheet.draw(ctx, row, col, smokeX, smokeY, smokeWidth, smokeHeight, false);
     }
   }
 }

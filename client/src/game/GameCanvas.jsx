@@ -431,7 +431,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const vortexSheet = getSheet(world.sprites.vortex);
   const darkMatterSheet = getSheet(world.sprites.darkMatter);
   const frogSheet = getSheet(world.sprites.frog);
-  const smokeImage = getImage(world.sprites.smoke);
+  const smokeSheet = getSheet(world.sprites.smoke);
 
   const canvasRef = useRef(null);
     const [health, setHealth] = useState(10);
@@ -1227,7 +1227,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         obstacleRef.current.draw(ctx, obstacleImage);
       }
       if (quicksandRef.current) {
-        quicksandRef.current.draw(ctx, quicksandImage, smokeImage);
+        quicksandRef.current.draw(ctx, quicksandImage, smokeSheet);
       }
       if (cactusRef.current) {
         cactusRef.current.draw(ctx, cactusImage);

@@ -88,7 +88,7 @@ export const WORLDS = [
       obstacle: '/sprites/obstacle.png', // reused placeholder wall until World 4 gets its own
       cactus: null,
       quicksand: null, // TODO: still-sprite art for the quicksand patch — falls back to a pulsing white-glow placeholder
-      smoke: '/sprites/smoke.png', // smoke visual indicator for quicksand pit
+      smoke: { path: '/sprites/smoke.png', frameWidth: 350.5, frameHeight: 561, columns: 4, rows: 2 },
     },
     levels: WORLD_4_LEVELS,
   },
