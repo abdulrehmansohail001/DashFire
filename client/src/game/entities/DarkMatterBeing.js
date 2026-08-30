@@ -114,7 +114,18 @@ export class DarkMatterBeing {
       const frameIndex = frameList[this.frameIndex % frameList.length];
       const row = Math.floor(frameIndex / spriteSheet.columns);
       const col = frameIndex % spriteSheet.columns;
+
+      // Rim-glow around the silhouette's edges — the sprite is pure black
+      // and so is the World 4 background, so without this it's nearly
+      // invisible. shadowBlur follows the drawn image's actual alpha
+      // shape (not a bounding box), so it traces the silhouette's outline
+      // itself rather than changing any of its fill color.
+      ctx.save();
+      ctx.shadowColor = '#8a4dff';
+      ctx.shadowBlur = 14;
       const drew = spriteSheet.draw(ctx, row, col, this.x, this.y, this.width, this.height, this.facing === 'left');
+      ctx.restore();
+
       if (drew) return;
     }
 
