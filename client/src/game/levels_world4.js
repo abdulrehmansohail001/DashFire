@@ -1,94 +1,89 @@
 // src/game/levels_world4.js
-// World 4 (Farthest Black Hole) temporary placeholder level file, copied
-// from World 3 as a starting point, to be redesigned level-by-level once
-// World 4's real entities exist (same situation World 3 was in when it was
-// first copied from World 2).
+// World 4 (Farthest Black Hole) level definitions. hasDarkMatter/
+// darkMatterCount/darkMatterHealth drive DarkMatterBeing (stationary,
+// fires like a gunman, triggers the stillness-pull mechanic). hasVortex/
+// vortexCount/vortexHealth drive Vortex ("spiral" — teleport-mirrors the
+// player). hasQuicksand/quicksandX/quicksandWidth drive QuicksandPatch
+// (non-solid ground hazard). Level 10's boss is TBD — left as a
+// placeholder, untouched.
 
 export const LEVELS = [
+  // Level 1 — 1 dark matter being, 12 HP
   {
     level: 1,
+    hasDarkMatter: true,
+    darkMatterCount: 1,
+    darkMatterHealth: 12,
+  },
+  // Level 2 — 1 vortex (10 HP) + quicksand
+  {
+    level: 2,
     hasVortex: true,
     vortexCount: 1,
-    vortexHealth: 6,
-    
+    vortexHealth: 10,
+    hasQuicksand: true,
   },
-  // Level 2 — 1 spaceship, 15 HP
-  {
-  level: 2,
-  hasDarkMatter: true,
-  darkMatterCount: 1,
-  darkMatterHealth: 8,
-  darkMatterFireIntervalMin: 1.5,
-  darkMatterFireIntervalMax: 2.3,
-  darkMatterBulletSpeed: 260,
-  
-  hasQuicksand: true,
-  quicksandX: 380,
-  quicksandWidth: 90,
-},
-  // Level 3 — 2 yetis, 15 HP each
+  // Level 3 — 1 dark matter being (12 HP) + quicksand
   {
     level: 3,
-    hasYeti: true,
-    yetiCount: 2,
-    yetiHealth: 15,
-    
-  hasQuicksand: true,
-  quicksandX: 380,
-  quicksandWidth: 90,
+    hasDarkMatter: true,
+    darkMatterCount: 1,
+    darkMatterHealth: 12,
+    hasQuicksand: true,
   },
-  // Level 4 — 2 spaceships, 10 HP each
+  // Level 4 — 2 vortices (10 HP each) + quicksand
   {
     level: 4,
-    hasSpaceship: true,
-    shipCount: 2,
-    shipHealth: 10,
+    hasVortex: true,
+    vortexCount: 2,
+    vortexHealth: 10,
+    hasQuicksand: true,
   },
-  // Level 5 — 1 ship (10 HP) + 1 yeti (15 HP)
+  // Level 5 — 2 dark matter beings, 12 HP each
   {
     level: 5,
-    hasSpaceship: true,
-    shipCount: 1,
-    shipHealth: 10,
-    hasYeti: true,
-    yetiCount: 1,
-    yetiHealth: 15,
+    hasDarkMatter: true,
+    darkMatterCount: 2,
+    darkMatterHealth: 12,
   },
-  // Level 6 — 2 ships (10 HP each) + iceberg obstacle
+  // Level 6 — 2 dark matter beings (12 HP each) + 1 vortex (10 HP)
   {
     level: 6,
-    hasSpaceship: true,
-    shipCount: 2,
-    shipHealth: 10,
-    hasIceberg: true,
+    hasDarkMatter: true,
+    darkMatterCount: 2,
+    darkMatterHealth: 12,
+    hasVortex: true,
+    vortexCount: 1,
+    vortexHealth: 10,
   },
-  // Level 7 — 1 ship (10 HP) + 2 yetis (15 HP each)
+  // Level 7 — 3 vortices, 10 HP each
   {
     level: 7,
-    hasSpaceship: true,
-    shipCount: 1,
-    shipHealth: 10,
-    hasYeti: true,
-    yetiCount: 2,
-    yetiHealth: 15,
+    hasVortex: true,
+    vortexCount: 3,
+    vortexHealth: 10,
   },
-  // Level 8 — 3 ships, 10 HP each
+  // Level 8 — one of all three: dark matter, vortex, quicksand
   {
     level: 8,
-    hasSpaceship: true,
-    shipCount: 3,
-    shipHealth: 10,
+    hasDarkMatter: true,
+    darkMatterCount: 1,
+    darkMatterHealth: 12,
+    hasVortex: true,
+    vortexCount: 1,
+    vortexHealth: 10,
+    hasQuicksand: true,
   },
-  // Level 9 — 1 yeti (15 HP) + 1 ship (10 HP) + iceberg obstacle
+  // Level 9 — 2 dark matter beings, 1 vortex, 1 quicksand
   {
     level: 9,
-    hasYeti: true,
-    yetiCount: 1,
-    yetiHealth: 15,
-    hasSpaceship: true,
-    shipCount: 1,
-    shipHealth: 10,
-    hasIceberg: true,
+    hasDarkMatter: true,
+    darkMatterCount: 2,
+    darkMatterHealth: 12,
+    hasVortex: true,
+    vortexCount: 1,
+    vortexHealth: 10,
+    hasQuicksand: true,
   },
   // Level 10 — Twin Glaciers boss fight.
   {
