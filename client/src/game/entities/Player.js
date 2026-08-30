@@ -145,11 +145,28 @@ export class Player {
   }
 
   // Movement only — held-key state, safe to read every frame.
+  // When stuck in quicksand: vx is locked to 0 (no movement), but facing
+  // direction DOES update from direction keys so the player can aim/shoot
+  // in different directions.
   handleInput(keys) {
-    if (this.frozen || this.pulled || this.stuck) {
+    if (this.frozen || this.pulled) {
       this.vx = 0;
       return;
     }
+    
+    // When stuck: lock vx but still allow facing to update
+    if (this.stuck) {
+      this.vx = 0;
+      // Still process facing direction from input keys
+      if (keys['ArrowLeft'] || keys['a']) {
+        this.facing = 'left';
+      } else if (keys['ArrowRight'] || keys['d']) {
+        this.facing = 'right';
+      }
+      return;
+    }
+    
+    // Normal movement (not stuck)
     if (keys['ArrowLeft'] || keys['a']) {
       this.vx = -MOVE_SPEED;
       this.facing = 'left';
