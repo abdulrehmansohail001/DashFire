@@ -82,6 +82,7 @@ export const WORLDS = [
       enemy: null,      // TODO: World 4's basic enemy — not built yet
       eagle: null,      // TODO: World 4's flying enemy, if any
       vortex: { path: '/sprites/vortex.png', frameWidth: 418, frameHeight: 470, columns: 4, rows: 2 },
+      darkMatter: null, // TODO: dark_matter_being.png once generated
       boss: null,       // TODO: World 4 boss — not decided yet
       background: { path: '/sprites/blackhole_bg.jpg', frameWidth: 443, frameHeight: 443, columns: 4, rows: 2 },
       obstacle: '/sprites/obstacle.png', // reused placeholder wall until World 4 gets its own

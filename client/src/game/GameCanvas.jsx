@@ -20,6 +20,7 @@ import { Iceberg } from './entities/Iceberg';
 import { Glacier } from './entities/Glacier';
 import { GlacierProjectile } from './entities/GlacierProjectile';
 import { Vortex } from './entities/Vortex';
+import { DarkMatterBeing } from './entities/DarkMatterBeing';
 import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
@@ -200,6 +201,25 @@ function buildEnemiesForLevel(levelConfig) {
 
   return enemies;
 }
+// DarkMatterBeing is stationary like Yeti, so it shares the exact same
+// arena-slot spread pattern — only the class and the ground y differ.
+function buildDarkMatterBeingsForLevel(levelConfig) {
+  if (!levelConfig.hasDarkMatter) return [];
+  const darkMatterCount = levelConfig.darkMatterCount ?? 1;
+  const slotWidth = (ARENA_MAX_X - ARENA_MIN_X) / darkMatterCount;
+  const beings = [];
+
+  for (let i = 0; i < darkMatterCount; i++) {
+    const startX = ARENA_MIN_X + slotWidth * (i + 0.5);
+    // Ground line (canvas 400) minus this being's own height (90) — same
+    // reasoning as Yeti: stationary, no physics, so the spawn y must
+    // already be the final resting y.
+    beings.push(new DarkMatterBeing(startX, 310, levelConfig));
+  }
+
+  return beings;
+}
+
 // Builds N yetis for a level config. Unlike Enemy/Eagle, yetis never move —
 // "standing" is the whole point — so this just spreads their fixed spots
 // across the arena when there's more than one.
@@ -398,6 +418,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     const cactusImage = getImage(world.sprites.cactus);
     const icebergImage = getImage(world.sprites.iceberg);
   const vortexSheet = getSheet(world.sprites.vortex);
+  const darkMatterImage = getImage(world.sprites.darkMatter);
   const frogSheet = getSheet(world.sprites.frog);
 
   const canvasRef = useRef(null);
@@ -421,6 +442,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   );
       const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
       const vorticesRef = useRef(buildVorticesForLevel(LEVELS[initialLevelIndex]));
+  const darkMattersRef = useRef(buildDarkMatterBeingsForLevel(LEVELS[initialLevelIndex]));
   const yetisRef = useRef(buildYetisForLevel(LEVELS[initialLevelIndex]));
   const yetiProjectilesRef = useRef([]);
   const spaceshipsRef = useRef(buildSpaceshipsForLevel(LEVELS[initialLevelIndex]));
@@ -473,6 +495,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     icebergRef.current = config.hasIceberg ? new Iceberg(345, { ...config, minX: 0, maxX: 800 - 26 }) : null;
         eaglesRef.current = buildEaglesForLevel(config);
         vorticesRef.current = buildVorticesForLevel(config);
+        darkMattersRef.current = buildDarkMatterBeingsForLevel(config);
         yetisRef.current = buildYetisForLevel(config);
     yetiProjectilesRef.current = [];
     spaceshipsRef.current = buildSpaceshipsForLevel(config);
@@ -712,6 +735,44 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           player.takeHit();
           player.teleportMirror(CANVAS_WIDTH);
         }
+      }
+
+      // DarkMatterBeing: stationary, fires like a gunman (reuses
+      // EnemyBullet directly — no contact damage of its own, only its
+      // shots hurt). The pull mechanic itself is driven from here every
+      // frame: start a pull once stillTimer crosses 1.5s and a being is
+      // alive, keep the target/speed live-updated toward whichever alive
+      // being is closest while pulled, and force-end early if the being
+      // count drops to 0 mid-pull.
+      const darkMatters = darkMattersRef.current;
+      const BASE_PULL_SPEED = 120; // px/s per alive being — 2 alive = 240px/s
+      for (const being of darkMatters) {
+        if (!being.alive) continue;
+        being.update(dt, player.x);
+        if (being.wantsToFire) {
+          being.wantsToFire = false;
+          const bulletX = being.facing === 'right' ? being.x + being.width : being.x;
+          enemyBulletsRef.current.push(
+            new EnemyBullet(bulletX, GUNMEN_FIRE_HEIGHT_Y, being.facing, being.bulletSpeed)
+          );
+        }
+      }
+
+      const aliveBeings = darkMatters.filter((b) => b.alive);
+      if (player.pulled) {
+        if (aliveBeings.length === 0) {
+          player.endPull();
+        } else {
+          const closest = aliveBeings.reduce((a, b) =>
+            Math.abs(a.x - player.x) <= Math.abs(b.x - player.x) ? a : b
+          );
+          player.updatePullTarget(closest.x + closest.width / 2, BASE_PULL_SPEED * aliveBeings.length);
+        }
+      } else if (aliveBeings.length > 0 && player.stillTimer >= 1.5) {
+        const closest = aliveBeings.reduce((a, b) =>
+          Math.abs(a.x - player.x) <= Math.abs(b.x - player.x) ? a : b
+        );
+        player.startPull(closest.x + closest.width / 2, BASE_PULL_SPEED * aliveBeings.length);
       }
 
       // Yetis: standing (never move), throw one big ice projectile at a
@@ -1045,6 +1106,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           }
         }
         if (hitVortex) continue;
+        let hitDarkMatter = false;
+        for (const being of darkMatters) {
+          if (!being.alive) continue;
+          if (isColliding(bullet.getBounds(), being.getBounds())) {
+            being.takeHit();
+            bullet.hit = true;
+            hitDarkMatter = true;
+            break;
+          }
+        }
+        if (hitDarkMatter) continue;
         if (bossRef.current && bossRef.current.alive && isColliding(bullet.getBounds(), bossRef.current.getBounds())) {
           bossRef.current.takeHit();
           bullet.hit = true;
@@ -1065,7 +1137,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
           const allEnemiesDead = bossRef.current
   ? !bossRef.current.alive
-  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && vortices.every((v) => !v.alive) && spaceshipsRef.current.every((s) => !s.alive) && (levelConfigRef.current.hasTwinGlaciers || iceBeesRef.current.every((b) => !b.alive)) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
+  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && vortices.every((v) => !v.alive) && darkMattersRef.current.every((b) => !b.alive) && spaceshipsRef.current.every((s) => !s.alive) && (levelConfigRef.current.hasTwinGlaciers || iceBeesRef.current.every((b) => !b.alive)) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
@@ -1112,6 +1184,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       bulletsRef.current.forEach((b) => b.draw(ctx));
                         eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
       vorticesRef.current.forEach((vortex) => vortex.draw(ctx, vortexSheet));
+      darkMattersRef.current.forEach((being) => being.draw(ctx, darkMatterImage));
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
       yetisRef.current.forEach((yeti) => yeti.draw(ctx, yetiSheet));
       yetiProjectilesRef.current.forEach((p) => p.draw(ctx));
@@ -1231,6 +1304,16 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           const pct = Math.max(vortex.health, 0) / vortex.maxHealth;
           drawHpBar(ctx, barX, vortexRowY - 8, barWidth, 16, pct, label, 'right');
           drawHudPortrait(ctx, null, enemyCircleX, vortexRowY, circleRadius, '#6a3aa0', 'V');
+        });
+
+        const preDarkMatterRows = enemies.length + eaglesRef.current.length + yetisRef.current.length + frogsRef.current.length + vorticesRef.current.length;
+        darkMattersRef.current.forEach((being, i) => {
+          if (!being.maxHealth) return;
+          const rowY = 34 + (preDarkMatterRows + i) * ENEMY_ROW_HEIGHT;
+          const label = darkMattersRef.current.length > 1 ? `DARK MATTER ${i + 1} HP` : 'DARK MATTER HP';
+          const pct = Math.max(being.health, 0) / being.maxHealth;
+          drawHpBar(ctx, barX, rowY - 8, barWidth, 16, pct, label, 'right');
+          drawHudPortrait(ctx, null, enemyCircleX, rowY, circleRadius, '#7a3aff', 'D');
         });
       }
 

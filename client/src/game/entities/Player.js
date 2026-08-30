@@ -109,6 +109,17 @@ export class Player {
     this.teleportGhostActive = false; // true for the 4-step ghost-blink window right after a teleport
     this.teleportGhostTimer = 0;
 
+    // World 4 DarkMatterBeing pull: stillTimer counts up while grounded +
+    // not moving (shooting does NOT reset it); GameCanvas starts a pull
+    // once it hits 1.5s and at least one being is alive. pullSpeed/
+    // pullTargetX are updated live every frame by GameCanvas while pulled
+    // is true (see startPull/updatePullTarget/endPull below).
+    this.stillTimer = 0;
+    this.pulled = false;
+    this.pulledTimer = 0;
+    this.pullTargetX = 0;
+    this.pullSpeed = 0;
+
     this.isSitting = false; // set every frame from GameCanvas based on ArrowDown held
 
     // Animation state
@@ -122,7 +133,7 @@ export class Player {
 
   // Movement only — held-key state, safe to read every frame.
   handleInput(keys) {
-    if (this.frozen) {
+    if (this.frozen || this.pulled) {
       this.vx = 0;
       return;
     }
@@ -148,7 +159,7 @@ export class Player {
   // Allows MAX_JUMPS total jumps before landing (MAX_JUMPS=2 -> one ground
   // jump + one real mid-air double-jump).
   jump() {
-    if (this.frozen) return;
+    if (this.frozen || this.pulled) return;
     if (this.jumpsUsed < MAX_JUMPS) {
       this.vy = this.jumpsUsed === 0 ? JUMP_VELOCITY : DOUBLE_JUMP_VELOCITY;
       this.isGrounded = false;
@@ -197,6 +208,16 @@ export class Player {
     this.x += this.vx * dt;
     this.y += this.vy * dt;
 
+    if (this.pulled) {
+      const dir = this.pullTargetX > this.x ? 1 : -1;
+      const step = this.pullSpeed * dt;
+      if (Math.abs(this.pullTargetX - this.x) <= step) {
+        this.x = this.pullTargetX;
+      } else {
+        this.x += dir * step;
+      }
+    }
+
     if (this.y >= GROUND_Y) {
       this.y = GROUND_Y;
       this.vy = 0;
@@ -231,6 +252,17 @@ export class Player {
       if (this.teleportGhostTimer >= GHOST_FRAME_DURATION * GHOST_FRAME_COUNT) {
         this.teleportGhostActive = false;
       }
+    }
+
+    if (this.pulled) {
+      this.pulledTimer -= dt;
+      if (this.pulledTimer <= 0) {
+        this.endPull();
+      }
+    } else if (this.isGrounded && this.vx === 0) {
+      this.stillTimer += dt;
+    } else {
+      this.stillTimer = 0;
     }
 
     if (this.shootCooldown > 0) {
@@ -330,6 +362,34 @@ export class Player {
     this.frozen = true;
     this.frozenTimer = freezeMin + Math.random() * (freezeMax - freezeMin);
     this.freezeAnimTimer = 0;
+  }
+
+  // Starts a pull toward targetX at the given speed. Does nothing if
+  // already mid-pull (GameCanvas should call updatePullTarget instead in
+  // that case to keep the target/speed live-updated each frame).
+  startPull(targetX, speed) {
+    if (this.pulled) return;
+    this.pulled = true;
+    this.pulledTimer = 1.5;
+    this.pullTargetX = targetX;
+    this.pullSpeed = speed;
+  }
+
+  // Called every frame while pulled is true, so the target/speed stay
+  // current as beings die or the closest one changes.
+  updatePullTarget(targetX, speed) {
+    if (!this.pulled) return;
+    this.pullTargetX = targetX;
+    this.pullSpeed = speed;
+  }
+
+  // Ends the pull early (all beings died) or naturally (timer ran out —
+  // called internally from update()). Resets stillTimer so a fresh 1.5s
+  // window starts immediately after.
+  endPull() {
+    this.pulled = false;
+    this.pulledTimer = 0;
+    this.stillTimer = 0;
   }
 
   teleportMirror(canvasWidth = 800) {
