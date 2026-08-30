@@ -68,8 +68,8 @@ const ICEBEE_HEIGHT_Y = SHIP_HEIGHT_Y + 100; // was +70 — bees sit noticeably 
 
 // Twin Glaciers boss fight — fixed at opposite edges, stationary.
 const GLACIER_Y = 185; // 230-tall body, feet at y=400 ground line + ~15px nudge lower
-const GLACIER_LEFT_X = 20;
-const GLACIER_RIGHT_X = 800 - 230 - 20; // 230 = glacier width
+const GLACIER_LEFT_X = 0; // flush with the left corner — was 20, ate into the middle play space
+const GLACIER_RIGHT_X = 800 - 230; // flush with the right corner — 230 = glacier width
 const GLACIER_FIGHT_GRACE_SECONDS = 1.5; // neither glacier fires for this long at fight start
 const GLACIER_STALL_BEE_INTERVAL = 2.5; // no hit on EITHER glacier for this long -> spawn a bee
 const MAX_GLACIER_STALL_BEES = 5; // cap so a bad run can't spiral into an unlimited swarm
