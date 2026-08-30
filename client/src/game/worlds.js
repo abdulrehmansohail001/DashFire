@@ -15,6 +15,7 @@
 import { LEVELS as WORLD_1_LEVELS } from './levels';
 import { LEVELS as WORLD_2_LEVELS } from './levels_world2';
 import { LEVELS as WORLD_3_LEVELS } from './levels_world3';
+import { LEVELS as WORLD_4_LEVELS } from './levels_world4';
 
 export const WORLDS = [
   {
@@ -71,6 +72,21 @@ export const WORLDS = [
     },
     levels: WORLD_3_LEVELS,
   },
-  { id: 3, name: 'World 4', sprites: {}, levels: [] },
+  {
+    id: 3,
+    name: 'Farthest Black Hole',
+    missionTitle: 'FARTHEST BLACK HOLE',
+    sprites: {
+      player: { path: '/sprites/player.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
+      playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
+      enemy: null,      // TODO: World 4's basic enemy — not built yet
+      eagle: null,      // TODO: World 4's flying enemy, if any
+      boss: null,       // TODO: World 4 boss — not decided yet
+      background: null, // TODO: black-hole-themed background art
+      obstacle: '/sprites/obstacle.png', // reused placeholder wall until World 4 gets its own
+      cactus: null,
+    },
+    levels: WORLD_4_LEVELS,
+  },
   { id: 4, name: 'World 5', sprites: {}, levels: [] },
 ];
