@@ -20,6 +20,9 @@ const RECOIL_FRAME_DURATION = 0.2;
 const SETTLE_FRAME_DURATION = 0.2;
 const IDLE_PULSE_INTERVAL = 0.5;
 
+const SPRITE_DRAW_SIZE = 230; // bigger, and SQUARE to match the source art's real proportions — was stretched into a 90x150 hitbox before, squashing it thin
+const Y_NUDGE = 20; // sits a bit lower so the feet actually touch the ground line
+
 export class Glacier {
   constructor(x, y, side, config = {}) {
     this.x = x;
@@ -143,7 +146,9 @@ export class Glacier {
       const flip = this.facing === 'left';
       const row = Math.floor(this.animFrame / 4);
       const col = this.animFrame % 4;
-      const drew = spriteSheet.draw(ctx, row, col, this.x, this.y, this.width, this.height, flip);
+      const drawX = this.x + this.width / 2 - SPRITE_DRAW_SIZE / 2;
+      const drawY = this.y + this.height - SPRITE_DRAW_SIZE + Y_NUDGE;
+      const drew = spriteSheet.draw(ctx, row, col, drawX, drawY, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE, flip);
       if (drew) return;
     }
 
