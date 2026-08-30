@@ -24,8 +24,8 @@ export class Glacier {
     this.maxHealth = this.health;
     this.alive = true;
 
-    this.fireIntervalMin = config.glacierFireIntervalMin ?? 2.0; // was 1.2 — bigger gap between shots
-    this.fireIntervalMax = config.glacierFireIntervalMax ?? 3.2; // was 2.0
+    this.fireIntervalMin = config.glacierFireIntervalMin ?? 1.8; // was 1.2 — bigger gap between shots
+    this.fireIntervalMax = config.glacierFireIntervalMax ?? 2.6; // was 2.0
     this.fireSpeed = config.glacierProjectileSpeed ?? 240;
     this.fireTimer = 0;
     this.fireInterval = this.randomFireInterval();
