@@ -8,6 +8,11 @@
 // any single being's own state. This class only tracks its own position,
 // health, facing, and firing timer — no contact damage of its own.
 
+const STANDING_FRAMES = [0, 1, 2];
+const FIRING_FRAMES = [3, 4];
+const PULL_FRAMES = [5, 6, 7];
+const FRAME_DURATION = 0.12;
+
 export class DarkMatterBeing {
   constructor(x, y, config = {}) {
     this.x = x;
@@ -29,6 +34,9 @@ export class DarkMatterBeing {
     this.wantsToFire = false;
 
     this.hitFlashTimer = 0;
+    this.animationState = 'standing';
+    this.frameIndex = 0;
+    this.frameTimer = 0;
   }
 
   randomFireInterval() {
@@ -44,11 +52,21 @@ export class DarkMatterBeing {
     }
   }
 
-  update(dt, playerX) {
+  update(dt, playerX, isPlayerPulled = false) {
     if (!this.alive) return;
 
     if (typeof playerX === 'number') {
       this.facing = playerX < this.x ? 'left' : 'right';
+    }
+
+    if (isPlayerPulled) {
+      this.animationState = 'pulling';
+      this.frameIndex = 0;
+      this.frameTimer = 0;
+    } else if (this.wantsToFire) {
+      this.animationState = 'firing';
+    } else {
+      this.animationState = 'standing';
     }
 
     this.fireTimer += dt;
@@ -56,6 +74,24 @@ export class DarkMatterBeing {
       this.fireTimer = 0;
       this.fireInterval = this.randomFireInterval();
       this.wantsToFire = true;
+      this.animationState = 'firing';
+      this.frameIndex = 0;
+      this.frameTimer = 0;
+    }
+
+    if (this.animationState === 'firing' || this.animationState === 'pulling') {
+      this.frameTimer += dt;
+      const frameList = this.animationState === 'firing' ? FIRING_FRAMES : PULL_FRAMES;
+      if (this.frameTimer >= FRAME_DURATION) {
+        this.frameTimer = 0;
+        this.frameIndex = (this.frameIndex + 1) % frameList.length;
+      }
+    } else {
+      this.frameTimer += dt;
+      if (this.frameTimer >= FRAME_DURATION) {
+        this.frameTimer = 0;
+        this.frameIndex = (this.frameIndex + 1) % STANDING_FRAMES.length;
+      }
     }
 
     if (this.hitFlashTimer > 0) this.hitFlashTimer -= dt;
@@ -65,7 +101,7 @@ export class DarkMatterBeing {
     return { x: this.x, y: this.y, width: this.width, height: this.height };
   }
 
-  draw(ctx, image) {
+  draw(ctx, spriteSheet) {
     if (!this.alive) return;
 
     if (this.hitFlashTimer > 0) {
@@ -73,9 +109,13 @@ export class DarkMatterBeing {
       if (step % 2 === 0) return;
     }
 
-    if (image && image.complete && image.naturalWidth > 0) {
-      ctx.drawImage(image, this.x, this.y, this.width, this.height);
-      return;
+    if (spriteSheet && spriteSheet.loaded) {
+      const frameList = this.animationState === 'firing' ? FIRING_FRAMES : this.animationState === 'pulling' ? PULL_FRAMES : STANDING_FRAMES;
+      const frameIndex = frameList[this.frameIndex % frameList.length];
+      const row = Math.floor(frameIndex / spriteSheet.columns);
+      const col = frameIndex % spriteSheet.columns;
+      const drew = spriteSheet.draw(ctx, row, col, this.x, this.y, this.width, this.height, this.facing === 'left');
+      if (drew) return;
     }
 
     const cx = this.x + this.width / 2;

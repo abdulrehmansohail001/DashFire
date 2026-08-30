@@ -748,7 +748,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       const BASE_PULL_SPEED = 120; // px/s per alive being — 2 alive = 240px/s
       for (const being of darkMatters) {
         if (!being.alive) continue;
-        being.update(dt, player.x);
+        being.update(dt, player.x, player.pulled);
         if (being.wantsToFire) {
           being.wantsToFire = false;
           const bulletX = being.facing === 'right' ? being.x + being.width : being.x;
