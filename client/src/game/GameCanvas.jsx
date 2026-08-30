@@ -148,6 +148,19 @@ function getImage(path) {
   return imageCache[path];
 }
 
+// Ghost-blink overlay for Vortex's teleport (universal player-status
+// effect, same reasoning as freezeCrystalSheet above — not per-world). 
+// TODO: once ghost.png exists, uncomment and fill in its real frame
+// dimensions (check the generated sheet's actual pixel size first):
+// const ghostSheet = getSheet({
+//   path: '/sprites/ghost.png',
+//   frameWidth: 0,   // TODO
+//   frameHeight: 0,  // TODO
+//   columns: 4,
+//   rows: 1,
+// });
+const ghostSheet = null; // falls back to Player.js's own alpha-fade ghost effect until real art exists
+
 // Freeze-crystal overlay is a universal player-status effect, not a
 // per-world reskin, so it's a fixed global asset rather than something
 // declared in worlds.js.
@@ -1096,7 +1109,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       ctx.lineTo(800, 400);
       ctx.stroke();
 
-            playerRef.current.draw(ctx, playerSheet, playerExtraSheet, freezeCrystalSheet);
+            playerRef.current.draw(ctx, playerSheet, playerExtraSheet, freezeCrystalSheet, ghostSheet);
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));

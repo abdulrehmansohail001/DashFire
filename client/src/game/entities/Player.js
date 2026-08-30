@@ -65,6 +65,15 @@ const SPRITE_DRAW_HEIGHT = 100;
 const FREEZE_FRAME_COUNT = 4;
 const FREEZE_FRAME_DURATION = 0.09; // quick growth — reaches full height in ~0.36s, then holds
 
+// Vortex teleport-blink: 4 ghost frames flicker at the new (mirrored)
+// position before the real sprite resumes. If a dedicated ghostSheet is
+// passed into draw() and loaded, its own frames are used; otherwise this
+// falls back to redrawing the player's current pose at fading alpha —
+// see the ghostSheet branch in draw() below.
+const GHOST_FRAME_DURATION = 0.08; // seconds per ghost step
+const GHOST_FRAME_COUNT = 4;
+const GHOST_ALPHA_LEVELS = [0.75, 0.55, 0.35, 0.2];
+
 export class Player {
   constructor(x, y) {
     this.x = x;
@@ -97,6 +106,8 @@ export class Player {
     this.frozenTimer = 0;
     this.freezeAnimTimer = 0; // resets to 0 every fresh freeze hit; drives the crystal growth frame
     this.teleportCooldownTimer = 0; // guards Vortex's mirror-teleport from re-triggering instantly
+    this.teleportGhostActive = false; // true for the 4-step ghost-blink window right after a teleport
+    this.teleportGhostTimer = 0;
 
     this.isSitting = false; // set every frame from GameCanvas based on ArrowDown held
 
@@ -151,7 +162,7 @@ export class Player {
   }
 
   canShoot() {
-    return this.shootCooldown <= 0 && !this.frozen;
+    return this.shootCooldown <= 0 && !this.frozen && !this.teleportGhostActive;
   }
 
   // Locks the player into the death sequence: freezes physics, plays the
@@ -213,6 +224,13 @@ export class Player {
 
     if (this.teleportCooldownTimer > 0) {
       this.teleportCooldownTimer -= dt;
+    }
+
+    if (this.teleportGhostActive) {
+      this.teleportGhostTimer += dt;
+      if (this.teleportGhostTimer >= GHOST_FRAME_DURATION * GHOST_FRAME_COUNT) {
+        this.teleportGhostActive = false;
+      }
     }
 
     if (this.shootCooldown > 0) {
@@ -318,6 +336,8 @@ export class Player {
     if (this.teleportCooldownTimer > 0) return;
     this.x = canvasWidth - this.x - this.width;
     this.teleportCooldownTimer = 0.75;
+    this.teleportGhostActive = true;
+    this.teleportGhostTimer = 0;
   }
 
   // Shield pickup — reuses the same invulnerable/flicker system as the
@@ -335,45 +355,79 @@ export class Player {
   // mainSheet/extraSheet are optional — if the one this animState needs
   // isn't loaded yet, falls back to the original placeholder rectangle so
   // there's never a blank gap.
-   draw(ctx, mainSheet, extraSheet, freezeSheet) {
+   draw(ctx, mainSheet, extraSheet, freezeSheet, ghostSheet) {
     // Only the player's OWN sprite should flicker during invulnerability —
     // the freeze crystal overlay is drawn unconditionally further down, so
-    // it no longer blinks in sync with this.
+    // it no longer blinks in sync with this. Ghost phase takes priority
+    // over the invuln blink (they can't both be steering opacity at once).
+    const isGhostPhase = this.teleportGhostActive;
     const skipSpriteThisFrame =
-      !this.outroLocked && this.invulnerable && Math.floor(this.invulnerableTimer * 10) % 2 === 0;
+      !this.outroLocked && !isGhostPhase && this.invulnerable && Math.floor(this.invulnerableTimer * 10) % 2 === 0;
 
     if (!skipSpriteThisFrame) {
-      const config = ANIM_CONFIG[this.animState];
-      const sheet = config.sheet === 'extra' ? extraSheet : mainSheet;
       let drew = false;
 
-      if (sheet && sheet.loaded) {
-        let row, col;
-        if (config.cells) {
-          [row, col] = config.cells[this.frameIndex];
-        } else {
-          row = config.row;
-          col = this.frameIndex;
-        }
-
-        const aspect = sheet.frameWidth / sheet.frameHeight;
+      // TODO (dedicated ghost art): once a real ghost sheet exists, this
+      // branch draws ITS frames (indexed by ghostStep, 0-3) instead of the
+      // fallback. Nothing else in this file needs to change — just make
+      // sure GameCanvas passes a loaded ghostSheet into player.draw().
+      if (isGhostPhase && ghostSheet && ghostSheet.loaded) {
+        const ghostStep = Math.min(
+          GHOST_FRAME_COUNT - 1,
+          Math.floor(this.teleportGhostTimer / GHOST_FRAME_DURATION)
+        );
+        const aspect = ghostSheet.frameWidth / ghostSheet.frameHeight;
         const drawHeight = SPRITE_DRAW_HEIGHT;
         const drawWidth = SPRITE_DRAW_HEIGHT * aspect;
         const drawX = this.x + this.width / 2 - drawWidth / 2;
         const drawY = this.y + this.height - drawHeight;
         const flip = this.facing === 'left';
 
-        drew = sheet.draw(ctx, row, col, drawX, drawY, drawWidth, drawHeight, flip);
+        drew = ghostSheet.draw(ctx, 0, ghostStep, drawX, drawY, drawWidth, drawHeight, flip);
       }
 
       if (!drew) {
-        // Placeholder rectangle fallback (sheet missing/not loaded yet)
-        ctx.fillStyle = this.facing === 'right' ? '#3ad1ff' : '#3affb0';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        const config = ANIM_CONFIG[this.animState];
+        const sheet = config.sheet === 'extra' ? extraSheet : mainSheet;
 
-        ctx.fillStyle = '#111';
-        const noseX = this.facing === 'right' ? this.x + this.width - 6 : this.x;
-        ctx.fillRect(noseX, this.y + 10, 6, 6);
+        ctx.save();
+        if (isGhostPhase) {
+          const ghostStep = Math.min(
+            GHOST_FRAME_COUNT - 1,
+            Math.floor(this.teleportGhostTimer / GHOST_FRAME_DURATION)
+          );
+          ctx.globalAlpha = GHOST_ALPHA_LEVELS[ghostStep];
+        }
+
+        if (sheet && sheet.loaded) {
+          let row, col;
+          if (config.cells) {
+            [row, col] = config.cells[this.frameIndex];
+          } else {
+            row = config.row;
+            col = this.frameIndex;
+          }
+
+          const aspect = sheet.frameWidth / sheet.frameHeight;
+          const drawHeight = SPRITE_DRAW_HEIGHT;
+          const drawWidth = SPRITE_DRAW_HEIGHT * aspect;
+          const drawX = this.x + this.width / 2 - drawWidth / 2;
+          const drawY = this.y + this.height - drawHeight;
+          const flip = this.facing === 'left';
+
+          drew = sheet.draw(ctx, row, col, drawX, drawY, drawWidth, drawHeight, flip);
+        }
+
+        if (!drew) {
+          // Placeholder rectangle fallback (sheet missing/not loaded yet)
+          ctx.fillStyle = this.facing === 'right' ? '#3ad1ff' : '#3affb0';
+          ctx.fillRect(this.x, this.y, this.width, this.height);
+
+          ctx.fillStyle = '#111';
+          const noseX = this.facing === 'right' ? this.x + this.width - 6 : this.x;
+          ctx.fillRect(noseX, this.y + 10, 6, 6);
+        }
+        ctx.restore();
       }
     }
 
