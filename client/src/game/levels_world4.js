@@ -13,12 +13,14 @@ export const LEVELS = [
   },
   // Level 2 — 1 spaceship, 15 HP
   {
-    level: 2,
-    hasSpaceship: true,
-    shipCount: 1,
-    shipHealth: 15,
-    hasIceberg: true,
-  },
+  level: 2,
+  hasDarkMatter: true,
+  darkMatterCount: 1,
+  darkMatterHealth: 8,
+  darkMatterFireIntervalMin: 1.5,
+  darkMatterFireIntervalMax: 2.3,
+  darkMatterBulletSpeed: 260,
+},
   // Level 3 — 2 yetis, 15 HP each
   {
     level: 3,
