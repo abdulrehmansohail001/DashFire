@@ -749,7 +749,13 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       for (const being of darkMatters) {
         if (!being.alive) continue;
         being.update(dt, player.x, player.pulled);
-        if (isColliding(player.getBounds(), being.getBounds())) {
+
+        const playerBounds = player.getBounds();
+        const sameVerticalBand =
+          playerBounds.y + playerBounds.height > being.y + 12 &&
+          playerBounds.y < being.y + being.height - 12;
+
+        if (sameVerticalBand && isColliding(playerBounds, being.getBounds())) {
           if (prevPlayerX < being.x) {
             player.x = being.x - player.width;
           } else {
