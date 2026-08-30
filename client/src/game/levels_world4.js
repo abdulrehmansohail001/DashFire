@@ -11,9 +11,6 @@ export const LEVELS = [
     vortexCount: 1,
     vortexHealth: 6,
     
-  hasQuicksand: true,
-  quicksandX: 380,
-  quicksandWidth: 90,
   },
   // Level 2 — 1 spaceship, 15 HP
   {
@@ -24,6 +21,10 @@ export const LEVELS = [
   darkMatterFireIntervalMin: 1.5,
   darkMatterFireIntervalMax: 2.3,
   darkMatterBulletSpeed: 260,
+  
+  hasQuicksand: true,
+  quicksandX: 380,
+  quicksandWidth: 90,
 },
   // Level 3 — 2 yetis, 15 HP each
   {

@@ -31,6 +31,20 @@ export class QuicksandPatch {
     return playerX + playerWidth > this.x && playerX < this.x + this.width;
   }
 
+  // Check if player is FULLY on the patch (both feet) — player's entire
+  // horizontal span must be within the patch's bounds to enter quicksand.
+  isFullyOn(playerX, playerWidth) {
+    return playerX >= this.x && playerX + playerWidth <= this.x + this.width;
+  }
+
+  // Constrain a pull target (dark matter dragging the stuck player) so the
+  // player cannot be pulled beyond the patch edges. Returns the clamped X.
+  constrainPullX(pullTargetX, playerWidth) {
+    const minX = this.x; // player's left edge can't go left of patch
+    const maxX = this.x + this.width - playerWidth; // player's right edge can't exceed patch right
+    return Math.max(minX, Math.min(maxX, pullTargetX));
+  }
+
   draw(ctx, image) {
     if (image && image.complete && image.naturalWidth > 0) {
       ctx.drawImage(image, this.x, this.y, this.width, this.height);

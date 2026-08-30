@@ -656,15 +656,15 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       }
 
       // Quicksand: NOT solid — no push-back, the player walks freely onto
-      // it. Only triggers while grounded (jumping over it is unaffected
-      // mid-air; landing back on it while already stuck is a no-op since
-      // enterQuicksand() is idempotent). Escaping only happens via a
-      // successful hit on a Vortex/DarkMatterBeing — see the bullet
-      // collision blocks further down.
+      // it. Only triggers when player is FULLY on the patch (both feet) while
+      // grounded. Jumping over it is unaffected mid-air; landing back on it
+      // while already stuck is a no-op since enterQuicksand() is idempotent.
+      // Escaping only happens via a successful hit on a Vortex/DarkMatterBeing
+      // — see the bullet collision blocks further down.
       const quicksand = quicksandRef.current;
       if (quicksand) {
         quicksand.update(dt);
-        if (player.isGrounded && quicksand.overlapsX(player.x, player.width)) {
+        if (player.isGrounded && quicksand.isFullyOn(player.x, player.width)) {
           player.enterQuicksand();
         }
       }
@@ -810,18 +810,26 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           const closest = aliveBeings.reduce((a, b) =>
             Math.abs(a.x - player.x) <= Math.abs(b.x - player.x) ? a : b
           );
-          const targetX = player.x < closest.x + closest.width / 2
+          let targetX = player.x < closest.x + closest.width / 2
             ? closest.x - pullSafetyGap - player.width
             : closest.x + closest.width + pullSafetyGap;
+          // If stuck in quicksand, constrain pull to stay within patch bounds
+          if (player.stuck && quicksandRef.current) {
+            targetX = quicksandRef.current.constrainPullX(targetX, player.width);
+          }
           player.updatePullTarget(targetX, BASE_PULL_SPEED * aliveBeings.length);
         }
       } else if (aliveBeings.length > 0 && player.stillTimer >= 0.5) {
         const closest = aliveBeings.reduce((a, b) =>
           Math.abs(a.x - player.x) <= Math.abs(b.x - player.x) ? a : b
         );
-        const targetX = player.x < closest.x + closest.width / 2
+        let targetX = player.x < closest.x + closest.width / 2
           ? closest.x - pullSafetyGap - player.width
           : closest.x + closest.width + pullSafetyGap;
+        // If stuck in quicksand, constrain pull to stay within patch bounds
+        if (player.stuck && quicksandRef.current) {
+          targetX = quicksandRef.current.constrainPullX(targetX, player.width);
+        }
         player.startPull(targetX, BASE_PULL_SPEED * aliveBeings.length);
       }
 
