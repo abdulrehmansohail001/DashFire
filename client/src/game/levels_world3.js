@@ -82,11 +82,10 @@ export const LEVELS = [
     shipHealth: 10,
     hasIceberg: true,
   },
-  // Level 10 — placeholder, to be redesigned later. 1 yeti, 1 HP.
+  // Level 10 — Twin Glaciers boss fight.
   {
     level: 10,
-    hasYeti: true,
-    yetiCount: 1,
-    yetiHealth: 1,
+    hasTwinGlaciers: true,
+    glacierHealth: 20,
   },
 ];
