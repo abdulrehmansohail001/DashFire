@@ -81,7 +81,7 @@ export const WORLDS = [
       playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
       enemy: null,      // TODO: World 4's basic enemy — not built yet
       eagle: null,      // TODO: World 4's flying enemy, if any
-      vortex: null,     // TODO: vortex.png once generated — falls back to placeholder art
+      vortex: { path: '/sprites/vortex.png', frameWidth: 418, frameHeight: 470, columns: 4, rows: 2 },
       boss: null,       // TODO: World 4 boss — not decided yet
       background: { path: '/sprites/blackhole_bg.jpg', frameWidth: 443, frameHeight: 443, columns: 4, rows: 2 },
       obstacle: '/sprites/obstacle.png', // reused placeholder wall until World 4 gets its own

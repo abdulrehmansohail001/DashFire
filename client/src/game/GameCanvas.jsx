@@ -66,6 +66,7 @@ const EAGLE_WIDTH = 60;
 // World 3 nested enemy: ship flies at eagle height, bees fly a bit lower.
 const SHIP_HEIGHT_Y = 140; // was 90 — sits lower
 const ICEBEE_HEIGHT_Y = SHIP_HEIGHT_Y + 100; // was +70 — bees sit noticeably lower than the ship
+const VORTEX_HEIGHT_Y = 260; // hover lower than the eagle's flight lane, closer to the ground
 
 // Twin Glaciers boss fight — fixed at opposite edges, stationary.
 const GLACIER_Y = 235; // 180-tall body, feet at y=400 ground line + ~15px nudge lower
@@ -249,7 +250,7 @@ function buildVorticesForLevel(levelConfig) {
   for (let i = 0; i < vortexCount; i++) {
     const startX = EAGLE_ARENA_MIN_X + (span * (i + 0.5)) / vortexCount;
     vortices.push(
-      new Vortex(EAGLE_HEIGHT_Y, levelConfig, {
+      new Vortex(VORTEX_HEIGHT_Y, levelConfig, {
         startX,
         minX: EAGLE_ARENA_MIN_X,
         maxX: EAGLE_ARENA_MAX_X - width,
@@ -386,7 +387,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const obstacleImage = getImage(world.sprites.obstacle);
     const cactusImage = getImage(world.sprites.cactus);
     const icebergImage = getImage(world.sprites.iceberg);
-    const vortexImage = getImage(world.sprites.vortex);
+  const vortexSheet = getSheet(world.sprites.vortex);
   const frogSheet = getSheet(world.sprites.frog);
 
   const canvasRef = useRef(null);
@@ -1100,7 +1101,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
                         eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
-      vorticesRef.current.forEach((vortex) => vortex.draw(ctx, vortexImage));
+      vorticesRef.current.forEach((vortex) => vortex.draw(ctx, vortexSheet));
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
       yetisRef.current.forEach((yeti) => yeti.draw(ctx, yetiSheet));
       yetiProjectilesRef.current.forEach((p) => p.draw(ctx));
