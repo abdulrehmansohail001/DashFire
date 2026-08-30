@@ -150,16 +150,13 @@ function getImage(path) {
 
 // Ghost-blink overlay for Vortex's teleport (universal player-status
 // effect, same reasoning as freezeCrystalSheet above — not per-world). 
-// TODO: once ghost.png exists, uncomment and fill in its real frame
-// dimensions (check the generated sheet's actual pixel size first):
-// const ghostSheet = getSheet({
-//   path: '/sprites/ghost.png',
-//   frameWidth: 0,   // TODO
-//   frameHeight: 0,  // TODO
-//   columns: 4,
-//   rows: 1,
-// });
-const ghostSheet = null; // falls back to Player.js's own alpha-fade ghost effect until real art exists
+const ghostSheet = getSheet({
+  path: '/sprites/ghost.png',
+  frameWidth: 244,
+  frameHeight: 240,
+  columns: 4,
+  rows: 1,
+});
 
 // Freeze-crystal overlay is a universal player-status effect, not a
 // per-world reskin, so it's a fixed global asset rather than something
