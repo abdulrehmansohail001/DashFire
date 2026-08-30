@@ -137,10 +137,11 @@ export class QuicksandPatch {
     }
 
     if (this.smokeState !== 'idle' && smokeSheet && smokeSheet.loaded) {
-      const smokeWidth = this.width * 1.5;
+      const SMOKE_Y_NUDGE = 14; // pushes the base down so it actually touches the ground, was floating above it
+      const smokeWidth = this.width * 0.9; // was 1.5 — too big
       const smokeHeight = smokeWidth * (smokeSheet.frameHeight / smokeSheet.frameWidth);
       const smokeX = this.x + this.width / 2 - smokeWidth / 2;
-      const smokeY = this.y - smokeHeight + this.height; // base anchored to the ground line, rising upward
+      const smokeY = this.y - smokeHeight + this.height + SMOKE_Y_NUDGE;
       const row = Math.floor(this.smokeFrame / 4);
       const col = this.smokeFrame % 4;
       smokeSheet.draw(ctx, row, col, smokeX, smokeY, smokeWidth, smokeHeight, false);
