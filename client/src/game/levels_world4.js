@@ -85,10 +85,10 @@ export const LEVELS = [
     vortexHealth: 10,
     hasQuicksand: true,
   },
-  // Level 10 — Twin Glaciers boss fight.
+  // Level 10 — Black Hole boss fight.
   {
     level: 10,
-    hasTwinGlaciers: true,
-    glacierHealth: 20,
+    hasBlackHoleBoss: true,
+    bossHealth: 20,
   },
 ];

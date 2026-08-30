@@ -22,6 +22,7 @@ import { Glacier } from './entities/Glacier';
 import { GlacierProjectile } from './entities/GlacierProjectile';
 import { Vortex } from './entities/Vortex';
 import { DarkMatterBeing } from './entities/DarkMatterBeing';
+import { BlackHoleBoss } from './entities/BlackHoleBoss';
 import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
@@ -104,6 +105,7 @@ const FROG_WIDTH = 44;
 // a lane in front of it so they never overlap the boss's own hitbox.
 const BOSS_X = 640;
 const BOSS_Y = 200; // feet at y=400, same ground line as everything else
+const BLACKHOLE_HEIGHT_Y = 100; // fixed flight height, same idea as SHIP_HEIGHT_Y
 const MAX_BOSS_SHIELD_ENEMIES = 2;
 const SHIELD_PATROL_MIN_X = 480;
 const SHIELD_PATROL_MAX_X = 620;
@@ -478,6 +480,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           arenaMinX: BOSSFROG_ARENA_MIN_X,
           arenaMaxX: BOSSFROG_HOP_MAX_X,
         })
+      : LEVELS[initialLevelIndex].hasBlackHoleBoss
+      ? new BlackHoleBoss(BLACKHOLE_HEIGHT_Y, LEVELS[initialLevelIndex], { startX: 400, minX: 0, maxX: 800 - 70 })
       : null
   );
   const levelConfigRef = useRef(LEVELS[initialLevelIndex]);
@@ -527,6 +531,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       ? new Boss(BOSS_X, BOSS_Y, config)
       : config.hasBossFrog
       ? new BossFrog(FROG_GROUND_Y, { ...config, arenaMinX: BOSSFROG_ARENA_MIN_X, arenaMaxX: BOSSFROG_HOP_MAX_X })
+      : config.hasBlackHoleBoss
+      ? new BlackHoleBoss(BLACKHOLE_HEIGHT_Y, config, { startX: 400, minX: 0, maxX: 800 - 70 })
       : null;
     levelConfigRef.current = config;
 
@@ -553,7 +559,12 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       const direction = player.facing;
       const bulletX = direction === 'right' ? player.x + player.width : player.x;
             const bulletY = player.y + player.height * 0.35 - 2; // ~gun height, not box-center
-            bulletsRef.current.push(new Bullet(bulletX, bulletY, direction));
+            // BlackHoleBoss LEFT-zone effect: player's own shots spawn at half
+      // speed while the boss is currently in the left third, regardless of
+      // where the player is standing.
+      const blackHoleZone = bossRef.current && bossRef.current.currentZone ? bossRef.current.currentZone : null;
+      const bulletSpeedMultiplier = blackHoleZone === 'left' ? 0.5 : 1;
+            bulletsRef.current.push(new Bullet(bulletX, bulletY, direction, bulletSpeedMultiplier));
       player.triggerShoot();
       playSound('shoot', 0.5);
     }
@@ -796,9 +807,42 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         if (being.wantsToFire) {
           being.wantsToFire = false;
           const bulletX = being.facing === 'right' ? being.x + being.width : being.x;
+          const beingBulletSpeed =
+            bossRef.current && bossRef.current.currentZone === 'right'
+              ? being.bulletSpeed * 2
+              : being.bulletSpeed;
           enemyBulletsRef.current.push(
-            new EnemyBullet(bulletX, GUNMEN_FIRE_HEIGHT_Y, being.facing, being.bulletSpeed)
+            new EnemyBullet(bulletX, GUNMEN_FIRE_HEIGHT_Y, being.facing, beingBulletSpeed)
           );
+        }
+      }
+
+      // BlackHoleBoss: enforce the "max 3 alive" being cap here (boss
+      // itself has no visibility into how many of its spawned beings are
+      // still alive), and drive the middle-zone quicksand trap.
+      if (bossRef.current instanceof BlackHoleBoss && bossRef.current.alive) {
+        const boss = bossRef.current;
+
+        if (boss.wantsToSpawnBeing) {
+          boss.wantsToSpawnBeing = false;
+          const aliveBeingCount = darkMattersRef.current.filter((b) => b.alive).length;
+          if (aliveBeingCount < 3) {
+            darkMattersRef.current.push(
+              new DarkMatterBeing(boss.x + boss.width / 2, 310, { ...levelConfigRef.current, darkMatterHealth: 2 })
+            );
+          }
+        }
+
+        const ZONE_WIDTH = 800 / 3;
+        const playerCenter = player.x + player.width / 2;
+        const playerInMiddleThird = playerCenter >= ZONE_WIDTH && playerCenter < ZONE_WIDTH * 2;
+
+        if (boss.currentZone === 'middle' && playerInMiddleThird && player.isGrounded) {
+          player.enterQuicksand();
+        } else if (player.stuck && boss.currentZone !== 'middle') {
+          // Fight-specific auto-release: boss left the middle third while
+          // the player was stuck, even without landing a hit.
+          player.escapeQuicksand();
         }
       }
 
@@ -1180,6 +1224,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         if (hitDarkMatter) continue;
         if (bossRef.current && bossRef.current.alive && isColliding(bullet.getBounds(), bossRef.current.getBounds())) {
           bossRef.current.takeHit();
+          player.escapeQuicksand(); // no-op if the player wasn't stuck
           bullet.hit = true;
           continue;
         }

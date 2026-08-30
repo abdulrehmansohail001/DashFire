@@ -3,12 +3,12 @@
 // when fired, removed once off-screen or once it hits the enemy.
 
 export class Bullet {
-  constructor(x, y, direction) {
+  constructor(x, y, direction, speedMultiplier = 1) {
     this.x = x;
     this.y = y;
     this.width = 10;
     this.height = 4;
-    this.speed = 600; // px/s
+    this.speed = 600 * speedMultiplier; // px/s — multiplier defaults to 1, so every other caller across all 4 worlds is completely unaffected
     this.direction = direction; // 'left' | 'right'
     this.hit = false;
   }
