@@ -20,15 +20,12 @@ const RECOIL_FRAME_DURATION = 0.2;
 const SETTLE_FRAME_DURATION = 0.2;
 const IDLE_PULSE_INTERVAL = 0.5;
 
-const SPRITE_DRAW_SIZE = 230; // bigger, and SQUARE to match the source art's real proportions — was stretched into a 90x150 hitbox before, squashing it thin
-const Y_NUDGE = 20; // sits a bit lower so the feet actually touch the ground line
-
 export class Glacier {
   constructor(x, y, side, config = {}) {
     this.x = x;
     this.y = y;
-    this.width = 90;
-    this.height = 150;
+    this.width = 230;
+    this.height = 230; // matches the sprite's real square proportions — hitbox now equals what's actually drawn, no more invisible overhang
     this.side = side; // 'left' | 'right' — which edge it's fixed at (position only, no longer fire direction)
     this.facing = side === 'left' ? 'right' : 'left'; // default: face inward until the first update() sets it from the player's real position
 
@@ -146,9 +143,7 @@ export class Glacier {
       const flip = this.facing === 'left';
       const row = Math.floor(this.animFrame / 4);
       const col = this.animFrame % 4;
-      const drawX = this.x + this.width / 2 - SPRITE_DRAW_SIZE / 2;
-      const drawY = this.y + this.height - SPRITE_DRAW_SIZE + Y_NUDGE;
-      const drew = spriteSheet.draw(ctx, row, col, drawX, drawY, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE, flip);
+      const drew = spriteSheet.draw(ctx, row, col, this.x, this.y, this.width, this.height, flip);
       if (drew) return;
     }
 
