@@ -17,7 +17,8 @@ export class Glacier {
     this.y = y;
     this.width = 90;
     this.height = 150;
-    this.side = side; // 'left' | 'right' — determines which way it fires
+    this.side = side; // 'left' | 'right' — which edge it's fixed at (position only, no longer fire direction)
+    this.facing = side === 'left' ? 'right' : 'left'; // default: face inward until the first update() sets it from the player's real position
 
     this.health = config.glacierHealth ?? 20;
     this.maxHealth = this.health;
@@ -47,10 +48,17 @@ export class Glacier {
     }
   }
 
-  update(dt) {
+  update(dt, playerX) {
     if (!this.alive) return;
 
     if (this.hitFlashTimer > 0) this.hitFlashTimer -= dt;
+
+    // Tracks the player like Yeti/Enemy do — fires toward wherever they
+    // actually are, including back out toward its own edge if the player
+    // gets behind it, instead of always firing a fixed inward direction.
+    if (typeof playerX === 'number') {
+      this.facing = playerX < this.x ? 'left' : 'right';
+    }
 
     if (!this.firingEnabled) return;
 
@@ -75,7 +83,7 @@ export class Glacier {
     }
 
     if (spriteSheet && spriteSheet.loaded) {
-      const flip = this.side === 'right';
+      const flip = this.facing === 'left';
       const drew = spriteSheet.draw(ctx, 0, 0, this.x, this.y, this.width, this.height, flip);
       if (drew) return;
     }

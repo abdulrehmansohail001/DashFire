@@ -768,15 +768,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         for (const glacier of [leftGlacier, rightGlacier]) {
           if (!glacier || !glacier.alive) continue;
           glacier.firingEnabled = graceOver;
-          glacier.update(dt);
+          glacier.update(dt, player.x);
 
           if (glacier.wantsToFire) {
             glacier.wantsToFire = false;
             const shotY = glacier.y + glacier.height * 0.35;
-            const direction = glacier.side === 'left' ? 'right' : 'left';
-            const shotX = direction === 'right' ? glacier.x + glacier.width : glacier.x;
+            const shotX = glacier.facing === 'right' ? glacier.x + glacier.width : glacier.x;
             enemyBulletsRef.current.push(
-              new GlacierProjectile(shotX, shotY, direction, glacier.fireSpeed)
+              new GlacierProjectile(shotX, shotY, glacier.facing, glacier.fireSpeed)
             );
           }
         }
@@ -1009,7 +1008,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
           const allEnemiesDead = bossRef.current
   ? !bossRef.current.alive
-  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && spaceshipsRef.current.every((s) => !s.alive) && iceBeesRef.current.every((b) => !b.alive) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
+  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && spaceshipsRef.current.every((s) => !s.alive) && (levelConfigRef.current.hasTwinGlaciers || iceBeesRef.current.every((b) => !b.alive)) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
