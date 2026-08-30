@@ -17,6 +17,7 @@ import { Player } from './entities/Player';
 import { isColliding, Obstacle } from './entities/Obstacle';
 import { Cactus } from './entities/Cactus';
 import { Iceberg } from './entities/Iceberg';
+import { Glacier } from './entities/Glacier';
 import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
@@ -63,6 +64,14 @@ const EAGLE_WIDTH = 60;
 // World 3 nested enemy: ship flies at eagle height, bees fly a bit lower.
 const SHIP_HEIGHT_Y = 140; // was 90 — sits lower
 const ICEBEE_HEIGHT_Y = SHIP_HEIGHT_Y + 100; // was +70 — bees sit noticeably lower than the ship
+
+// Twin Glaciers boss fight — fixed at opposite edges, stationary.
+const GLACIER_Y = 250; // 150-tall body, feet at y=400 same ground line as everything else
+const GLACIER_LEFT_X = 20;
+const GLACIER_RIGHT_X = 800 - 90 - 20; // 90 = glacier width
+const GLACIER_FIGHT_GRACE_SECONDS = 3.0; // neither glacier fires for this long at fight start
+const GLACIER_STALL_BEE_INTERVAL = 3.0; // no hit on EITHER glacier for this long -> spawn a bee
+const MAX_GLACIER_STALL_BEES = 5; // cap so a bad run can't spiral into an unlimited swarm
 
 function buildSpaceshipsForLevel(levelConfig) {
   if (!levelConfig.hasSpaceship) return [];
@@ -347,6 +356,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const eagleSheet = getSheet(world.sprites.eagle);
      const yetiSheet = getSheet(world.sprites.yeti);
     const shipSheet = getSheet(world.sprites.spaceship);
+    const glacierSheet = getSheet(world.sprites.glacier);
     const iceBeeSheet = getSheet(world.sprites.iceBee);
   const bossSheet = getSheet(world.sprites.boss);
   const moonBgSheet = getSheet(world.sprites.background);
@@ -381,6 +391,11 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const iceBeesRef = useRef([]); // spawned dynamically at runtime by the spaceship, never built up front
   const iceBeeProjectilesRef = useRef([]);
   const shipProjectilesRef = useRef([]);
+  const leftGlacierRef = useRef(LEVELS[initialLevelIndex].hasTwinGlaciers ? new Glacier(GLACIER_LEFT_X, GLACIER_Y, 'left', LEVELS[initialLevelIndex]) : null);
+  const rightGlacierRef = useRef(LEVELS[initialLevelIndex].hasTwinGlaciers ? new Glacier(GLACIER_RIGHT_X, GLACIER_Y, 'right', LEVELS[initialLevelIndex]) : null);
+  const glacierFightTimerRef = useRef(0); // counts up from level start — gates the 3s firing grace period
+  const glacierStallTimerRef = useRef(0); // counts up since the last successful hit on either glacier
+  const glacierStallBeeCountRef = useRef(0); // total bees spawned via the stall mechanic this level, capped
   const eagleProjectilesRef = useRef([]);
   const frogsRef = useRef(buildFrogsForLevel(LEVELS[initialLevelIndex]));
   const bossRef = useRef(
@@ -427,6 +442,11 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     iceBeesRef.current = [];
     iceBeeProjectilesRef.current = [];
     shipProjectilesRef.current = [];
+    leftGlacierRef.current = config.hasTwinGlaciers ? new Glacier(GLACIER_LEFT_X, GLACIER_Y, 'left', config) : null;
+    rightGlacierRef.current = config.hasTwinGlaciers ? new Glacier(GLACIER_RIGHT_X, GLACIER_Y, 'right', config) : null;
+    glacierFightTimerRef.current = 0;
+    glacierStallTimerRef.current = 0;
+    glacierStallBeeCountRef.current = 0;
     eagleProjectilesRef.current = [];
     frogsRef.current = buildFrogsForLevel(config);
         bossRef.current = config.hasBoss
@@ -734,6 +754,51 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         return !p.hasLanded(400);
       });
 
+      // Twin Glaciers: neither fires for the first 3s (relocation grace
+      // period), then each fires on its own independent timer. A rolling
+      // stall timer spawns a bee every 3s that passes with no successful
+      // hit on EITHER glacier, capped so it can't spiral indefinitely.
+      const leftGlacier = leftGlacierRef.current;
+      const rightGlacier = rightGlacierRef.current;
+      if (leftGlacier || rightGlacier) {
+        glacierFightTimerRef.current += dt;
+        const graceOver = glacierFightTimerRef.current >= GLACIER_FIGHT_GRACE_SECONDS;
+
+        for (const glacier of [leftGlacier, rightGlacier]) {
+          if (!glacier || !glacier.alive) continue;
+          glacier.firingEnabled = graceOver;
+          glacier.update(dt);
+
+          if (glacier.wantsToFire) {
+            glacier.wantsToFire = false;
+            const shotY = glacier.y + glacier.height * 0.35;
+            const direction = glacier.side === 'left' ? 'right' : 'left';
+            const shotX = direction === 'right' ? glacier.x + glacier.width : glacier.x;
+            enemyBulletsRef.current.push(
+              new BossFireball(shotX, shotY, direction, glacier.fireSpeed)
+            );
+          }
+        }
+
+        if (graceOver && (leftGlacier?.alive || rightGlacier?.alive)) {
+          glacierStallTimerRef.current += dt;
+          if (
+            glacierStallTimerRef.current >= GLACIER_STALL_BEE_INTERVAL &&
+            glacierStallBeeCountRef.current < MAX_GLACIER_STALL_BEES
+          ) {
+            glacierStallTimerRef.current = 0;
+            glacierStallBeeCountRef.current += 1;
+            iceBeesRef.current.push(
+              new IcyBee(ICEBEE_HEIGHT_Y, levelConfigRef.current, {
+                startX: 400,
+                minX: EAGLE_ARENA_MIN_X,
+                maxX: EAGLE_ARENA_MAX_X - 34,
+              })
+            );
+          }
+        }
+      }
+
       yetiProjectilesRef.current.forEach((p) => p.update(dt));
       yetiProjectilesRef.current = yetiProjectilesRef.current.filter((p) => {
         if (isColliding(playerBounds, p.getBounds())) {
@@ -871,6 +936,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
                 if (hitEagle) continue;
         let hitYeti = false;
         let hitShipOrBee = false;
+        for (const glacier of [leftGlacierRef.current, rightGlacierRef.current]) {
+          if (!glacier || !glacier.alive) continue;
+          if (isColliding(bullet.getBounds(), glacier.getBounds())) {
+            glacier.takeHit();
+            glacierStallTimerRef.current = 0; // successful hit on EITHER glacier resets the stall clock
+            bullet.hit = true;
+            hitShipOrBee = true;
+            break;
+          }
+        }
+        if (hitShipOrBee) continue;
         for (const ship of spaceships) {
           if (!ship.alive) continue;
           if (isColliding(bullet.getBounds(), ship.getBounds())) {
@@ -932,7 +1008,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
           const allEnemiesDead = bossRef.current
   ? !bossRef.current.alive
-  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && spaceshipsRef.current.every((s) => !s.alive) && iceBeesRef.current.every((b) => !b.alive);
+  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && spaceshipsRef.current.every((s) => !s.alive) && iceBeesRef.current.every((b) => !b.alive) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
@@ -981,6 +1057,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
       yetisRef.current.forEach((yeti) => yeti.draw(ctx, yetiSheet));
       yetiProjectilesRef.current.forEach((p) => p.draw(ctx));
+      if (leftGlacierRef.current) leftGlacierRef.current.draw(ctx, glacierSheet);
+      if (rightGlacierRef.current) rightGlacierRef.current.draw(ctx, glacierSheet);
       spaceshipsRef.current.forEach((ship) => ship.draw(ctx, shipSheet));
       iceBeesRef.current.forEach((bee) => bee.draw(ctx, iceBeeSheet));
       iceBeeProjectilesRef.current.forEach((p) => p.draw(ctx));
@@ -1061,6 +1139,16 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           const pct = Math.max(ship.health, 0) / ship.maxHealth;
           drawHpBar(ctx, barX, shipRowY - 8, barWidth, 16, pct, 'SHIP HP', 'right');
           drawHudPortrait(ctx, shipSheet, enemyCircleX, shipRowY, circleRadius, '#2a3a4a', 'S');
+        });
+
+        const preGlacierRows = preShipRows + spaceshipsRef.current.length;
+        [leftGlacierRef.current, rightGlacierRef.current].forEach((glacier, i) => {
+          if (!glacier || !glacier.maxHealth) return;
+          const rowY = 34 + (preGlacierRows + i) * ENEMY_ROW_HEIGHT;
+          const label = glacier.side === 'left' ? 'LEFT GLACIER HP' : 'RIGHT GLACIER HP';
+          const pct = Math.max(glacier.health, 0) / glacier.maxHealth;
+          drawHpBar(ctx, barX, rowY - 8, barWidth, 16, pct, label, 'right');
+          drawHudPortrait(ctx, glacierSheet, enemyCircleX, rowY, circleRadius, '#7fb8d4', 'G');
         });
 
         // Bees deliberately have no HUD bar — they're simple 2-hit fodder,
