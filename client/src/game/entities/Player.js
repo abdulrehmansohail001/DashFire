@@ -73,7 +73,7 @@ const FREEZE_FRAME_DURATION = 0.09; // quick growth — reaches full height in ~
 const GHOST_FRAME_DURATION = 0.08; // seconds per ghost step
 const GHOST_FRAME_COUNT = 4;
 const GHOST_ALPHA_LEVELS = [0.75, 0.55, 0.35, 0.2];
-const SINK_OFFSET = 22; // px the sprite draws lower while stuck in quicksand — "sunk to the knees"
+const SINK_OFFSET = 35; // px the sprite draws lower while stuck in quicksand — sunk deeper into the pit
 
 export class Player {
   constructor(x, y) {

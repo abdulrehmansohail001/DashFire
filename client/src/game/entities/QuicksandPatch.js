@@ -18,10 +18,12 @@ export class QuicksandPatch {
     this.height = height;
 
     this.pulseTimer = 0; // placeholder-only glow animation, purely cosmetic
+    this.playerStuck = false; // tracks whether to show smoke
   }
 
-  update(dt) {
+  update(dt, playerStuck = false) {
     this.pulseTimer += dt;
+    this.playerStuck = playerStuck; // just toggle smoke on/off
   }
 
   // Horizontal-only overlap check — GameCanvas calls this against the
@@ -45,39 +47,47 @@ export class QuicksandPatch {
     return Math.max(minX, Math.min(maxX, pullTargetX));
   }
 
-  draw(ctx, image) {
+  draw(ctx, image, smokeImage) {
     if (image && image.complete && image.naturalWidth > 0) {
       ctx.drawImage(image, this.x, this.y, this.width, this.height);
-      return;
+    } else {
+      // Placeholder: pulsing white-glow patch, ready to swap for a still
+      // sprite later — no code changes needed elsewhere when that happens.
+      const pulse = 0.5 + 0.5 * Math.sin(this.pulseTimer * 3);
+      ctx.save();
+      ctx.globalAlpha = 0.55 + 0.25 * pulse;
+      ctx.fillStyle = '#f2f6ff';
+      ctx.beginPath();
+      ctx.ellipse(
+        this.x + this.width / 2,
+        this.y + this.height / 2,
+        this.width / 2,
+        this.height / 2,
+        0, 0, Math.PI * 2
+      );
+      ctx.fill();
+      ctx.restore();
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(
+        this.x + this.width / 2,
+        this.y + this.height / 2,
+        this.width / 2,
+        this.height / 2,
+        0, 0, Math.PI * 2
+      );
+      ctx.stroke();
     }
 
-    // Placeholder: pulsing white-glow patch, ready to swap for a still
-    // sprite later — no code changes needed elsewhere when that happens.
-    const pulse = 0.5 + 0.5 * Math.sin(this.pulseTimer * 3);
-    ctx.save();
-    ctx.globalAlpha = 0.55 + 0.25 * pulse;
-    ctx.fillStyle = '#f2f6ff';
-    ctx.beginPath();
-    ctx.ellipse(
-      this.x + this.width / 2,
-      this.y + this.height / 2,
-      this.width / 2,
-      this.height / 2,
-      0, 0, Math.PI * 2
-    );
-    ctx.fill();
-    ctx.restore();
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(
-      this.x + this.width / 2,
-      this.y + this.height / 2,
-      this.width / 2,
-      this.height / 2,
-      0, 0, Math.PI * 2
-    );
-    ctx.stroke();
+    // Draw smoke when player is stuck
+    if (this.playerStuck && smokeImage && smokeImage.complete && smokeImage.naturalWidth > 0) {
+      const smokeWidth = this.width * 1.5;
+      const smokeHeight = smokeWidth;
+      const smokeX = this.x + this.width / 2 - smokeWidth / 2;
+      const smokeY = this.y - smokeHeight * 0.6;
+      ctx.drawImage(smokeImage, smokeX, smokeY, smokeWidth, smokeHeight);
+    }
   }
 }

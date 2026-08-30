@@ -431,6 +431,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const vortexSheet = getSheet(world.sprites.vortex);
   const darkMatterSheet = getSheet(world.sprites.darkMatter);
   const frogSheet = getSheet(world.sprites.frog);
+  const smokeImage = getImage(world.sprites.smoke);
 
   const canvasRef = useRef(null);
     const [health, setHealth] = useState(10);
@@ -663,7 +664,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       // — see the bullet collision blocks further down.
       const quicksand = quicksandRef.current;
       if (quicksand) {
-        quicksand.update(dt);
+        quicksand.update(dt, player.stuck);
         if (player.isGrounded && quicksand.isFullyOn(player.x, player.width)) {
           player.enterQuicksand();
         }
@@ -1226,7 +1227,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         obstacleRef.current.draw(ctx, obstacleImage);
       }
       if (quicksandRef.current) {
-        quicksandRef.current.draw(ctx, quicksandImage);
+        quicksandRef.current.draw(ctx, quicksandImage, smokeImage);
       }
       if (cactusRef.current) {
         cactusRef.current.draw(ctx, cactusImage);
