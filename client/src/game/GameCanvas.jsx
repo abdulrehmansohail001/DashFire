@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Player } from './entities/Player';
 import { isColliding, Obstacle } from './entities/Obstacle';
 import { Cactus } from './entities/Cactus';
+import { QuicksandPatch } from './entities/QuicksandPatch';
 import { Iceberg } from './entities/Iceberg';
 import { Glacier } from './entities/Glacier';
 import { GlacierProjectile } from './entities/GlacierProjectile';
@@ -220,6 +221,15 @@ function buildDarkMatterBeingsForLevel(levelConfig) {
   return beings;
 }
 
+// Single fixed patch per level, same simple shape as Cactus/Obstacle —
+// non-solid (no collision blocking), so this doesn't need slot-splitting.
+function buildQuicksandForLevel(levelConfig) {
+  if (!levelConfig.hasQuicksand) return null;
+  const x = levelConfig.quicksandX ?? 380;
+  const width = levelConfig.quicksandWidth ?? 90;
+  return new QuicksandPatch(x, 394, width); // y sits at the ground line itself
+}
+
 // Builds N yetis for a level config. Unlike Enemy/Eagle, yetis never move —
 // "standing" is the whole point — so this just spreads their fixed spots
 // across the arena when there's more than one.
@@ -416,6 +426,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const moonBgSheet = getSheet(world.sprites.background);
   const obstacleImage = getImage(world.sprites.obstacle);
     const cactusImage = getImage(world.sprites.cactus);
+    const quicksandImage = getImage(world.sprites.quicksand);
     const icebergImage = getImage(world.sprites.iceberg);
   const vortexSheet = getSheet(world.sprites.vortex);
   const darkMatterSheet = getSheet(world.sprites.darkMatter);
@@ -437,6 +448,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const bulletsRef = useRef([]);
       const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
       const cactusRef = useRef(LEVELS[initialLevelIndex].hasCactus ? new Cactus(380, 310) : null);
+      const quicksandRef = useRef(buildQuicksandForLevel(LEVELS[initialLevelIndex]));
   const icebergRef = useRef(
     LEVELS[initialLevelIndex].hasIceberg ? new Iceberg(345, { ...LEVELS[initialLevelIndex], minX: 0, maxX: 800 - 26 }) : null
   );
@@ -492,6 +504,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     bulletsRef.current = [];
         obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
         cactusRef.current = config.hasCactus ? new Cactus(380, 310) : null;
+        quicksandRef.current = buildQuicksandForLevel(config);
     icebergRef.current = config.hasIceberg ? new Iceberg(345, { ...config, minX: 0, maxX: 800 - 26 }) : null;
         eaglesRef.current = buildEaglesForLevel(config);
         vorticesRef.current = buildVorticesForLevel(config);
@@ -639,6 +652,20 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           player.x = cactus.x - player.width;
         } else {
           player.x = cactus.x + cactus.width;
+        }
+      }
+
+      // Quicksand: NOT solid — no push-back, the player walks freely onto
+      // it. Only triggers while grounded (jumping over it is unaffected
+      // mid-air; landing back on it while already stuck is a no-op since
+      // enterQuicksand() is idempotent). Escaping only happens via a
+      // successful hit on a Vortex/DarkMatterBeing — see the bullet
+      // collision blocks further down.
+      const quicksand = quicksandRef.current;
+      if (quicksand) {
+        quicksand.update(dt);
+        if (player.isGrounded && quicksand.overlapsX(player.x, player.width)) {
+          player.enterQuicksand();
         }
       }
 
@@ -1125,6 +1152,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
             vortex.takeHit();
             bullet.hit = true;
             hitVortex = true;
+            player.escapeQuicksand(); // no-op if the player wasn't stuck
             break;
           }
         }
@@ -1136,6 +1164,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
             being.takeHit();
             bullet.hit = true;
             hitDarkMatter = true;
+            player.escapeQuicksand(); // no-op if the player wasn't stuck
             break;
           }
         }
@@ -1187,6 +1216,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
       if (obstacleRef.current) {
         obstacleRef.current.draw(ctx, obstacleImage);
+      }
+      if (quicksandRef.current) {
+        quicksandRef.current.draw(ctx, quicksandImage);
       }
       if (cactusRef.current) {
         cactusRef.current.draw(ctx, cactusImage);

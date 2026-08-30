@@ -73,6 +73,7 @@ const FREEZE_FRAME_DURATION = 0.09; // quick growth — reaches full height in ~
 const GHOST_FRAME_DURATION = 0.08; // seconds per ghost step
 const GHOST_FRAME_COUNT = 4;
 const GHOST_ALPHA_LEVELS = [0.75, 0.55, 0.35, 0.2];
+const SINK_OFFSET = 22; // px the sprite draws lower while stuck in quicksand — "sunk to the knees"
 
 export class Player {
   constructor(x, y) {
@@ -120,6 +121,18 @@ export class Player {
     this.pullTargetX = 0;
     this.pullSpeed = 0;
 
+    // World 4 quicksand: locks X-axis movement ONLY (deliberately lighter
+    // than frozen/pulled — jump, double jump, and shooting all stay
+    // available). Only clears via a successful bullet hit on a
+    // DarkMatterBeing or Vortex while stuck (escapeQuicksand, called by
+    // GameCanvas right where those hit-checks already happen) — jumping
+    // alone does nothing, since jump() never touches vx and stuck is never
+    // cleared by time or by landing. stuckInvulnerableTimer is a 1s grace
+    // window after escaping so walking off the same patch doesn't
+    // instantly re-trigger it.
+    this.stuck = false;
+    this.stuckInvulnerableTimer = 0;
+
     this.isSitting = false; // set every frame from GameCanvas based on ArrowDown held
 
     // Animation state
@@ -133,7 +146,7 @@ export class Player {
 
   // Movement only — held-key state, safe to read every frame.
   handleInput(keys) {
-    if (this.frozen || this.pulled) {
+    if (this.frozen || this.pulled || this.stuck) {
       this.vx = 0;
       return;
     }
@@ -251,6 +264,10 @@ export class Player {
 
     if (this.teleportCooldownTimer > 0) {
       this.teleportCooldownTimer -= dt;
+    }
+
+    if (this.stuckInvulnerableTimer > 0) {
+      this.stuckInvulnerableTimer -= dt;
     }
 
     if (this.teleportGhostActive) {
@@ -406,6 +423,22 @@ export class Player {
     this.teleportGhostTimer = 0;
   }
 
+  // Called by GameCanvas when the player is grounded and overlapping a
+  // quicksand patch. No-ops during the post-escape grace window so
+  // walking off the same patch after escaping doesn't immediately re-trap.
+  enterQuicksand() {
+    if (this.stuckInvulnerableTimer > 0 || this.stuck) return;
+    this.stuck = true;
+  }
+
+  // Called by GameCanvas the moment a bullet fired while stuck lands a hit
+  // on a DarkMatterBeing or Vortex. That's the ONLY way stuck clears.
+  escapeQuicksand() {
+    if (!this.stuck) return;
+    this.stuck = false;
+    this.stuckInvulnerableTimer = 1.0;
+  }
+
   // Shield pickup — reuses the same invulnerable/flicker system as the
   // post-hit grace period, just for a longer duration and without a health
   // change.
@@ -422,6 +455,7 @@ export class Player {
   // isn't loaded yet, falls back to the original placeholder rectangle so
   // there's never a blank gap.
    draw(ctx, mainSheet, extraSheet, freezeSheet, ghostSheet) {
+    const sinkOffset = this.stuck ? SINK_OFFSET : 0; // visual-only — sunk to "knee" depth in quicksand
     // Only the player's OWN sprite should flicker during invulnerability —
     // the freeze crystal overlay is drawn unconditionally further down, so
     // it no longer blinks in sync with this. Ghost phase takes priority
@@ -446,7 +480,7 @@ export class Player {
         const drawHeight = SPRITE_DRAW_HEIGHT;
         const drawWidth = SPRITE_DRAW_HEIGHT * aspect;
         const drawX = this.x + this.width / 2 - drawWidth / 2;
-        const drawY = this.y + this.height - drawHeight;
+        const drawY = this.y + this.height - drawHeight + sinkOffset;
         const visualFacing = this.pulled ? (this.pullTargetX > this.x ? 'left' : 'right') : this.facing;
         const flip = visualFacing === 'left';
 
@@ -479,7 +513,7 @@ export class Player {
           const drawHeight = SPRITE_DRAW_HEIGHT;
           const drawWidth = SPRITE_DRAW_HEIGHT * aspect;
           const drawX = this.x + this.width / 2 - drawWidth / 2;
-          const drawY = this.y + this.height - drawHeight;
+          const drawY = this.y + this.height - drawHeight + sinkOffset;
           const visualFacing = this.pulled ? (this.pullTargetX > this.x ? 'left' : 'right') : this.facing;
           const flip = visualFacing === 'left';
 
@@ -489,11 +523,11 @@ export class Player {
         if (!drew) {
           // Placeholder rectangle fallback (sheet missing/not loaded yet)
           ctx.fillStyle = this.facing === 'right' ? '#3ad1ff' : '#3affb0';
-          ctx.fillRect(this.x, this.y, this.width, this.height);
+          ctx.fillRect(this.x, this.y + sinkOffset, this.width, this.height);
 
           ctx.fillStyle = '#111';
           const noseX = this.facing === 'right' ? this.x + this.width - 6 : this.x;
-          ctx.fillRect(noseX, this.y + 10, 6, 6);
+          ctx.fillRect(noseX, this.y + sinkOffset + 10, 6, 6);
         }
         ctx.restore();
       }

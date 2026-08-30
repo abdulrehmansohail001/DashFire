@@ -10,6 +10,10 @@ export const LEVELS = [
     hasVortex: true,
     vortexCount: 1,
     vortexHealth: 6,
+    
+  hasQuicksand: true,
+  quicksandX: 380,
+  quicksandWidth: 90,
   },
   // Level 2 — 1 spaceship, 15 HP
   {
@@ -27,6 +31,10 @@ export const LEVELS = [
     hasYeti: true,
     yetiCount: 2,
     yetiHealth: 15,
+    
+  hasQuicksand: true,
+  quicksandX: 380,
+  quicksandWidth: 90,
   },
   // Level 4 — 2 spaceships, 10 HP each
   {

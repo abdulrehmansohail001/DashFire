@@ -87,6 +87,7 @@ export const WORLDS = [
       background: { path: '/sprites/blackhole_bg.jpg', frameWidth: 443, frameHeight: 443, columns: 4, rows: 2 },
       obstacle: '/sprites/obstacle.png', // reused placeholder wall until World 4 gets its own
       cactus: null,
+      quicksand: null, // TODO: still-sprite art for the quicksand patch — falls back to a pulsing white-glow placeholder
     },
     levels: WORLD_4_LEVELS,
   },
