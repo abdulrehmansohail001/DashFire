@@ -217,11 +217,11 @@ export class Player {
         this.x += dir * step;
       }
 
-      // While being pulled, the run cycle should always face away from the
-      // dark-matter source so it reads like the player is struggling against
-      // the drag, regardless of which way they were facing when the pull
-      // started.
-      this.facing = this.pullTargetX < this.x ? 'right' : 'left';
+      // The player still aims toward the dark-matter source while being
+      // dragged so the gun can track it; the visual run pose is flipped away
+      // from the source in draw(), which preserves the intended struggle look
+      // without removing the player's ability to fire.
+      this.facing = this.pullTargetX > this.x ? 'right' : 'left';
     }
 
     if (this.y >= GROUND_Y) {
@@ -447,7 +447,8 @@ export class Player {
         const drawWidth = SPRITE_DRAW_HEIGHT * aspect;
         const drawX = this.x + this.width / 2 - drawWidth / 2;
         const drawY = this.y + this.height - drawHeight;
-        const flip = this.facing === 'left';
+        const visualFacing = this.pulled ? (this.pullTargetX > this.x ? 'left' : 'right') : this.facing;
+        const flip = visualFacing === 'left';
 
         drew = ghostSheet.draw(ctx, 0, ghostStep, drawX, drawY, drawWidth, drawHeight, flip);
       }
@@ -479,7 +480,8 @@ export class Player {
           const drawWidth = SPRITE_DRAW_HEIGHT * aspect;
           const drawX = this.x + this.width / 2 - drawWidth / 2;
           const drawY = this.y + this.height - drawHeight;
-          const flip = this.facing === 'left';
+          const visualFacing = this.pulled ? (this.pullTargetX > this.x ? 'left' : 'right') : this.facing;
+          const flip = visualFacing === 'left';
 
           drew = sheet.draw(ctx, row, col, drawX, drawY, drawWidth, drawHeight, flip);
         }

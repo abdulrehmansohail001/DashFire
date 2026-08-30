@@ -749,6 +749,16 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       for (const being of darkMatters) {
         if (!being.alive) continue;
         being.update(dt, player.x, player.pulled);
+        if (isColliding(player.getBounds(), being.getBounds())) {
+          if (prevPlayerX < being.x) {
+            player.x = being.x - player.width;
+          } else {
+            player.x = being.x + being.width;
+          }
+          if (player.pulled) {
+            player.endPull();
+          }
+        }
         if (being.wantsToFire) {
           being.wantsToFire = false;
           const bulletX = being.facing === 'right' ? being.x + being.width : being.x;
@@ -759,6 +769,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       }
 
       const aliveBeings = darkMatters.filter((b) => b.alive);
+      const pullSafetyGap = 16;
       if (player.pulled) {
         if (aliveBeings.length === 0) {
           player.endPull();
@@ -766,13 +777,19 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           const closest = aliveBeings.reduce((a, b) =>
             Math.abs(a.x - player.x) <= Math.abs(b.x - player.x) ? a : b
           );
-          player.updatePullTarget(closest.x + closest.width / 2, BASE_PULL_SPEED * aliveBeings.length);
+          const targetX = player.x < closest.x + closest.width / 2
+            ? closest.x - pullSafetyGap - player.width
+            : closest.x + closest.width + pullSafetyGap;
+          player.updatePullTarget(targetX, BASE_PULL_SPEED * aliveBeings.length);
         }
       } else if (aliveBeings.length > 0 && player.stillTimer >= 0.5) {
         const closest = aliveBeings.reduce((a, b) =>
           Math.abs(a.x - player.x) <= Math.abs(b.x - player.x) ? a : b
         );
-        player.startPull(closest.x + closest.width / 2, BASE_PULL_SPEED * aliveBeings.length);
+        const targetX = player.x < closest.x + closest.width / 2
+          ? closest.x - pullSafetyGap - player.width
+          : closest.x + closest.width + pullSafetyGap;
+        player.startPull(targetX, BASE_PULL_SPEED * aliveBeings.length);
       }
 
       // Yetis: standing (never move), throw one big ice projectile at a
