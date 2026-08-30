@@ -740,7 +740,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       // DarkMatterBeing: stationary, fires like a gunman (reuses
       // EnemyBullet directly — no contact damage of its own, only its
       // shots hurt). The pull mechanic itself is driven from here every
-      // frame: start a pull once stillTimer crosses 1.5s and a being is
+      // frame: start a pull once stillTimer crosses 1.0s and a being is
       // alive, keep the target/speed live-updated toward whichever alive
       // being is closest while pulled, and force-end early if the being
       // count drops to 0 mid-pull.
@@ -768,7 +768,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           );
           player.updatePullTarget(closest.x + closest.width / 2, BASE_PULL_SPEED * aliveBeings.length);
         }
-      } else if (aliveBeings.length > 0 && player.stillTimer >= 1.5) {
+      } else if (aliveBeings.length > 0 && player.stillTimer >= 1.0) {
         const closest = aliveBeings.reduce((a, b) =>
           Math.abs(a.x - player.x) <= Math.abs(b.x - player.x) ? a : b
         );

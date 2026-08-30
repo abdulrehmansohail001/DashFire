@@ -111,7 +111,7 @@ export class Player {
 
     // World 4 DarkMatterBeing pull: stillTimer counts up while grounded +
     // not moving (shooting does NOT reset it); GameCanvas starts a pull
-    // once it hits 1.5s and at least one being is alive. pullSpeed/
+    // once it hits 1.0s and at least one being is alive. pullSpeed/
     // pullTargetX are updated live every frame by GameCanvas while pulled
     // is true (see startPull/updatePullTarget/endPull below).
     this.stillTimer = 0;
@@ -216,6 +216,12 @@ export class Player {
       } else {
         this.x += dir * step;
       }
+
+      // While being pulled, the run cycle should always face away from the
+      // dark-matter source so it reads like the player is struggling against
+      // the drag, regardless of which way they were facing when the pull
+      // started.
+      this.facing = this.pullTargetX < this.x ? 'right' : 'left';
     }
 
     if (this.y >= GROUND_Y) {
@@ -287,7 +293,7 @@ export class Player {
     if (this.frozen && !this.outroLocked) return; // pose holds entirely — no state change, no frame advance
 
     if (!this.outroLocked) {
-      // Priority: airborne > shooting > sitting > running > idle.
+      // Priority: airborne > shooting > sitting > pulled/run > idle.
       let nextState;
       if (!this.isGrounded) {
         nextState = 'jump';
@@ -295,7 +301,7 @@ export class Player {
         nextState = 'shoot';
       } else if (this.isSitting) {
         nextState = 'sit';
-      } else if (this.vx !== 0) {
+      } else if (this.pulled || this.vx !== 0) {
         nextState = 'run';
       } else {
         nextState = 'idle';
