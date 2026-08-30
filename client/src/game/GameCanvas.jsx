@@ -789,7 +789,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
             glacierStallTimerRef.current = 0;
             glacierStallBeeCountRef.current += 1;
             iceBeesRef.current.push(
-              new IcyBee(ICEBEE_HEIGHT_Y, levelConfigRef.current, {
+              new IcyBee(ICEBEE_HEIGHT_Y, { ...levelConfigRef.current, iceBeeHealth: 1 }, {
                 startX: 400,
                 minX: EAGLE_ARENA_MIN_X,
                 maxX: EAGLE_ARENA_MAX_X - 34,
