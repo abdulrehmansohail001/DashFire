@@ -11,6 +11,15 @@
 const HIT_FLASH_DURATION = 0.18;
 const HIT_FLASH_INTERVAL = 0.06;
 
+// Frame map (4 cols x 2 rows, row-major): 0-1 idle/pulse, 2-4 charge
+// ramp, 5 fire (muzzle flash — synced to the real shot), 6 recoil,
+// 7 settle back to idle.
+const CHARGE_FRAME_DURATION = 0.18; // per charge-ramp frame (2,3,4)
+const FIRE_FRAME_DURATION = 0.12;
+const RECOIL_FRAME_DURATION = 0.2;
+const SETTLE_FRAME_DURATION = 0.2;
+const IDLE_PULSE_INTERVAL = 0.5;
+
 export class Glacier {
   constructor(x, y, side, config = {}) {
     this.x = x;
@@ -33,6 +42,11 @@ export class Glacier {
     this.firingEnabled = false; // GameCanvas flips this true once the 3s grace period ends
 
     this.hitFlashTimer = 0;
+
+    this.animState = 'idle'; // 'idle' | 'charge' | 'fire' | 'recoil'
+    this.animFrame = 0;
+    this.animTimer = 0;
+    this.idlePulseTimer = 0;
   }
 
   randomFireInterval() {
@@ -63,10 +77,53 @@ export class Glacier {
     if (!this.firingEnabled) return;
 
     this.fireTimer += dt;
-    if (this.fireTimer >= this.fireInterval) {
-      this.fireTimer = 0;
-      this.fireInterval = this.randomFireInterval();
-      this.wantsToFire = true;
+    if (this.animState === 'idle' && this.fireTimer >= this.fireInterval - (CHARGE_FRAME_DURATION * 3)) {
+      // Start the charge animation slightly before the shot actually
+      // fires, so frame 5's muzzle flash lands right on the real hit.
+      this.animState = 'charge';
+      this.animFrame = 2;
+      this.animTimer = 0;
+    }
+
+    if (this.animState === 'charge') {
+      this.animTimer += dt;
+      if (this.animTimer >= CHARGE_FRAME_DURATION) {
+        this.animTimer = 0;
+        this.animFrame += 1;
+        if (this.animFrame > 4) {
+          this.animState = 'fire';
+          this.animFrame = 5;
+          this.fireTimer = 0;
+          this.fireInterval = this.randomFireInterval();
+          this.wantsToFire = true;
+        }
+      }
+    } else if (this.animState === 'fire') {
+      this.animTimer += dt;
+      if (this.animTimer >= FIRE_FRAME_DURATION) {
+        this.animTimer = 0;
+        this.animState = 'recoil';
+        this.animFrame = 6;
+      }
+    } else if (this.animState === 'recoil') {
+      this.animTimer += dt;
+      if (this.animTimer >= RECOIL_FRAME_DURATION) {
+        this.animTimer = 0;
+        this.animFrame = 7;
+        this.animState = 'settle';
+      }
+    } else if (this.animState === 'settle') {
+      this.animTimer += dt;
+      if (this.animTimer >= SETTLE_FRAME_DURATION) {
+        this.animTimer = 0;
+        this.animState = 'idle';
+        this.animFrame = 0;
+        this.idlePulseTimer = 0;
+      }
+    } else {
+      // idle — gentle pulse between frames 0 and 1
+      this.idlePulseTimer += dt;
+      this.animFrame = Math.floor(this.idlePulseTimer / IDLE_PULSE_INTERVAL) % 2;
     }
   }
 
@@ -84,7 +141,9 @@ export class Glacier {
 
     if (spriteSheet && spriteSheet.loaded) {
       const flip = this.facing === 'left';
-      const drew = spriteSheet.draw(ctx, 0, 0, this.x, this.y, this.width, this.height, flip);
+      const row = Math.floor(this.animFrame / 4);
+      const col = this.animFrame % 4;
+      const drew = spriteSheet.draw(ctx, row, col, this.x, this.y, this.width, this.height, flip);
       if (drew) return;
     }
 

@@ -61,7 +61,7 @@ export const WORLDS = [
       yeti: { path: '/sprites/yeti.png', frameWidth: 431, frameHeight: 431, columns: 4, rows: 2 },
             spaceship: { path: '/sprites/spaceship_beeform.png', frameWidth: 354, frameHeight: 454, columns: 4, rows: 2 },
       iceBee: { path: '/sprites/icebee.png', frameWidth: 420, frameHeight: 480, columns: 4, rows: 1 },
-      glacier: null, // TODO: glacier.png
+      glacier: { path: '/sprites/glacier.png', frameWidth: 443.5, frameHeight: 443.5, columns: 4, rows: 2 },
             iceberg: '/sprites/iceberg.png',
       eagle: null,    // World 3 has no plain eagle — replaced by the Spaceship/Bee system
       boss: null,     // TBD later
