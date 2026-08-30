@@ -18,6 +18,7 @@ import { isColliding, Obstacle } from './entities/Obstacle';
 import { Cactus } from './entities/Cactus';
 import { Iceberg } from './entities/Iceberg';
 import { Glacier } from './entities/Glacier';
+import { GlacierProjectile } from './entities/GlacierProjectile';
 import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
@@ -775,7 +776,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
             const direction = glacier.side === 'left' ? 'right' : 'left';
             const shotX = direction === 'right' ? glacier.x + glacier.width : glacier.x;
             enemyBulletsRef.current.push(
-              new BossFireball(shotX, shotY, direction, glacier.fireSpeed)
+              new GlacierProjectile(shotX, shotY, direction, glacier.fireSpeed)
             );
           }
         }
