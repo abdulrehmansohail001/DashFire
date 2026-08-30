@@ -211,10 +211,10 @@ function buildDarkMatterBeingsForLevel(levelConfig) {
 
   for (let i = 0; i < darkMatterCount; i++) {
     const startX = ARENA_MIN_X + slotWidth * (i + 0.5);
-    // Ground line (canvas 400) minus this being's own height (90) — same
-    // reasoning as Yeti: stationary, no physics, so the spawn y must
-    // already be the final resting y.
-    beings.push(new DarkMatterBeing(startX, 310, levelConfig));
+    // The sprite sheet is a full-body 4x2 tall form, so the resting y is
+    // set lower to keep its feet on the ground line instead of squeezing it
+    // into the old 44x90 placeholder bounds.
+    beings.push(new DarkMatterBeing(startX, 230, levelConfig));
   }
 
   return beings;
@@ -418,7 +418,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     const cactusImage = getImage(world.sprites.cactus);
     const icebergImage = getImage(world.sprites.iceberg);
   const vortexSheet = getSheet(world.sprites.vortex);
-  const darkMatterImage = getImage(world.sprites.darkMatter);
+  const darkMatterSheet = getSheet(world.sprites.darkMatter);
   const frogSheet = getSheet(world.sprites.frog);
 
   const canvasRef = useRef(null);
@@ -1184,7 +1184,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       bulletsRef.current.forEach((b) => b.draw(ctx));
                         eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
       vorticesRef.current.forEach((vortex) => vortex.draw(ctx, vortexSheet));
-      darkMattersRef.current.forEach((being) => being.draw(ctx, darkMatterImage));
+      darkMattersRef.current.forEach((being) => being.draw(ctx, darkMatterSheet));
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
       yetisRef.current.forEach((yeti) => yeti.draw(ctx, yetiSheet));
       yetiProjectilesRef.current.forEach((p) => p.draw(ctx));

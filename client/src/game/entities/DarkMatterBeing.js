@@ -17,8 +17,8 @@ export class DarkMatterBeing {
   constructor(x, y, config = {}) {
     this.x = x;
     this.y = y;
-    this.width = 44;
-    this.height = 90;
+    this.width = 128;
+    this.height = 170;
 
     this.facing = 'left';
 
