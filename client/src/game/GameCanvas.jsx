@@ -827,8 +827,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           boss.wantsToSpawnBeing = false;
           const aliveBeingCount = darkMattersRef.current.filter((b) => b.alive).length;
           if (aliveBeingCount < 3) {
+            const spawnX = Math.min(520 + aliveBeingCount * 80, 800 - 128);
             darkMattersRef.current.push(
-              new DarkMatterBeing(boss.x + boss.width / 2, 310, { ...levelConfigRef.current, darkMatterHealth: 2 })
+              new DarkMatterBeing(spawnX, 230, { ...levelConfigRef.current, darkMatterHealth: 2 })
             );
           }
         }
