@@ -23,6 +23,7 @@ import { GlacierProjectile } from './entities/GlacierProjectile';
 import { Vortex } from './entities/Vortex';
 import { DarkMatterBeing } from './entities/DarkMatterBeing';
 import { BlackHoleBoss } from './entities/BlackHoleBoss';
+import { RayEffect } from './entities/RayEffect';
 import { Enemy } from './entities/Enemy';
 import { Bullet } from './entities/Bullet';
 import { EnemyBullet } from './entities/EnemyBullet';
@@ -443,6 +444,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     const icebergImage = getImage(world.sprites.iceberg);
   const vortexSheet = getSheet(world.sprites.vortex);
   const darkMatterSheet = getSheet(world.sprites.darkMatter);
+  const pullPushRaysSheet = getSheet(world.sprites.pullPushRays);
   const frogSheet = getSheet(world.sprites.frog);
   const smokeSheet = getSheet(world.sprites.smoke);
 
@@ -469,6 +471,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
       const vorticesRef = useRef(buildVorticesForLevel(LEVELS[initialLevelIndex]));
   const darkMattersRef = useRef(buildDarkMatterBeingsForLevel(LEVELS[initialLevelIndex]));
+  const rayEffectRef = useRef(new RayEffect());
   const yetisRef = useRef(buildYetisForLevel(LEVELS[initialLevelIndex]));
   const yetiProjectilesRef = useRef([]);
   const spaceshipsRef = useRef(buildSpaceshipsForLevel(LEVELS[initialLevelIndex]));
@@ -833,6 +836,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       // still alive), and drive the middle-zone quicksand trap.
       if (bossRef.current instanceof BlackHoleBoss && bossRef.current.alive) {
         const boss = bossRef.current;
+        rayEffectRef.current.update(dt);
 
         // Contact teleports the player to the opposite side, same as
         // Vortex — but deliberately NO damage, this boss never hurts on
@@ -1336,6 +1340,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       shipProjectilesRef.current.forEach((p) => p.draw(ctx));
       frogsRef.current.forEach((frog) => frog.draw(ctx, frogSheet));
       if (bossRef.current) bossRef.current.draw(ctx, bossSheet);
+      if (bossRef.current instanceof BlackHoleBoss && bossRef.current.alive && bossRef.current.currentZone === 'left') {
+        const ZONE_WIDTH = 800 / 3;
+        const rayWidth = 150;
+        const rayHeight = 400 - BLACKHOLE_HEIGHT_Y;
+        const rayX = ZONE_WIDTH / 2 - rayWidth / 2;
+        const rayY = BLACKHOLE_HEIGHT_Y;
+        rayEffectRef.current.draw(ctx, pullPushRaysSheet, rayX, rayY, rayWidth, rayHeight, 0.5);
+      }
 
       // --- HUD: player HP top-left ---
       const playerCircleX = 40;
