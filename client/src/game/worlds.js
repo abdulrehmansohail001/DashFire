@@ -110,7 +110,7 @@ export const WORLDS = [
       pullPushRays: { path: '/sprites/pull_push_rays.png', frameWidth: 384, frameHeight: 1024, columns: 4, rows: 1 },
       pullPushRaysGreen: { path: '/sprites/pull_push_rays_green.png', frameWidth: 384, frameHeight: 1024, columns: 4, rows: 1 },
       boss: { path: '/sprites/blackhole_boss.png', frameWidth: 372, frameHeight: 500, columns: 4, rows: 2 },
-      background: { path: '/sprites/blackhole_bg.jpg', frameWidth: 443, frameHeight: 443, columns: 4, rows: 2 },
+            background: { path: '/sprites/multiverse_bg.png', frameWidth: 433, frameHeight: 433, columns: 4, rows: 2 },
       obstacle: '/sprites/obstacle.png',
       cactus: null,
       quicksand: null,
