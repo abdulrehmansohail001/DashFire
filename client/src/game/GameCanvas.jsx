@@ -1352,7 +1352,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         const rayWidth = 120; // was 70 — fatter/wider, still fits inside the left third's own bounds
         const RAY_GAP_BELOW_BOSS = 15; // clears the boss's own sprite instead of starting inside it
         const RAY_GAP_ABOVE_GROUND = 60; // stops well short of the player's ground line
-        const rayY = boss.y + boss.height + RAY_GAP_BELOW_BOSS;
+        const rayY = bossRef.current.y + bossRef.current.height + RAY_GAP_BELOW_BOSS;
         const rayHeight = 400 - RAY_GAP_ABOVE_GROUND - rayY;
         const rayX = ZONE_WIDTH / 2 - rayWidth / 2;
         rayEffectRef.current.draw(ctx, pullPushRaysSheet, rayX, rayY, rayWidth, rayHeight, 0.28);
