@@ -892,7 +892,11 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
         if (ss.wantsToFire) {
           ss.wantsToFire = false;
-          if (ss.phase === 'disguise') ss.flashDisguiseShootPose();
+          if (ss.phase === 'disguise') {
+            ss.flashDisguiseShootPose();
+          } else {
+            ss.flashNormalShootPose();
+          }
           const bulletX = ss.facing === 'right' ? ss.x + ss.width : ss.x;
           enemyBulletsRef.current.push(
             new EnemyBullet(bulletX, GUNMEN_FIRE_HEIGHT_Y, ss.facing, ss.bulletSpeed)

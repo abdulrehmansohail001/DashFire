@@ -1,10 +1,16 @@
 // src/game/entities/Shapeshifter.js
 // World 5 enemy — a "reality glitch" gunman. Fires at the player on its
 // own regular timer in BOTH phases (reuses EnemyBullet directly, same as
-// a normal gunman). Cycles every 2-2.5s (random) between 'normal' (its
-// own look, real damage applies) and 'disguise' (draws using the actual
-// Player.js sprite sheets — reuses ANIM_CONFIG's idle/shoot frame
-// lookups directly, not a separate asset).
+// a normal gunman). Cycles between a 2s 'normal' window (its own look,
+// real damage applies) and a 4s 'disguise' window (draws using the actual
+// Player.js sprite sheets — reuses ANIM_CONFIG's idle/shoot frame lookups
+// directly, not a separate asset). During disguise, bullet speed is 2x.
+//
+// Sprite sheet layout (shapeshifter.png, 4 columns × 3 rows):
+//   Row 0: idle / walk  (normal-phase standing animation)
+//   Row 1: shoot        (normal-phase firing pose)
+//   Row 2: glitch       (transformation effect — plays briefly on every
+//                         phase switch, regardless of direction)
 //
 // The psychological-warfare rule: during 'disguise', it is NOT
 // damageable — any player bullet that would hit it instead damages the
@@ -17,8 +23,10 @@
 
 import { ANIM_CONFIG } from './Player';
 
-const PHASE_MIN = 2.0;
-const PHASE_MAX = 2.5;
+const NORMAL_DURATION = 2.0;   // seconds in normal (damageable) form
+const DISGUISE_DURATION = 4.0; // seconds in disguise (backfire) form
+const GLITCH_DURATION = 0.6;   // row-2 transition anim on every phase switch
+const GLITCH_FRAME_DURATION = 0.15;
 const FIRE_INTERVAL_MIN = 1.5;
 const FIRE_INTERVAL_MAX = 2.3;
 const MOVEMENT_SHOT_COOLDOWN = 1.0; // mirrors Player.js's own shootCooldown value
@@ -43,11 +51,10 @@ export class Shapeshifter {
 
     this.phase = 'normal'; // 'normal' | 'disguise'
     this.phaseTimer = 0;
-    this.phaseDuration = this.randomPhaseDuration();
 
     this.fireIntervalMin = config.shapeshifterFireIntervalMin ?? FIRE_INTERVAL_MIN;
     this.fireIntervalMax = config.shapeshifterFireIntervalMax ?? FIRE_INTERVAL_MAX;
-    this.bulletSpeed = config.shapeshifterBulletSpeed ?? 260;
+    this.baseBulletSpeed = config.shapeshifterBulletSpeed ?? 260;
     this.fireTimer = 0;
     this.fireInterval = this.randomFireInterval();
     this.wantsToFire = false;
@@ -62,10 +69,22 @@ export class Shapeshifter {
     this.disguiseFrameIndex = 0;
     this.disguiseFrameTimer = 0;
     this.disguiseShootPoseTimer = 0;
+
+    // Normal-phase animation: row 0 = idle, row 1 = shoot pose.
+    this.normalFrameIndex = 0;
+    this.normalFrameTimer = 0;
+    this.normalShootPoseTimer = 0;
+
+    // Glitch transition (row 2 of sheet): plays briefly on every
+    // phase switch, regardless of direction.
+    this.glitchTimer = 0;
+    this.glitchFrameIndex = 0;
+    this.glitchFrameTimer = 0;
   }
 
-  randomPhaseDuration() {
-    return PHASE_MIN + Math.random() * (PHASE_MAX - PHASE_MIN);
+  // Effective bullet speed — 2x during disguise phase.
+  get bulletSpeed() {
+    return this.phase === 'disguise' ? this.baseBulletSpeed * 2 : this.baseBulletSpeed;
   }
 
   randomFireInterval() {
@@ -101,10 +120,14 @@ export class Shapeshifter {
     }
 
     this.phaseTimer += dt;
-    if (this.phaseTimer >= this.phaseDuration) {
+    const currentDuration = this.phase === 'normal' ? NORMAL_DURATION : DISGUISE_DURATION;
+    if (this.phaseTimer >= currentDuration) {
       this.phaseTimer = 0;
-      this.phaseDuration = this.randomPhaseDuration();
       this.phase = this.phase === 'normal' ? 'disguise' : 'normal';
+      // Trigger the glitch transition animation (row 2).
+      this.glitchTimer = GLITCH_DURATION;
+      this.glitchFrameIndex = 0;
+      this.glitchFrameTimer = 0;
     }
 
     this.fireTimer += dt;
@@ -120,6 +143,16 @@ export class Shapeshifter {
 
     if (this.hitFlashTimer > 0) this.hitFlashTimer -= dt;
 
+    // Glitch transition animation (row 2 of the sheet).
+    if (this.glitchTimer > 0) {
+      this.glitchTimer -= dt;
+      this.glitchFrameTimer += dt;
+      if (this.glitchFrameTimer >= GLITCH_FRAME_DURATION) {
+        this.glitchFrameTimer = 0;
+        this.glitchFrameIndex = (this.glitchFrameIndex + 1) % 4;
+      }
+    }
+
     // Disguise-phase idle animation loop, plus a brief shoot-pose flash
     // right after wantsToFire fires (checked by GameCanvas that same
     // frame, so this just tracks the visual timer independently).
@@ -132,12 +165,29 @@ export class Shapeshifter {
         this.disguiseFrameIndex = (this.disguiseFrameIndex + 1) % 4;
       }
     }
+
+    // Normal-phase idle/shoot animation.
+    if (this.normalShootPoseTimer > 0) {
+      this.normalShootPoseTimer -= dt;
+    } else {
+      this.normalFrameTimer += dt;
+      if (this.normalFrameTimer >= 0.15) {
+        this.normalFrameTimer = 0;
+        this.normalFrameIndex = (this.normalFrameIndex + 1) % 4;
+      }
+    }
   }
 
   // Called by GameCanvas right when it actually fires, so the disguise
   // draw briefly shows the player's shoot pose instead of idle.
   flashDisguiseShootPose() {
     this.disguiseShootPoseTimer = 0.25;
+  }
+
+  // Same idea for the normal phase — briefly shows row 1 (shoot) instead
+  // of row 0 (idle).
+  flashNormalShootPose() {
+    this.normalShootPoseTimer = 0.25;
   }
 
   getBounds() {
@@ -159,7 +209,15 @@ export class Shapeshifter {
     // didn't happen to match.
     const flip = this.facing === 'left';
 
-    if (this.phase === 'disguise') {
+    // Glitch transition always uses the shapeshifter's own sheet (row 2),
+    // regardless of which phase just started — it's the visual bridge
+    // between the two forms.
+    if (this.glitchTimer > 0) {
+      if (normalSheet && normalSheet.loaded) {
+        const drew = normalSheet.draw(ctx, 2, this.glitchFrameIndex, this.x, this.y, this.width, this.height, flip);
+        if (drew) return;
+      }
+    } else if (this.phase === 'disguise') {
       const stateKey = this.disguiseShootPoseTimer > 0 ? 'shoot' : 'idle';
       const config = ANIM_CONFIG[stateKey];
       const sheet = config.sheet === 'extra' ? playerExtraSheet : playerSheet;
@@ -186,7 +244,9 @@ export class Shapeshifter {
         if (drew) return;
       }
     } else if (normalSheet && normalSheet.loaded) {
-      const drew = normalSheet.draw(ctx, 0, 0, this.x, this.y, this.width, this.height, flip);
+      // Normal phase: row 0 = idle, row 1 = shoot.
+      const row = this.normalShootPoseTimer > 0 ? 1 : 0;
+      const drew = normalSheet.draw(ctx, row, this.normalFrameIndex, this.x, this.y, this.width, this.height, flip);
       if (drew) return;
     }
 
