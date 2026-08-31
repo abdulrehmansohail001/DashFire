@@ -30,7 +30,7 @@ export class Cactus {
       const drawHeight = 140;
       const drawWidth = drawHeight * aspect;
       const drawX = this.x + this.width / 2 - drawWidth / 2;
-      const drawY = this.y + this.height - drawHeight;
+      const drawY = this.y + this.height - drawHeight+8;
       ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
       return;
     }

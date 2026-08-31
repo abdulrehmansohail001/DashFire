@@ -5,13 +5,15 @@
 // real damage applies) and a 4s 'disguise' window (draws using the actual
 // Player.js sprite sheets — reuses ANIM_CONFIG's idle/shoot frame lookups
 // directly, not a separate asset). During disguise, bullet speed is 2x.
+
 //
 // Sprite sheet layout (shapeshifter.png, 4 columns × 3 rows):
 //   Row 0: idle / walk  (normal-phase standing animation)
 //   Row 1: shoot        (normal-phase firing pose)
 //   Row 2: glitch       (transformation effect — plays briefly on every
-//                         phase switch, regardless of direction)
+//                        phase switch, regardless of direction)
 //
+
 // The psychological-warfare rule: during 'disguise', it is NOT
 // damageable — any player bullet that would hit it instead damages the
 // PLAYER (GameCanvas handles this redirect, this class just exposes
@@ -230,6 +232,7 @@ export class Shapeshifter {
           row = config.row;
           col = this.disguiseFrameIndex;
         }
+
         // Same aspect-ratio-derived sizing Player.js itself uses — the raw
         // 40x90 hitbox is much narrower/taller than the player sheet's
         // actual cell proportions, so stretching straight into it squashed
@@ -246,7 +249,27 @@ export class Shapeshifter {
     } else if (normalSheet && normalSheet.loaded) {
       // Normal phase: row 0 = idle, row 1 = shoot.
       const row = this.normalShootPoseTimer > 0 ? 1 : 0;
-      const drew = normalSheet.draw(ctx, row, this.normalFrameIndex, this.x, this.y, this.width, this.height, flip);
+
+      // Same aspect-ratio-derived sizing used for the disguise form.
+      // Keep the 40x90 hitbox unchanged, but don't stretch the normal
+      // sprite into that narrow box.
+      const aspect = normalSheet.frameWidth / normalSheet.frameHeight;
+      const drawHeight = DISGUISE_SPRITE_DRAW_HEIGHT;
+      const drawWidth = drawHeight * aspect;
+      const drawX = this.x + this.width / 2 - drawWidth / 2;
+      const drawY = this.y + this.height - drawHeight+8;
+
+      const drew = normalSheet.draw(
+        ctx,
+        row,
+        this.normalFrameIndex,
+        drawX,
+        drawY,
+        drawWidth,
+        drawHeight,
+        flip
+      );
+
       if (drew) return;
     }
 

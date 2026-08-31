@@ -115,7 +115,7 @@ export const WORLDS = [
       cactus: null,
       quicksand: null,
       smoke: { path: '/sprites/smoke.png', frameWidth: 350.5, frameHeight: 561, columns: 4, rows: 2 },
-      shapeshifter: { path: '/sprites/shapeshifter.png', frameWidth: 285, frameHeight: 284, columns: 4, rows: 3 },
+      shapeshifter: { path: '/sprites/shapeshifter.png', frameWidth: 144, frameHeight: 144, columns: 4, rows: 3 },
     },
     levels: WORLD_5_LEVELS,
   },
