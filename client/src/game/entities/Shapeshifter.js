@@ -213,10 +213,17 @@ export class Shapeshifter {
 
     // Glitch transition always uses the shapeshifter's own sheet (row 2),
     // regardless of which phase just started — it's the visual bridge
-    // between the two forms.
+    // between the two forms. Must share the same aspect-corrected box as
+    // the idle/shoot rows below, or the sprite visibly snaps size at the
+    // start/end of every transform.
     if (this.glitchTimer > 0) {
       if (normalSheet && normalSheet.loaded) {
-        const drew = normalSheet.draw(ctx, 2, this.glitchFrameIndex, this.x, this.y, this.width, this.height, flip);
+        const aspect = normalSheet.frameWidth / normalSheet.frameHeight;
+        const drawHeight = DISGUISE_SPRITE_DRAW_HEIGHT;
+        const drawWidth = drawHeight * aspect;
+        const drawX = this.x + this.width / 2 - drawWidth / 2;
+        const drawY = this.y + this.height - drawHeight + 8;
+        const drew = normalSheet.draw(ctx, 2, this.glitchFrameIndex, drawX, drawY, drawWidth, drawHeight, flip);
         if (drew) return;
       }
     } else if (this.phase === 'disguise') {
@@ -254,7 +261,7 @@ export class Shapeshifter {
       // Keep the 40x90 hitbox unchanged, but don't stretch the normal
       // sprite into that narrow box.
       const aspect = normalSheet.frameWidth / normalSheet.frameHeight;
-      const drawHeight = DISGUISE_SPRITE_DRAW_HEIGHT;
+      const drawHeight = DISGUISE_SPRITE_DRAW_HEIGHT+10;
       const drawWidth = drawHeight * aspect;
       const drawX = this.x + this.width / 2 - drawWidth / 2;
       const drawY = this.y + this.height - drawHeight+8;
