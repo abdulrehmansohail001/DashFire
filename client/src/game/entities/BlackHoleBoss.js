@@ -41,6 +41,9 @@ export class BlackHoleBoss {
     this.currentZone = 'middle'; // recalculated every update() from actual x
 
     this.hitFlashTimer = 0;
+
+    this.frameIndex = 0;
+    this.frameTimer = 0;
   }
 
   randomSpawnInterval() {
@@ -85,6 +88,12 @@ export class BlackHoleBoss {
     }
 
     if (this.hitFlashTimer > 0) this.hitFlashTimer -= dt;
+
+    this.frameTimer += dt;
+    if (this.frameTimer >= 0.09) {
+      this.frameTimer = 0;
+      this.frameIndex = (this.frameIndex + 1) % 8; // cycles all 8 rotation frames continuously
+    }
   }
 
   getBounds() {
@@ -101,7 +110,9 @@ export class BlackHoleBoss {
 
     if (spriteSheet && spriteSheet.loaded) {
       const flip = this.vx < 0;
-      const drew = spriteSheet.draw(ctx, 0, 0, this.x, this.y, this.width, this.height, flip);
+      const row = Math.floor(this.frameIndex / 4);
+      const col = this.frameIndex % 4;
+      const drew = spriteSheet.draw(ctx, row, col, this.x, this.y, this.width, this.height, flip);
       if (drew) return;
     }
 
