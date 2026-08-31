@@ -83,7 +83,7 @@ export const WORLDS = [
       eagle: null,      // TODO: World 4's flying enemy, if any
       vortex: { path: '/sprites/vortex.png', frameWidth: 418, frameHeight: 470, columns: 4, rows: 2 },
       darkMatter: { path: '/sprites/darkmatterbeing.png', frameWidth: 435, frameHeight: 429, columns: 4, rows: 2 },
-      boss: { path: '/sprites/blackhole_boss.png', frameWidth: 362, frameHeight: 543, columns: 4, rows: 2 },
+      boss: { path: '/sprites/blackhole_boss.png', frameWidth: 372, frameHeight: 500, columns: 4, rows: 2 },
       background: { path: '/sprites/blackhole_bg.jpg', frameWidth: 443, frameHeight: 443, columns: 4, rows: 2 },
       obstacle: '/sprites/obstacle.png', // reused placeholder wall until World 4 gets its own
       cactus: null,
