@@ -847,13 +847,20 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
                 if (boss.wantsToSpawnBeing) {
           boss.wantsToSpawnBeing = false;
+          // Prune dead beings before doing anything else — without this,
+          // the array grows forever over a long fight (a new one spawns
+          // every 2.5-4s indefinitely, dead ones were never removed),
+          // and every frame's iteration over it gets slower and slower
+          // until the tab locks up.
+          darkMattersRef.current = darkMattersRef.current.filter((b) => b.alive);
+
           // 3 FIXED spawn slots spread across the right side, not the
           // boss's current x — each slot can only ever hold one alive
           // being at a time. If a slot's occupant is dead, that slot is
           // free again; if all 3 are currently occupied, skip this spawn
           // entirely (don't queue it up, don't stack into a taken spot).
           const occupiedSlots = new Set(
-            darkMattersRef.current.filter((b) => b.alive).map((b) => b.slotIndex)
+            darkMattersRef.current.map((b) => b.slotIndex)
           );
           const freeSlotIndex = BLACKHOLE_BEING_SLOT_X.findIndex((_, i) => !occupiedSlots.has(i));
 
