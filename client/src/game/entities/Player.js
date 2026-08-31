@@ -32,13 +32,13 @@ export const CANVAS_WIDTH = 800;
 // `cells` (death only) is an explicit [row, col] list for animations that
 // span more than one row of a sheet; everything else uses `row` + a
 // straight 0..frames-1 column walk.
-const ANIM_CONFIG = {
-  idle:    { sheet: 'main',  row: 0, frames: 4, loop: true },
-  run:     { sheet: 'main',  row: 1, frames: 4, loop: true },
-  jump:    { sheet: 'main',  row: 2, frames: 4, loop: true },
-  shoot:   { sheet: 'main',  row: 3, frames: 4, loop: true },
-    sit:     { sheet: 'extra', cells: [[0, 0], [0, 1], [0, 2], [0, 2]], loop: false },
-  death:   { sheet: 'extra', cells: [[1, 0], [1, 1], [1, 2], [1, 3], [2, 0], [2, 1], [2, 2], [2, 3]], loop: false },
+export const ANIM_CONFIG = {
+  idle: { sheet: 'main', row: 0, frames: 4, loop: true },
+  run: { sheet: 'main', row: 1, frames: 4, loop: true },
+  jump: { sheet: 'main', row: 2, frames: 4, loop: true },
+  shoot: { sheet: 'main', row: 3, frames: 4, loop: true },
+  sit: { sheet: 'extra', cells: [[0, 0], [0, 1], [0, 2], [0, 2]], loop: false },
+  death: { sheet: 'extra', cells: [[1, 0], [1, 1], [1, 2], [1, 3], [2, 0], [2, 1], [2, 2], [2, 3]], loop: false },
   victory: { sheet: 'extra', row: 3, frames: 4, loop: false },
 };
 
@@ -153,7 +153,7 @@ export class Player {
       this.vx = 0;
       return;
     }
-    
+
     // When stuck: lock vx but still allow facing to update
     if (this.stuck) {
       this.vx = 0;
@@ -165,7 +165,7 @@ export class Player {
       }
       return;
     }
-    
+
     // Normal movement (not stuck)
     if (keys['ArrowLeft'] || keys['a']) {
       this.vx = -MOVE_SPEED;
@@ -471,7 +471,7 @@ export class Player {
   // mainSheet/extraSheet are optional — if the one this animState needs
   // isn't loaded yet, falls back to the original placeholder rectangle so
   // there's never a blank gap.
-   draw(ctx, mainSheet, extraSheet, freezeSheet, ghostSheet) {
+  draw(ctx, mainSheet, extraSheet, freezeSheet, ghostSheet) {
     const sinkOffset = this.stuck ? SINK_OFFSET : 0; // visual-only — sunk to "knee" depth in quicksand
     // Only the player's OWN sprite should flicker during invulnerability —
     // the freeze crystal overlay is drawn unconditionally further down, so

@@ -115,6 +115,7 @@ export const WORLDS = [
       cactus: null,
       quicksand: null,
       smoke: { path: '/sprites/smoke.png', frameWidth: 350.5, frameHeight: 561, columns: 4, rows: 2 },
+      shapeshifter: null, // TODO: shapeshifter.png (normal-phase look only — disguise phase reuses the player sheets directly)
     },
     levels: WORLD_5_LEVELS,
   },

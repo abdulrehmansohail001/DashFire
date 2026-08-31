@@ -1,0 +1,178 @@
+// src/game/entities/Shapeshifter.js
+// World 5 enemy — a "reality glitch" gunman. Fires at the player on its
+// own regular timer in BOTH phases (reuses EnemyBullet directly, same as
+// a normal gunman). Cycles every 2-2.5s (random) between 'normal' (its
+// own look, real damage applies) and 'disguise' (draws using the actual
+// Player.js sprite sheets — reuses ANIM_CONFIG's idle/shoot frame
+// lookups directly, not a separate asset).
+//
+// The psychological-warfare rule: during 'disguise', it is NOT
+// damageable — any player bullet that would hit it instead damages the
+// PLAYER (GameCanvas handles this redirect, this class just exposes
+// `phase` so GameCanvas knows which behavior applies). Additionally,
+// during 'disguise' only, the player starting to move on the x-axis
+// triggers one bonus shot — GameCanvas calls triggerMovementShot() for
+// that, gated by its own short cooldown here so rapid tapping can't
+// spam it.
+
+import { ANIM_CONFIG } from './Player';
+
+const PHASE_MIN = 2.0;
+const PHASE_MAX = 2.5;
+const FIRE_INTERVAL_MIN = 1.5;
+const FIRE_INTERVAL_MAX = 2.3;
+const MOVEMENT_SHOT_COOLDOWN = 1.0; // mirrors Player.js's own shootCooldown value
+
+export class Shapeshifter {
+  constructor(x, y, config = {}) {
+    this.x = x;
+    this.y = y;
+    this.width = 40;
+    this.height = 90;
+
+    this.facing = 'left';
+
+    this.health = config.shapeshifterHealth ?? 6;
+    this.maxHealth = this.health;
+    this.alive = true;
+
+    this.phase = 'normal'; // 'normal' | 'disguise'
+    this.phaseTimer = 0;
+    this.phaseDuration = this.randomPhaseDuration();
+
+    this.fireIntervalMin = config.shapeshifterFireIntervalMin ?? FIRE_INTERVAL_MIN;
+    this.fireIntervalMax = config.shapeshifterFireIntervalMax ?? FIRE_INTERVAL_MAX;
+    this.bulletSpeed = config.shapeshifterBulletSpeed ?? 260;
+    this.fireTimer = 0;
+    this.fireInterval = this.randomFireInterval();
+    this.wantsToFire = false;
+
+    this.movementShotCooldown = 0;
+    this.wantsToFireMovementShot = false;
+
+    this.hitFlashTimer = 0;
+
+    // Simple disguise-phase animation: idle most of the time, briefly
+    // shows the player's shoot pose right when it fires.
+    this.disguiseFrameIndex = 0;
+    this.disguiseFrameTimer = 0;
+    this.disguiseShootPoseTimer = 0;
+  }
+
+  randomPhaseDuration() {
+    return PHASE_MIN + Math.random() * (PHASE_MAX - PHASE_MIN);
+  }
+
+  randomFireInterval() {
+    return this.fireIntervalMin + Math.random() * (this.fireIntervalMax - this.fireIntervalMin);
+  }
+
+  takeHit() {
+    // GameCanvas is responsible for NOT calling this during 'disguise'
+    // (redirecting to the player instead) — this method assumes it's
+    // only ever called when a hit should actually count.
+    if (!this.alive) return;
+    this.health -= 1;
+    this.hitFlashTimer = 0.18;
+    if (this.health <= 0) {
+      this.alive = false;
+    }
+  }
+
+  // Called by GameCanvas the instant the player's x-movement starts
+  // (edge-triggered), only while phase === 'disguise'. No-ops if the
+  // being isn't alive, isn't disguised, or is still on cooldown.
+  triggerMovementShot() {
+    if (!this.alive || this.phase !== 'disguise' || this.movementShotCooldown > 0) return;
+    this.movementShotCooldown = MOVEMENT_SHOT_COOLDOWN;
+    this.wantsToFireMovementShot = true;
+  }
+
+  update(dt, playerX) {
+    if (!this.alive) return;
+
+    if (typeof playerX === 'number') {
+      this.facing = playerX < this.x ? 'left' : 'right';
+    }
+
+    this.phaseTimer += dt;
+    if (this.phaseTimer >= this.phaseDuration) {
+      this.phaseTimer = 0;
+      this.phaseDuration = this.randomPhaseDuration();
+      this.phase = this.phase === 'normal' ? 'disguise' : 'normal';
+    }
+
+    this.fireTimer += dt;
+    if (this.fireTimer >= this.fireInterval) {
+      this.fireTimer = 0;
+      this.fireInterval = this.randomFireInterval();
+      this.wantsToFire = true;
+    }
+
+    if (this.movementShotCooldown > 0) {
+      this.movementShotCooldown -= dt;
+    }
+
+    if (this.hitFlashTimer > 0) this.hitFlashTimer -= dt;
+
+    // Disguise-phase idle animation loop, plus a brief shoot-pose flash
+    // right after wantsToFire fires (checked by GameCanvas that same
+    // frame, so this just tracks the visual timer independently).
+    if (this.disguiseShootPoseTimer > 0) {
+      this.disguiseShootPoseTimer -= dt;
+    } else {
+      this.disguiseFrameTimer += dt;
+      if (this.disguiseFrameTimer >= 0.15) {
+        this.disguiseFrameTimer = 0;
+        this.disguiseFrameIndex = (this.disguiseFrameIndex + 1) % 4;
+      }
+    }
+  }
+
+  // Called by GameCanvas right when it actually fires, so the disguise
+  // draw briefly shows the player's shoot pose instead of idle.
+  flashDisguiseShootPose() {
+    this.disguiseShootPoseTimer = 0.25;
+  }
+
+  getBounds() {
+    return { x: this.x, y: this.y, width: this.width, height: this.height };
+  }
+
+  draw(ctx, normalSheet, playerSheet, playerExtraSheet) {
+    if (!this.alive) return;
+
+    if (this.hitFlashTimer > 0) {
+      const step = Math.floor(this.hitFlashTimer / 0.06);
+      if (step % 2 === 0) return;
+    }
+
+    const flip = this.facing === 'right';
+
+    if (this.phase === 'disguise') {
+      const stateKey = this.disguiseShootPoseTimer > 0 ? 'shoot' : 'idle';
+      const config = ANIM_CONFIG[stateKey];
+      const sheet = config.sheet === 'extra' ? playerExtraSheet : playerSheet;
+
+      if (sheet && sheet.loaded) {
+        let row, col;
+        if (config.cells) {
+          [row, col] = config.cells[this.disguiseFrameIndex % config.cells.length];
+        } else {
+          row = config.row;
+          col = this.disguiseFrameIndex;
+        }
+        const drew = sheet.draw(ctx, row, col, this.x, this.y, this.width, this.height, flip);
+        if (drew) return;
+      }
+    } else if (normalSheet && normalSheet.loaded) {
+      const drew = normalSheet.draw(ctx, 0, 0, this.x, this.y, this.width, this.height, flip);
+      if (drew) return;
+    }
+
+    // Placeholder fallback — grey silhouette so it's still visibly
+    // distinct from a real gunman before real art exists.
+    ctx.fillStyle = this.phase === 'disguise' ? '#4a4a6a' : '#6a4a4a';
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+  }
+}

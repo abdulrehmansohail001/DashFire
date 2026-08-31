@@ -22,6 +22,7 @@ import { Glacier } from './entities/Glacier';
 import { GlacierProjectile } from './entities/GlacierProjectile';
 import { Vortex } from './entities/Vortex';
 import { DarkMatterBeing } from './entities/DarkMatterBeing';
+import { Shapeshifter } from './entities/Shapeshifter';
 import { BlackHoleBoss } from './entities/BlackHoleBoss';
 import { RayEffect } from './entities/RayEffect';
 import { Enemy } from './entities/Enemy';
@@ -216,6 +217,20 @@ function buildEnemiesForLevel(levelConfig) {
 
   return enemies;
 }
+function buildShapeshiftersForLevel(levelConfig) {
+  if (!levelConfig.hasShapeshifter) return [];
+  const count = levelConfig.shapeshifterCount ?? 1;
+  const slotWidth = (ARENA_MAX_X - ARENA_MIN_X) / count;
+  const shapeshifters = [];
+
+  for (let i = 0; i < count; i++) {
+    const startX = ARENA_MIN_X + slotWidth * (i + 0.5);
+    shapeshifters.push(new Shapeshifter(startX, 310, levelConfig));
+  }
+
+  return shapeshifters;
+}
+
 // DarkMatterBeing is stationary like Yeti, so it shares the exact same
 // arena-slot spread pattern — only the class and the ground y differ.
 function buildDarkMatterBeingsForLevel(levelConfig) {
@@ -444,6 +459,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const icebergImage = getImage(world.sprites.iceberg);
   const vortexSheet = getSheet(world.sprites.vortex);
   const darkMatterSheet = getSheet(world.sprites.darkMatter);
+    const shapeshifterSheet = getSheet(world.sprites.shapeshifter);
   const pullPushRaysSheet = getSheet(world.sprites.pullPushRays);
   const pullPushRaysGreenSheet = getSheet(world.sprites.pullPushRaysGreen);
   const frogSheet = getSheet(world.sprites.frog);
@@ -489,6 +505,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
   const vorticesRef = useRef(buildVorticesForLevel(LEVELS[initialLevelIndex]));
   const darkMattersRef = useRef(buildDarkMatterBeingsForLevel(LEVELS[initialLevelIndex]));
+  const shapeshiftersRef = useRef(buildShapeshiftersForLevel(LEVELS[initialLevelIndex]));
   const rayEffectRef = useRef(new RayEffect());
   const rayEffectGreenRef = useRef(new RayEffect());
   const yetisRef = useRef(buildYetisForLevel(LEVELS[initialLevelIndex]));
@@ -547,6 +564,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     eaglesRef.current = buildEaglesForLevel(config);
     vorticesRef.current = buildVorticesForLevel(config);
     darkMattersRef.current = buildDarkMatterBeingsForLevel(config);
+    shapeshiftersRef.current = buildShapeshiftersForLevel(config);
     yetisRef.current = buildYetisForLevel(config);
     yetiProjectilesRef.current = [];
     spaceshipsRef.current = buildSpaceshipsForLevel(config);
@@ -684,6 +702,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       player.setSitting(!!keysRef.current['ArrowDown']);
 
       const prevPlayerX = player.x;
+      const wasPlayerVxZero = player.vx === 0;
       player.update(dt);
 
       // Solid wall: push the player back out if it's grounded-level overlap.
@@ -857,6 +876,38 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
               : being.bulletSpeed;
           enemyBulletsRef.current.push(
             new EnemyBullet(bulletX, GUNMEN_FIRE_HEIGHT_Y, being.facing, beingBulletSpeed)
+          );
+        }
+      }
+
+      // Shapeshifter: fires on its own timer in both phases, PLUS one
+      // bonus shot the instant the player starts moving on the x-axis
+      // while disguised (edge-triggered — only on the frame vx goes from
+      // 0 to nonzero, not every frame it's held).
+      const shapeshifters = shapeshiftersRef.current;
+      const playerJustStartedMovingX = wasPlayerVxZero && player.vx !== 0;
+      for (const ss of shapeshifters) {
+        if (!ss.alive) continue;
+        ss.update(dt, player.x);
+
+        if (ss.wantsToFire) {
+          ss.wantsToFire = false;
+          if (ss.phase === 'disguise') ss.flashDisguiseShootPose();
+          const bulletX = ss.facing === 'right' ? ss.x + ss.width : ss.x;
+          enemyBulletsRef.current.push(
+            new EnemyBullet(bulletX, GUNMEN_FIRE_HEIGHT_Y, ss.facing, ss.bulletSpeed)
+          );
+        }
+
+        if (playerJustStartedMovingX && ss.phase === 'disguise') {
+          ss.triggerMovementShot();
+        }
+        if (ss.wantsToFireMovementShot) {
+          ss.wantsToFireMovementShot = false;
+          ss.flashDisguiseShootPose();
+          const bulletX = ss.facing === 'right' ? ss.x + ss.width : ss.x;
+          enemyBulletsRef.current.push(
+            new EnemyBullet(bulletX, GUNMEN_FIRE_HEIGHT_Y, ss.facing, ss.bulletSpeed)
           );
         }
       }
@@ -1302,6 +1353,23 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           }
         }
         if (hitDarkMatter) continue;
+        let hitShapeshifter = false;
+        for (const ss of shapeshifters) {
+          if (!ss.alive) continue;
+          if (isColliding(bullet.getBounds(), ss.getBounds())) {
+            bullet.hit = true;
+            hitShapeshifter = true;
+            if (ss.phase === 'disguise') {
+              // Backfire — the "enemy" is really wearing the player's
+              // face right now, so a hit redirects onto the player.
+              player.takeHit();
+            } else {
+              ss.takeHit();
+            }
+            break;
+          }
+        }
+        if (hitShapeshifter) continue;
         if (bossRef.current && bossRef.current.alive && isColliding(bullet.getBounds(), bossRef.current.getBounds())) {
           bossRef.current.takeHit();
           player.escapeQuicksand(); // no-op if the player wasn't stuck
@@ -1323,7 +1391,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
       const allEnemiesDead = bossRef.current
         ? !bossRef.current.alive
-        : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && vortices.every((v) => !v.alive) && darkMattersRef.current.every((b) => !b.alive) && spaceshipsRef.current.every((s) => !s.alive) && (levelConfigRef.current.hasTwinGlaciers || iceBeesRef.current.every((b) => !b.alive)) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
+        : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && vortices.every((v) => !v.alive) && darkMattersRef.current.every((b) => !b.alive) && shapeshiftersRef.current.every((s) => !s.alive) && spaceshipsRef.current.every((s) => !s.alive) && (levelConfigRef.current.hasTwinGlaciers || iceBeesRef.current.every((b) => !b.alive)) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
@@ -1381,6 +1449,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
       vorticesRef.current.forEach((vortex) => vortex.draw(ctx, vortexSheet));
       darkMattersRef.current.forEach((being) => being.draw(ctx, darkMatterSheet));
+      shapeshiftersRef.current.forEach((ss) => ss.draw(ctx, shapeshifterSheet, playerSheet, playerExtraSheet));
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
       yetisRef.current.forEach((yeti) => yeti.draw(ctx, yetiSheet));
       yetiProjectilesRef.current.forEach((p) => p.draw(ctx));
