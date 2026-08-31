@@ -445,6 +445,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const vortexSheet = getSheet(world.sprites.vortex);
   const darkMatterSheet = getSheet(world.sprites.darkMatter);
   const pullPushRaysSheet = getSheet(world.sprites.pullPushRays);
+  const pullPushRaysGreenSheet = getSheet(world.sprites.pullPushRaysGreen);
   const frogSheet = getSheet(world.sprites.frog);
   const smokeSheet = getSheet(world.sprites.smoke);
 
@@ -472,6 +473,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       const vorticesRef = useRef(buildVorticesForLevel(LEVELS[initialLevelIndex]));
   const darkMattersRef = useRef(buildDarkMatterBeingsForLevel(LEVELS[initialLevelIndex]));
   const rayEffectRef = useRef(new RayEffect());
+  const rayEffectGreenRef = useRef(new RayEffect());
   const yetisRef = useRef(buildYetisForLevel(LEVELS[initialLevelIndex]));
   const yetiProjectilesRef = useRef([]);
   const spaceshipsRef = useRef(buildSpaceshipsForLevel(LEVELS[initialLevelIndex]));
@@ -837,6 +839,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       if (bossRef.current instanceof BlackHoleBoss && bossRef.current.alive) {
         const boss = bossRef.current;
         rayEffectRef.current.update(dt);
+        rayEffectGreenRef.current.update(dt);
 
         // Contact teleports the player to the opposite side, same as
         // Vortex — but deliberately NO damage, this boss never hurts on
@@ -1356,6 +1359,16 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         const rayHeight = 400 - RAY_GAP_ABOVE_GROUND - rayY;
         const rayX = ZONE_WIDTH / 2 - rayWidth / 2;
         rayEffectRef.current.draw(ctx, pullPushRaysSheet, rayX, rayY, rayWidth, rayHeight, 0.28);
+      }
+      if (bossRef.current instanceof BlackHoleBoss && bossRef.current.alive && bossRef.current.currentZone === 'right') {
+        const ZONE_WIDTH = 800 / 3;
+        const rayWidth = 120;
+        const RAY_GAP_BELOW_BOSS = 15;
+        const RAY_GAP_ABOVE_GROUND = 60;
+        const rayY = bossRef.current.y + bossRef.current.height + RAY_GAP_BELOW_BOSS;
+        const rayHeight = 400 - RAY_GAP_ABOVE_GROUND - rayY;
+        const rayX = ZONE_WIDTH * 2 + ZONE_WIDTH / 2 - rayWidth / 2;
+        rayEffectGreenRef.current.draw(ctx, pullPushRaysGreenSheet, rayX, rayY, rayWidth, rayHeight, 0.28);
       }
 
       // --- HUD: player HP top-left ---
