@@ -1342,11 +1342,11 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       if (bossRef.current) bossRef.current.draw(ctx, bossSheet);
       if (bossRef.current instanceof BlackHoleBoss && bossRef.current.alive && bossRef.current.currentZone === 'left') {
         const ZONE_WIDTH = 800 / 3;
-        const rayWidth = 150;
-        const rayHeight = 400 - BLACKHOLE_HEIGHT_Y;
+        const rayWidth = 70; // was 150 — too wide, was overlapping the player
+        const rayHeight = (400 - BLACKHOLE_HEIGHT_Y) * 0.65; // shorter too, was reaching all the way down to the player
         const rayX = ZONE_WIDTH / 2 - rayWidth / 2;
         const rayY = BLACKHOLE_HEIGHT_Y;
-        rayEffectRef.current.draw(ctx, pullPushRaysSheet, rayX, rayY, rayWidth, rayHeight, 0.5);
+        rayEffectRef.current.draw(ctx, pullPushRaysSheet, rayX, rayY, rayWidth, rayHeight, 0.28); // was 0.5 — more subtle
       }
 
       // --- HUD: player HP top-left ---
