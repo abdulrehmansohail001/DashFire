@@ -15,6 +15,7 @@
 // those effects, it only tracks its own position/health/spawn timer.
 
 const ZONE_WIDTH = 800 / 3;
+const SPRITE_DRAW_HEIGHT = 160; // visual size only — hitbox (this.width/height) stays 70x70 for collision/contact fairness
 
 export class BlackHoleBoss {
   constructor(y, config = {}, placement = {}) {
@@ -108,11 +109,16 @@ export class BlackHoleBoss {
       if (step % 2 === 0) return;
     }
 
-    if (spriteSheet && spriteSheet.loaded) {
+     if (spriteSheet && spriteSheet.loaded) {
       const flip = this.vx < 0;
       const row = Math.floor(this.frameIndex / 4);
       const col = this.frameIndex % 4;
-      const drew = spriteSheet.draw(ctx, row, col, this.x, this.y, this.width, this.height, flip);
+      const aspect = spriteSheet.frameWidth / spriteSheet.frameHeight;
+      const drawHeight = SPRITE_DRAW_HEIGHT;
+      const drawWidth = drawHeight * aspect;
+      const drawX = this.x + this.width / 2 - drawWidth / 2;
+      const drawY = this.y + this.height / 2 - drawHeight / 2;
+      const drew = spriteSheet.draw(ctx, row, col, drawX, drawY, drawWidth, drawHeight, flip);
       if (drew) return;
     }
 
