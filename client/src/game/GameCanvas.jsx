@@ -351,9 +351,9 @@ function drawHudPortrait(ctx, sheet, centerX, centerY, radius, fallbackColor, fa
   const drew = sheet
     ? cropOptions
       ? sheet.drawPortrait(
-          ctx, 0, 0, centerX, centerY, radius,
-          cropOptions.cropRatio, cropOptions.cropTopRatio, cropOptions.cropLeftRatio
-        )
+        ctx, 0, 0, centerX, centerY, radius,
+        cropOptions.cropRatio, cropOptions.cropTopRatio, cropOptions.cropLeftRatio
+      )
       : sheet.drawPortrait(ctx, 0, 0, centerX, centerY, radius)
     : false;
 
@@ -432,16 +432,16 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const playerExtraSheet = getSheet(world.sprites.playerExtra);
   const enemySheet = getSheet(world.sprites.enemy);
   const eagleSheet = getSheet(world.sprites.eagle);
-     const yetiSheet = getSheet(world.sprites.yeti);
-    const shipSheet = getSheet(world.sprites.spaceship);
-    const glacierSheet = getSheet(world.sprites.glacier);
-    const iceBeeSheet = getSheet(world.sprites.iceBee);
+  const yetiSheet = getSheet(world.sprites.yeti);
+  const shipSheet = getSheet(world.sprites.spaceship);
+  const glacierSheet = getSheet(world.sprites.glacier);
+  const iceBeeSheet = getSheet(world.sprites.iceBee);
   const bossSheet = getSheet(world.sprites.boss);
   const moonBgSheet = getSheet(world.sprites.background);
   const obstacleImage = getImage(world.sprites.obstacle);
-    const cactusImage = getImage(world.sprites.cactus);
-    const quicksandImage = getImage(world.sprites.quicksand);
-    const icebergImage = getImage(world.sprites.iceberg);
+  const cactusImage = getImage(world.sprites.cactus);
+  const quicksandImage = getImage(world.sprites.quicksand);
+  const icebergImage = getImage(world.sprites.iceberg);
   const vortexSheet = getSheet(world.sprites.vortex);
   const darkMatterSheet = getSheet(world.sprites.darkMatter);
   const pullPushRaysSheet = getSheet(world.sprites.pullPushRays);
@@ -450,27 +450,27 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const smokeSheet = getSheet(world.sprites.smoke);
 
   const canvasRef = useRef(null);
-    const [health, setHealth] = useState(10);
+  const [health, setHealth] = useState(10);
   const [levelNumber, setLevelNumber] = useState(LEVELS[initialLevelIndex].level);
-    // 'playing' | 'dying' | 'gameover' | 'celebrating' | 'levelComplete' | 'gameComplete'
+  // 'playing' | 'dying' | 'gameover' | 'celebrating' | 'levelComplete' | 'gameComplete'
   // 'dying'/'celebrating' are animation-only holds: the death/victory sprite
   // sequence plays out (gameplay paused) before flipping to the actual
   // result screen, so results never appear mid-animation.
   const [gameState, setGameState] = useState('playing');
 
-    const playerRef = useRef(new Player(100, 310));
+  const playerRef = useRef(new Player(100, 310));
   const enemiesRef = useRef(buildEnemiesForLevel(LEVELS[initialLevelIndex]));
   const backgroundRef = useRef(new Background(moonBgSheet, 0.20));
-    const enemyBulletsRef = useRef([]);
+  const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
-      const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
-      const cactusRef = useRef(LEVELS[initialLevelIndex].hasCactus ? new Cactus(380, 310) : null);
-      const quicksandRef = useRef(buildQuicksandForLevel(LEVELS[initialLevelIndex]));
+  const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
+  const cactusRef = useRef(LEVELS[initialLevelIndex].hasCactus ? new Cactus(380, 310) : null);
+  const quicksandRef = useRef(buildQuicksandForLevel(LEVELS[initialLevelIndex]));
   const icebergRef = useRef(
     LEVELS[initialLevelIndex].hasIceberg ? new Iceberg(345, { ...LEVELS[initialLevelIndex], minX: 0, maxX: 800 - 26 }) : null
   );
-      const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
-      const vorticesRef = useRef(buildVorticesForLevel(LEVELS[initialLevelIndex]));
+  const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
+  const vorticesRef = useRef(buildVorticesForLevel(LEVELS[initialLevelIndex]));
   const darkMattersRef = useRef(buildDarkMatterBeingsForLevel(LEVELS[initialLevelIndex]));
   const rayEffectRef = useRef(new RayEffect());
   const rayEffectGreenRef = useRef(new RayEffect());
@@ -491,19 +491,19 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     LEVELS[initialLevelIndex].hasBoss
       ? new Boss(BOSS_X, BOSS_Y, LEVELS[initialLevelIndex])
       : LEVELS[initialLevelIndex].hasBossFrog
-      ? new BossFrog(FROG_GROUND_Y, {
+        ? new BossFrog(FROG_GROUND_Y, {
           ...LEVELS[initialLevelIndex],
           arenaMinX: BOSSFROG_ARENA_MIN_X,
           arenaMaxX: BOSSFROG_HOP_MAX_X,
         })
-      : LEVELS[initialLevelIndex].hasBlackHoleBoss
-      ? new BlackHoleBoss(BLACKHOLE_HEIGHT_Y, LEVELS[initialLevelIndex], { startX: 400, minX: 0, maxX: 800 - 70 })
-      : null
+        : LEVELS[initialLevelIndex].hasBlackHoleBoss
+          ? new BlackHoleBoss(BLACKHOLE_HEIGHT_Y, LEVELS[initialLevelIndex], { startX: 400, minX: 0, maxX: 800 - 70 })
+          : null
   );
   const levelConfigRef = useRef(LEVELS[initialLevelIndex]);
   const keysRef = useRef({});
   const gameStateRef = useRef('playing');
-    const levelIndexRef = useRef(initialLevelIndex); // 0-based index into LEVELS
+  const levelIndexRef = useRef(initialLevelIndex); // 0-based index into LEVELS
   const outroTargetRef = useRef(null); // 'levelComplete' | 'gameComplete' — which screen to show once the victory animation finishes
 
   const startLevel = (index, keepHealth = true) => {
@@ -520,17 +520,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       playerRef.current.health = Math.min(PLAYER_MAX_HEALTH, playerRef.current.health + 1);
     }
 
-        enemiesRef.current = buildEnemiesForLevel(config);
+    enemiesRef.current = buildEnemiesForLevel(config);
     enemyBulletsRef.current = [];
     bulletsRef.current = [];
-        obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
-        cactusRef.current = config.hasCactus ? new Cactus(380, 310) : null;
-        quicksandRef.current = buildQuicksandForLevel(config);
+    obstacleRef.current = config.hasObstacle ? new Obstacle(380, 300) : null;
+    cactusRef.current = config.hasCactus ? new Cactus(380, 310) : null;
+    quicksandRef.current = buildQuicksandForLevel(config);
     icebergRef.current = config.hasIceberg ? new Iceberg(345, { ...config, minX: 0, maxX: 800 - 26 }) : null;
-        eaglesRef.current = buildEaglesForLevel(config);
-        vorticesRef.current = buildVorticesForLevel(config);
-        darkMattersRef.current = buildDarkMatterBeingsForLevel(config);
-        yetisRef.current = buildYetisForLevel(config);
+    eaglesRef.current = buildEaglesForLevel(config);
+    vorticesRef.current = buildVorticesForLevel(config);
+    darkMattersRef.current = buildDarkMatterBeingsForLevel(config);
+    yetisRef.current = buildYetisForLevel(config);
     yetiProjectilesRef.current = [];
     spaceshipsRef.current = buildSpaceshipsForLevel(config);
     iceBeesRef.current = [];
@@ -543,13 +543,13 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     glacierStallBeeCountRef.current = 0;
     eagleProjectilesRef.current = [];
     frogsRef.current = buildFrogsForLevel(config);
-        bossRef.current = config.hasBoss
+    bossRef.current = config.hasBoss
       ? new Boss(BOSS_X, BOSS_Y, config)
       : config.hasBossFrog
-      ? new BossFrog(FROG_GROUND_Y, { ...config, arenaMinX: BOSSFROG_ARENA_MIN_X, arenaMaxX: BOSSFROG_HOP_MAX_X })
-      : config.hasBlackHoleBoss
-      ? new BlackHoleBoss(BLACKHOLE_HEIGHT_Y, config, { startX: 400, minX: 0, maxX: 800 - 70 })
-      : null;
+        ? new BossFrog(FROG_GROUND_Y, { ...config, arenaMinX: BOSSFROG_ARENA_MIN_X, arenaMaxX: BOSSFROG_HOP_MAX_X })
+        : config.hasBlackHoleBoss
+          ? new BlackHoleBoss(BLACKHOLE_HEIGHT_Y, config, { startX: 400, minX: 0, maxX: 800 - 70 })
+          : null;
     levelConfigRef.current = config;
 
     gameStateRef.current = 'playing';
@@ -558,11 +558,11 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     setHealth(playerRef.current.health);
   };
 
-    const restartCurrentLevel = () => {
+  const restartCurrentLevel = () => {
     playerRef.current = new Player(100, 310);
     startLevel(levelIndexRef.current, false);
   };
-    
+
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -574,13 +574,13 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       if (!player.canShoot()) return;
       const direction = player.facing;
       const bulletX = direction === 'right' ? player.x + player.width : player.x;
-            const bulletY = player.y + player.height * 0.35 - 2; // ~gun height, not box-center
-            // BlackHoleBoss LEFT-zone effect: player's own shots spawn at half
+      const bulletY = player.y + player.height * 0.35 - 2; // ~gun height, not box-center
+      // BlackHoleBoss LEFT-zone effect: player's own shots spawn at half
       // speed while the boss is currently in the left third, regardless of
       // where the player is standing.
       const blackHoleZone = bossRef.current && bossRef.current.currentZone ? bossRef.current.currentZone : null;
       const bulletSpeedMultiplier = blackHoleZone === 'left' ? 0.5 : 1;
-            bulletsRef.current.push(new Bullet(bulletX, bulletY, direction, bulletSpeedMultiplier));
+      bulletsRef.current.push(new Bullet(bulletX, bulletY, direction, bulletSpeedMultiplier));
       player.triggerShoot();
       playSound('shoot', 0.5);
     }
@@ -590,7 +590,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     const handleKeyDown = (e) => {
       keysRef.current[e.key] = true;
 
-            if (gameStateRef.current === 'gameover' && (e.key === 'r' || e.key === 'R')) {
+      if (gameStateRef.current === 'gameover' && (e.key === 'r' || e.key === 'R')) {
         restartCurrentLevel();
       }
 
@@ -628,7 +628,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     let lastTime = performance.now();
     let animationFrameId;
 
-        function update(dt) {
+    function update(dt) {
       const player = playerRef.current;
 
       // Death/victory animation is playing out — freeze gameplay, just let
@@ -652,7 +652,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
       const wasGrounded = player.isGrounded;
 
-            player.handleInput(keysRef.current);
+      player.handleInput(keysRef.current);
       player.setSitting(!!keysRef.current['ArrowDown']);
 
       const prevPlayerX = player.x;
@@ -674,7 +674,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       // above, PLUS contact damage like a frog. player.takeHit() already
       // has its own invulnerability window, so standing against it doesn't
       // drain HP every frame.
-            const cactus = cactusRef.current;
+      const cactus = cactusRef.current;
       if (cactus && isColliding(player.getBounds(), cactus.getBounds())) {
         if (prevPlayerX < cactus.x) {
           player.x = cactus.x - player.width;
@@ -729,7 +729,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           enemy.triggerDelayedReaction();
         }
 
-                enemy.update(dt, player.x);
+        enemy.update(dt, player.x);
 
         if (enemy.wantsToFire) {
           enemy.wantsToFire = false;
@@ -755,7 +755,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         }
       }
 
-            // Eagles: patrol/throw update per eagle, then all their projectiles
+      // Eagles: patrol/throw update per eagle, then all their projectiles
       // (pooled together) get their own arc + collision. Every eagle is
       // shootable, and ALL must be defeated (with the ground gunmen) to
       // clear the level.
@@ -773,7 +773,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         }
       }
 
-            eagleProjectilesRef.current.forEach((p) => p.update(dt));
+      eagleProjectilesRef.current.forEach((p) => p.update(dt));
       eagleProjectilesRef.current = eagleProjectilesRef.current.filter((p) => {
         if (isColliding(playerBounds, p.getBounds())) {
           player.takeHit();
@@ -848,7 +848,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           player.teleportMirror(CANVAS_WIDTH);
         }
 
-                if (boss.wantsToSpawnBeing) {
+        if (boss.wantsToSpawnBeing) {
           boss.wantsToSpawnBeing = false;
           // Prune dead beings before doing anything else — without this,
           // the array grows forever over a long fight (a new one spawns
@@ -1027,7 +1027,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
           if (glacier.wantsToFire) {
             glacier.wantsToFire = false;
-            const shotY = GUNMEN_FIRE_HEIGHT_Y-40; // anchored to the universal muzzle height, not a ratio of the golem's own (now larger) size
+            const shotY = GUNMEN_FIRE_HEIGHT_Y - 40; // anchored to the universal muzzle height, not a ratio of the golem's own (now larger) size
             const shotX = glacier.facing === 'right' ? glacier.x + glacier.width : glacier.x;
             enemyBulletsRef.current.push(
               new GlacierProjectile(shotX, shotY, glacier.facing, glacier.fireSpeed)
@@ -1094,7 +1094,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           playSound('hit', 0.6);
         }
 
-                if (boss.wantsToFire) {
+        if (boss.wantsToFire) {
           boss.wantsToFire = false;
           // Anchored to the same muzzle height gunmen/cats fire from,
           // not boss.height-derived — the boss's hitbox is much taller,
@@ -1164,7 +1164,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         }
       }
 
-            for (const bullet of bulletsRef.current) {
+      for (const bullet of bulletsRef.current) {
         if (bullet.hit) continue;
         if (obstacleRef.current && isColliding(bullet.getBounds(), obstacleRef.current.getBounds())) {
           bullet.hit = true; // player bullets can't pass through the wall
@@ -1178,7 +1178,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           bullet.hit = true; // solid — blocks player bullets too
           continue;
         }
-                let hitEagle = false;
+        let hitEagle = false;
         for (const eagle of eagles) {
           if (!eagle.alive) continue;
           if (isColliding(bullet.getBounds(), eagle.getBounds())) {
@@ -1188,7 +1188,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
             break;
           }
         }
-                if (hitEagle) continue;
+        if (hitEagle) continue;
         let hitYeti = false;
         let hitShipOrBee = false;
         for (const glacier of [leftGlacierRef.current, rightGlacierRef.current]) {
@@ -1286,9 +1286,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       }
       bulletsRef.current = bulletsRef.current.filter((b) => !b.hit);
 
-          const allEnemiesDead = bossRef.current
-  ? !bossRef.current.alive
-  : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && vortices.every((v) => !v.alive) && darkMattersRef.current.every((b) => !b.alive) && spaceshipsRef.current.every((s) => !s.alive) && (levelConfigRef.current.hasTwinGlaciers || iceBeesRef.current.every((b) => !b.alive)) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
+      const allEnemiesDead = bossRef.current
+        ? !bossRef.current.alive
+        : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && vortices.every((v) => !v.alive) && darkMattersRef.current.every((b) => !b.alive) && spaceshipsRef.current.every((s) => !s.alive) && (levelConfigRef.current.hasTwinGlaciers || iceBeesRef.current.every((b) => !b.alive)) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
@@ -1308,10 +1308,10 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       setHealth(Math.max(player.health, 0));
     }
 
-        function draw() {
+    function draw() {
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-            backgroundRef.current.draw(ctx, CANVAS_WIDTH, CANVAS_HEIGHT);
+      backgroundRef.current.draw(ctx, CANVAS_WIDTH, CANVAS_HEIGHT);
 
       if (obstacleRef.current) {
         obstacleRef.current.draw(ctx, obstacleImage);
@@ -1332,11 +1332,11 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       ctx.lineTo(800, 400);
       ctx.stroke();
 
-            playerRef.current.draw(ctx, playerSheet, playerExtraSheet, freezeCrystalSheet, ghostSheet);
+      playerRef.current.draw(ctx, playerSheet, playerExtraSheet, freezeCrystalSheet, ghostSheet);
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
-                        eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
+      eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
       vorticesRef.current.forEach((vortex) => vortex.draw(ctx, vortexSheet));
       darkMattersRef.current.forEach((being) => being.draw(ctx, darkMatterSheet));
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
@@ -1358,17 +1358,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         const rayY = bossRef.current.y + bossRef.current.height + RAY_GAP_BELOW_BOSS;
         const rayHeight = 400 - RAY_GAP_ABOVE_GROUND - rayY;
         const rayX = ZONE_WIDTH / 2 - rayWidth / 2;
-        rayEffectRef.current.draw(ctx, pullPushRaysSheet, rayX, rayY, rayWidth, rayHeight, 0.28);
+        rayEffectRef.current.draw(ctx, pullPushRaysSheet, rayX, rayY, rayWidth, rayHeight, 0.12);
       }
       if (bossRef.current instanceof BlackHoleBoss && bossRef.current.alive && bossRef.current.currentZone === 'right') {
         const ZONE_WIDTH = 800 / 3;
         const rayWidth = 120;
         const RAY_GAP_BELOW_BOSS = 15;
-        const RAY_GAP_ABOVE_GROUND = 100; // was 195 — overcorrected, collapsed the ray height into a short floating segment near the boss with a big gap to the being below; was 60 originally (too low, overlapped the being's head)
+        const RAY_GAP_ABOVE_GROUND = 120; // was 195 — overcorrected, collapsed the ray height into a short floating segment near the boss with a big gap to the being below; was 60 originally (too low, overlapped the being's head)
         const rayY = bossRef.current.y + bossRef.current.height + RAY_GAP_BELOW_BOSS;
         const rayHeight = 400 - RAY_GAP_ABOVE_GROUND - rayY;
         const rayX = ZONE_WIDTH * 2 + ZONE_WIDTH / 2 - rayWidth / 2;
-        rayEffectGreenRef.current.draw(ctx, pullPushRaysGreenSheet, rayX, rayY, rayWidth, rayHeight, 0.28);
+        rayEffectGreenRef.current.draw(ctx, pullPushRaysGreenSheet, rayX, rayY, rayWidth, rayHeight, 0.12);
       }
 
       // --- HUD: player HP top-left ---
@@ -1387,7 +1387,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         'left'
       );
 
-            // --- HUD: enemy HP top-right, above the enemy patrol area ---
+      // --- HUD: enemy HP top-right, above the enemy patrol area ---
       // One independent bar per enemy (not summed/shared) — stacked
       // vertically when a level has more than one gunman, so defeating
       // one enemy visibly empties ITS bar rather than partially draining
@@ -1398,7 +1398,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       const barWidth = 150;
       const barX = enemyCircleX - circleRadius - 12 - barWidth;
 
-            if (!bossRef.current) {
+      if (!bossRef.current) {
         enemies.forEach((enemy, i) => {
           if (!enemy.maxHealth) return;
           const rowCircleY = 34 + i * ENEMY_ROW_HEIGHT;
@@ -1409,9 +1409,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         });
       }
 
-            // Eagles get their own stacked rows below the ground enemies, same
+      // Eagles get their own stacked rows below the ground enemies, same
       // pattern — independent bars, not merged/summed into one.
-            if (!bossRef.current) {
+      if (!bossRef.current) {
         eaglesRef.current.forEach((eagle, i) => {
           if (!eagle.maxHealth) return;
           const eagleRowY = 34 + (enemies.length + i) * ENEMY_ROW_HEIGHT;
@@ -1461,7 +1461,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       }
 
       // Frogs get their own stacked rows too, below eagles, same pattern.
-            if (!bossRef.current) {
+      if (!bossRef.current) {
         frogsRef.current.forEach((frog, i) => {
           if (!frog.maxHealth) return;
           const frogRowY = 34 + (enemies.length + eaglesRef.current.length + yetisRef.current.length + i) * ENEMY_ROW_HEIGHT;
@@ -1502,7 +1502,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
       drawTopCenterHud(ctx, levelIndexRef.current + 1);
 
-            if (gameStateRef.current === 'gameover') {
+      if (gameStateRef.current === 'gameover') {
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
@@ -1544,7 +1544,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       }
     }
 
-        function loop(now) {
+    function loop(now) {
       const dt = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
 
@@ -1564,7 +1564,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     };
   }, []);
 
-    return (
+  return (
     <div
       style={{
         position: 'fixed',
