@@ -1364,7 +1364,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         const ZONE_WIDTH = 800 / 3;
         const rayWidth = 120;
         const RAY_GAP_BELOW_BOSS = 15;
-        const RAY_GAP_ABOVE_GROUND = 195; // was 60 — dark matter beings (height 170) are much taller than the player (90), need far more clearance above their heads than the orange/left-zone version does
+        const RAY_GAP_ABOVE_GROUND = 100; // was 195 — overcorrected, collapsed the ray height into a short floating segment near the boss with a big gap to the being below; was 60 originally (too low, overlapped the being's head)
         const rayY = bossRef.current.y + bossRef.current.height + RAY_GAP_BELOW_BOSS;
         const rayHeight = 400 - RAY_GAP_ABOVE_GROUND - rayY;
         const rayX = ZONE_WIDTH * 2 + ZONE_WIDTH / 2 - rayWidth / 2;
