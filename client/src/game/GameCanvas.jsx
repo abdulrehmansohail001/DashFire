@@ -849,7 +849,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (freeSlotIndex !== -1) {
             const being = new DarkMatterBeing(
               BLACKHOLE_BEING_SLOT_X[freeSlotIndex],
-              310,
+              230, // matches the already-correct ground-aligned y used by the normal level-spawn site (400 - height 170) — was stale at 310 from before DarkMatterBeing's height grew
               { ...levelConfigRef.current, darkMatterHealth: 2 }
             );
             being.slotIndex = freeSlotIndex;
