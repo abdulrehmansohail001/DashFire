@@ -3,12 +3,13 @@
 // Swap out enemy types, health, and boss as World 5 content is built.
 
 export const LEVELS = [
-    // Level 1 — 1 dark matter being, 12 HP
+    // Level 1 — introduces the Shapeshifter, World 5's first real enemy
+    // (rest of this file is still the temporary World-4 copy).
     {
         level: 1,
-        hasDarkMatter: true,
-        darkMatterCount: 1,
-        darkMatterHealth: 12,
+        hasShapeshifter: true,
+        shapeshifterCount: 1,
+        shapeshifterHealth: 6,
     },
     // Level 2 — 1 vortex (10 HP) + quicksand
     {
