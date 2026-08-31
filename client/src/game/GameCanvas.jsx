@@ -834,6 +834,13 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       if (bossRef.current instanceof BlackHoleBoss && bossRef.current.alive) {
         const boss = bossRef.current;
 
+        // Contact teleports the player to the opposite side, same as
+        // Vortex — but deliberately NO damage, this boss never hurts on
+        // contact, only its beings' shots do.
+        if (isColliding(playerBounds, boss.getBounds())) {
+          player.teleportMirror(CANVAS_WIDTH);
+        }
+
                 if (boss.wantsToSpawnBeing) {
           boss.wantsToSpawnBeing = false;
           // 3 FIXED spawn slots spread across the right side, not the
