@@ -466,6 +466,23 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
   const cactusRef = useRef(LEVELS[initialLevelIndex].hasCactus ? new Cactus(380, 310) : null);
   const quicksandRef = useRef(buildQuicksandForLevel(LEVELS[initialLevelIndex]));
+  // Boss-level (World 4 L10) smoke patches — 3 QuicksandPatch tiles covering
+  // the middle third (x 266–533) so the same smoke animation plays when the
+  // player is stuck in the BlackHoleBoss quicksand zone. Only non-null on the
+  // boss level; normal levels leave this null.
+  const bossSmokeRef = useRef(
+    LEVELS[initialLevelIndex].hasBlackHoleBoss
+      ? (() => {
+        const ZONE_WIDTH = 800 / 3;
+        const tileW = ZONE_WIDTH / 3;
+        return [
+          new QuicksandPatch(ZONE_WIDTH, 394, tileW),
+          new QuicksandPatch(ZONE_WIDTH + tileW, 394, tileW),
+          new QuicksandPatch(ZONE_WIDTH + tileW * 2, 394, tileW),
+        ];
+      })()
+      : null
+  );
   const icebergRef = useRef(
     LEVELS[initialLevelIndex].hasIceberg ? new Iceberg(345, { ...LEVELS[initialLevelIndex], minX: 0, maxX: 800 - 26 }) : null
   );
@@ -550,6 +567,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         : config.hasBlackHoleBoss
           ? new BlackHoleBoss(BLACKHOLE_HEIGHT_Y, config, { startX: 400, minX: 0, maxX: 800 - 70 })
           : null;
+    bossSmokeRef.current = config.hasBlackHoleBoss
+      ? (() => {
+        const ZONE_WIDTH = 800 / 3;
+        const tileW = ZONE_WIDTH / 3;
+        return [
+          new QuicksandPatch(ZONE_WIDTH, 394, tileW),
+          new QuicksandPatch(ZONE_WIDTH + tileW, 394, tileW),
+          new QuicksandPatch(ZONE_WIDTH + tileW * 2, 394, tileW),
+        ];
+      })()
+      : null;
     levelConfigRef.current = config;
 
     gameStateRef.current = 'playing';
@@ -888,6 +916,13 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           // Fight-specific auto-release: boss left the middle third while
           // the player was stuck, even without landing a hit.
           player.escapeQuicksand();
+        }
+        // Drive the boss-zone smoke patches with the player's stuck state so
+        // they animate identically to normal-level quicksand smoke.
+        if (bossSmokeRef.current) {
+          for (const patch of bossSmokeRef.current) {
+            patch.update(dt, player.stuck);
+          }
         }
       }
 
@@ -1318,6 +1353,13 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       }
       if (quicksandRef.current) {
         quicksandRef.current.draw(ctx, quicksandImage, smokeSheet);
+      }
+      // Boss-level smoke: draw all 3 middle-zone smoke tiles (same QuicksandPatch
+      // draw logic as normal levels, tiled 3× across the wider middle zone).
+      if (bossSmokeRef.current) {
+        for (const patch of bossSmokeRef.current) {
+          patch.draw(ctx, null, smokeSheet);
+        }
       }
       if (cactusRef.current) {
         cactusRef.current.draw(ctx, cactusImage);
