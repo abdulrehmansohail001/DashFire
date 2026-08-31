@@ -16,6 +16,7 @@ import { LEVELS as WORLD_1_LEVELS } from './levels';
 import { LEVELS as WORLD_2_LEVELS } from './levels_world2';
 import { LEVELS as WORLD_3_LEVELS } from './levels_world3';
 import { LEVELS as WORLD_4_LEVELS } from './levels_world4';
+import { LEVELS as WORLD_5_LEVELS } from './levels_world5';
 
 export const WORLDS = [
   {
@@ -43,7 +44,7 @@ export const WORLDS = [
       playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
       enemy: { path: '/sprites/martian_cat.png', frameWidth: 310, frameHeight: 310, columns: 4, rows: 4 },
       eagle: null,   // World 2 has no eagle — replaced by Frog
-            boss: { path: '/sprites/bossfrog.png', frameWidth: 125, frameHeight: 250, columns: 4, rows: 2 },
+      boss: { path: '/sprites/bossfrog.png', frameWidth: 125, frameHeight: 250, columns: 4, rows: 2 },
       background: { path: '/sprites/mars_bg.jpg', frameWidth: 366, frameHeight: 352, columns: 8, rows: 1 },
       obstacle: '/sprites/obstacle.png',
       cactus: '/sprites/cactus.png',
@@ -60,13 +61,13 @@ export const WORLDS = [
       playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
       enemy: null,    // TODO: Yeti — not built yet, placeholder art from Enemy.js applies
       yeti: { path: '/sprites/yeti.png', frameWidth: 431, frameHeight: 431, columns: 4, rows: 2 },
-            spaceship: { path: '/sprites/spaceship_beeform.png', frameWidth: 354, frameHeight: 454, columns: 4, rows: 2 },
+      spaceship: { path: '/sprites/spaceship_beeform.png', frameWidth: 354, frameHeight: 454, columns: 4, rows: 2 },
       iceBee: { path: '/sprites/icebee.png', frameWidth: 420, frameHeight: 480, columns: 4, rows: 1 },
       glacier: { path: '/sprites/glacier.png', frameWidth: 427, frameHeight: 427, columns: 4, rows: 2 },
-            iceberg: '/sprites/iceberg.png',
+      iceberg: '/sprites/iceberg.png',
       eagle: null,    // World 3 has no plain eagle — replaced by the Spaceship/Bee system
       boss: null,     // TBD later
-           background: { path: '/sprites/aurora_bg.png', frameWidth: 1586 / 4, frameHeight: 496, columns: 4, rows: 2 },
+      background: { path: '/sprites/aurora_bg.png', frameWidth: 1586 / 4, frameHeight: 496, columns: 4, rows: 2 },
       obstacle: '/sprites/obstacle.png',
       cactus: null,   // TODO: freezing cactus art, separate from World 2's cactus.png
     },
@@ -94,5 +95,27 @@ export const WORLDS = [
     },
     levels: WORLD_4_LEVELS,
   },
-  { id: 4, name: 'World 5', sprites: {}, levels: [] },
+  {
+    id: 4,
+    name: 'Void Rift',
+    missionTitle: 'VOID RIFT',
+    sprites: {
+      // Placeholder: reuses World 4 sprites until World 5 art is built.
+      player: { path: '/sprites/player.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
+      playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
+      enemy: null,
+      eagle: null,
+      vortex: { path: '/sprites/vortex.png', frameWidth: 418, frameHeight: 470, columns: 4, rows: 2 },
+      darkMatter: { path: '/sprites/darkmatterbeing.png', frameWidth: 435, frameHeight: 429, columns: 4, rows: 2 },
+      pullPushRays: { path: '/sprites/pull_push_rays.png', frameWidth: 384, frameHeight: 1024, columns: 4, rows: 1 },
+      pullPushRaysGreen: { path: '/sprites/pull_push_rays_green.png', frameWidth: 384, frameHeight: 1024, columns: 4, rows: 1 },
+      boss: { path: '/sprites/blackhole_boss.png', frameWidth: 372, frameHeight: 500, columns: 4, rows: 2 },
+      background: { path: '/sprites/blackhole_bg.jpg', frameWidth: 443, frameHeight: 443, columns: 4, rows: 2 },
+      obstacle: '/sprites/obstacle.png',
+      cactus: null,
+      quicksand: null,
+      smoke: { path: '/sprites/smoke.png', frameWidth: 350.5, frameHeight: 561, columns: 4, rows: 2 },
+    },
+    levels: WORLD_5_LEVELS,
+  },
 ];
