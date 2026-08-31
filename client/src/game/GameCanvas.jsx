@@ -1600,6 +1600,19 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           drawHpBar(ctx, barX, rowY - 8, barWidth, 16, pct, label, 'right');
           drawHudPortrait(ctx, null, enemyCircleX, rowY, circleRadius, '#7a3aff', 'D');
         });
+
+        // Shapeshifter's bar stays visible in BOTH phases (normal and
+        // disguise) — its health doesn't reset or hide when it swaps
+        // appearance, so the bar shouldn't either.
+        const preShapeshifterRows = preDarkMatterRows + darkMattersRef.current.length;
+        shapeshiftersRef.current.forEach((shifter, i) => {
+          if (!shifter.maxHealth) return;
+          const rowY = 34 + (preShapeshifterRows + i) * ENEMY_ROW_HEIGHT;
+          const label = shapeshiftersRef.current.length > 1 ? `SHAPESHIFTER ${i + 1} HP` : 'SHAPESHIFTER HP';
+          const pct = Math.max(shifter.health, 0) / shifter.maxHealth;
+          drawHpBar(ctx, barX, rowY - 8, barWidth, 16, pct, label, 'right');
+          drawHudPortrait(ctx, null, enemyCircleX, rowY, circleRadius, '#6a4a4a', 'S');
+        });
       }
 
       // Boss level: only its own bar shows, at the top row — no gunman/eagle

@@ -22,6 +22,11 @@ const PHASE_MAX = 2.5;
 const FIRE_INTERVAL_MIN = 1.5;
 const FIRE_INTERVAL_MAX = 2.3;
 const MOVEMENT_SHOT_COOLDOWN = 1.0; // mirrors Player.js's own shootCooldown value
+// Must match Player.js's own SPRITE_DRAW_HEIGHT exactly — the disguise
+// phase reuses Player's sheets directly, so it needs Player's own sizing
+// convention (aspect-ratio-derived box, not the raw hitbox stretched to
+// fit) or the borrowed frames come out squashed/distorted.
+const DISGUISE_SPRITE_DRAW_HEIGHT = 100;
 
 export class Shapeshifter {
   constructor(x, y, config = {}) {
@@ -147,7 +152,12 @@ export class Shapeshifter {
       if (step % 2 === 0) return;
     }
 
-    const flip = this.facing === 'right';
+    // Player's sheet faces right by default — flip when facing left, same
+    // convention Player.js itself uses. This was inverted before
+    // (`facing === 'right'`), which faced the disguise the wrong way
+    // whenever Shapeshifter's own facing (tracks toward the player)
+    // didn't happen to match.
+    const flip = this.facing === 'left';
 
     if (this.phase === 'disguise') {
       const stateKey = this.disguiseShootPoseTimer > 0 ? 'shoot' : 'idle';
@@ -162,7 +172,17 @@ export class Shapeshifter {
           row = config.row;
           col = this.disguiseFrameIndex;
         }
-        const drew = sheet.draw(ctx, row, col, this.x, this.y, this.width, this.height, flip);
+        // Same aspect-ratio-derived sizing Player.js itself uses — the raw
+        // 40x90 hitbox is much narrower/taller than the player sheet's
+        // actual cell proportions, so stretching straight into it squashed
+        // the disguise badly. Anchored bottom-center on the hitbox so feet
+        // still land in the right place.
+        const aspect = sheet.frameWidth / sheet.frameHeight;
+        const drawHeight = DISGUISE_SPRITE_DRAW_HEIGHT;
+        const drawWidth = drawHeight * aspect;
+        const drawX = this.x + this.width / 2 - drawWidth / 2;
+        const drawY = this.y + this.height - drawHeight;
+        const drew = sheet.draw(ctx, row, col, drawX, drawY, drawWidth, drawHeight, flip);
         if (drew) return;
       }
     } else if (normalSheet && normalSheet.loaded) {
