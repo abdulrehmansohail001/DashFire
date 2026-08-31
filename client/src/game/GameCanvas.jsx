@@ -106,6 +106,17 @@ const FROG_WIDTH = 44;
 const BOSS_X = 640;
 const BOSS_Y = 200; // feet at y=400, same ground line as everything else
 const BLACKHOLE_HEIGHT_Y = 100; // fixed flight height, same idea as SHIP_HEIGHT_Y
+
+// 3 fixed spawn slots for the black hole's beings — evenly spread across
+// the same right-side zone gunmen/yetis already use (ARENA_MIN_X to
+// ARENA_MAX_X), positioned ahead of each other rather than randomly.
+// Each slot holds at most one alive being; occupancy is checked via
+// each being's own .slotIndex, tagged on at spawn time.
+const BLACKHOLE_BEING_SLOT_X = [
+  ARENA_MIN_X + (ARENA_MAX_X - ARENA_MIN_X) * (0.5 / 3),
+  ARENA_MIN_X + (ARENA_MAX_X - ARENA_MIN_X) * (1.5 / 3),
+  ARENA_MIN_X + (ARENA_MAX_X - ARENA_MIN_X) * (2.5 / 3),
+];
 const MAX_BOSS_SHIELD_ENEMIES = 2;
 const SHIELD_PATROL_MIN_X = 480;
 const SHIELD_PATROL_MAX_X = 620;
@@ -823,14 +834,26 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       if (bossRef.current instanceof BlackHoleBoss && bossRef.current.alive) {
         const boss = bossRef.current;
 
-        if (boss.wantsToSpawnBeing) {
+                if (boss.wantsToSpawnBeing) {
           boss.wantsToSpawnBeing = false;
-          const aliveBeingCount = darkMattersRef.current.filter((b) => b.alive).length;
-          if (aliveBeingCount < 3) {
-            const spawnX = Math.min(520 + aliveBeingCount * 80, 800 - 128);
-            darkMattersRef.current.push(
-              new DarkMatterBeing(spawnX, 230, { ...levelConfigRef.current, darkMatterHealth: 2 })
+          // 3 FIXED spawn slots spread across the right side, not the
+          // boss's current x — each slot can only ever hold one alive
+          // being at a time. If a slot's occupant is dead, that slot is
+          // free again; if all 3 are currently occupied, skip this spawn
+          // entirely (don't queue it up, don't stack into a taken spot).
+          const occupiedSlots = new Set(
+            darkMattersRef.current.filter((b) => b.alive).map((b) => b.slotIndex)
+          );
+          const freeSlotIndex = BLACKHOLE_BEING_SLOT_X.findIndex((_, i) => !occupiedSlots.has(i));
+
+          if (freeSlotIndex !== -1) {
+            const being = new DarkMatterBeing(
+              BLACKHOLE_BEING_SLOT_X[freeSlotIndex],
+              310,
+              { ...levelConfigRef.current, darkMatterHealth: 2 }
             );
+            being.slotIndex = freeSlotIndex;
+            darkMattersRef.current.push(being);
           }
         }
 
