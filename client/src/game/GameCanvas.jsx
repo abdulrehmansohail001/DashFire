@@ -123,7 +123,7 @@ const BLACKHOLE_BEING_SLOT_X = [
   ARENA_MIN_X + (ARENA_MAX_X - ARENA_MIN_X) * (2.5 / 3),
 ];
 const MAX_BOSS_SHIELD_ENEMIES = 2;
-const MAX_TIME_GUNMEN = 3; // TimeDistorter: spawn cap for its time-themed gunmen
+const MAX_TIME_GUNMEN = 1; // TimeDistorter: one time-gunman at a time, with a 3-HP health pool
 const SHIELD_PATROL_MIN_X = 480;
 const SHIELD_PATROL_MAX_X = 620;
 
@@ -505,11 +505,11 @@ function drawTimeDistorterOverlay(ctx, boss) {
   }
 
   ctx.translate(baseX, baseY);
-  ctx.setTransform(1, 0, Math.sin(wave) * 0.18, 1, 0, Math.sin(wave * 1.7) * 10, 0, 0, 1);
+  ctx.rotate(Math.sin(wave) * 0.08);
   ctx.fillStyle = `rgba(${tint.r}, ${tint.g}, ${tint.b}, 0.26)`;
   ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-  ctx.strokeText(label, 0, 0);
-  ctx.fillText(label, 0, 0);
+  ctx.strokeText(label, 0, Math.sin(wave * 1.7) * 10);
+  ctx.fillText(label, 0, Math.sin(wave * 1.7) * 10);
   ctx.restore();
 }
 
@@ -1453,7 +1453,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
               // undefined still wins over the default), which is why these
               // never fired. Let Enemy's built-ins handle the rest.
               new Enemy(spawnX, ENEMY_GROUND_Y, {
-                health: 2,
+                health: 3,
                 patrolMinX: 0,
                 patrolMaxX: 800,
               })
