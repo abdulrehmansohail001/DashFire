@@ -1443,11 +1443,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         if (distorter.wantsToFire) {
           distorter.wantsToFire = false;
           const fireDirection = player.x < distorter.x ? 'left' : 'right';
-          const bulletX = fireDirection === 'right' ? distorter.x + distorter.width : distorter.x;
+          const muzzleOffset = 18;
+          const bulletX = fireDirection === 'right'
+            ? distorter.x + distorter.width + muzzleOffset
+            : distorter.x - muzzleOffset - 10;
           const bulletY = GUNMEN_FIRE_HEIGHT_Y;
-          const speedMult = 260 / 600;
+
           enemyBulletsRef.current.push(
-            new Bullet(bulletX, bulletY, fireDirection, speedMult)
+            new EnemyBullet(bulletX, bulletY, fireDirection, 260)
           );
         }
 
