@@ -1,90 +1,89 @@
 // src/game/levels_world5.js
-// World 5 level definitions — placeholder scaffolding copied from World 4.
-// Swap out enemy types, health, and boss as World 5 content is built.
+// World 5 level definitions.
+// Level 10 is intentionally left as the existing boss placeholder.
 
 export const LEVELS = [
-    // Level 1 — introduces the Shapeshifter, World 5's first real enemy
-    // (rest of this file is still the temporary World-4 copy).
-    {
-        level: 1,
-        hasShapeshifter: true,
-        shapeshifterCount: 1,
-        shapeshifterHealth: 6,
-    },
-    // Level 2 — 1 REG (14 HP) — the multiverse shapeshifter
-    {
-        level: 2,
-        hasREG: true,
-        regCount: 1,
-        regHealth: 14,
-    },
-    // Level 3 — 1 dark matter being (12 HP) + quicksand
-    {
-        level: 3,
-        hasDarkMatter: true,
-        darkMatterCount: 1,
-        darkMatterHealth: 12,
-        hasQuicksand: true,
-        hasSittingDuck: true,
-    },
-    // Level 4 — 2 vortices (10 HP each) + quicksand
-    {
-        level: 4,
-        hasVortex: true,
-        vortexCount: 2,
-        vortexHealth: 10,
-        hasQuicksand: true,
-    },
-    // Level 5 — 2 dark matter beings, 12 HP each
-    {
-        level: 5,
-        hasDarkMatter: true,
-        darkMatterCount: 2,
-        darkMatterHealth: 12,
-    },
-    // Level 6 — 2 dark matter beings (12 HP each) + 1 vortex (10 HP)
-    {
-        level: 6,
-        hasDarkMatter: true,
-        darkMatterCount: 2,
-        darkMatterHealth: 12,
-        hasVortex: true,
-        vortexCount: 1,
-        vortexHealth: 10,
-    },
-    // Level 7 — 3 vortices, 10 HP each
-    {
-        level: 7,
-        hasVortex: true,
-        vortexCount: 3,
-        vortexHealth: 10,
-    },
-    // Level 8 — one of all three: dark matter, vortex, quicksand
-    {
-        level: 8,
-        hasDarkMatter: true,
-        darkMatterCount: 1,
-        darkMatterHealth: 12,
-        hasVortex: true,
-        vortexCount: 1,
-        vortexHealth: 10,
-        hasQuicksand: true,
-    },
-    // Level 9 — 2 dark matter beings, 1 vortex, 1 quicksand
-    {
-        level: 9,
-        hasDarkMatter: true,
-        darkMatterCount: 2,
-        darkMatterHealth: 12,
-        hasVortex: true,
-        vortexCount: 1,
-        vortexHealth: 10,
-        hasQuicksand: true,
-    },
-    // Level 10 — Placeholder boss (Black Hole Boss reused until World 5 boss is built)
-    {
-        level: 10,
-        hasBlackHoleBoss: true,
-        bossHealth: 20,
-    },
+  // Level 1 — 1 REG, 10 HP
+  {
+    level: 1,
+    hasREG: true,
+    regCount: 1,
+    regHealth: 10,
+  },
+  // Level 2 — 2 Shapeshifters, 10 HP each
+  {
+    level: 2,
+    hasShapeshifter: true,
+    shapeshifterCount: 2,
+    shapeshifterHealth: 10,
+  },
+  // Level 3 — 1 REG + 1 Shapeshifter, 10 HP each
+  {
+    level: 3,
+    hasREG: true,
+    regCount: 1,
+    regHealth: 10,
+    hasShapeshifter: true,
+    shapeshifterCount: 1,
+    shapeshifterHealth: 10,
+  },
+  // Level 4 — 1 REG + 1 Sitting Duck
+  {
+    level: 4,
+    hasREG: true,
+    regCount: 1,
+    regHealth: 10,
+    hasSittingDuck: true,
+  },
+  // Level 5 — 2 REGs, 10 HP each
+  {
+    level: 5,
+    hasREG: true,
+    regCount: 2,
+    regHealth: 10,
+  },
+  // Level 6 — 1 Sitting Duck + 2 Shapeshifters, 10 HP each
+  {
+    level: 6,
+    hasSittingDuck: true,
+    hasShapeshifter: true,
+    shapeshifterCount: 2,
+    shapeshifterHealth: 10,
+  },
+  // Level 7 — 1 each: REG, Shapeshifter, Sitting Duck
+  {
+    level: 7,
+    hasREG: true,
+    regCount: 1,
+    regHealth: 10,
+    hasShapeshifter: true,
+    shapeshifterCount: 1,
+    shapeshifterHealth: 10,
+    hasSittingDuck: true,
+  },
+  // Level 8 — 1 Sitting Duck + 2 REGs, 10 HP each
+  {
+    level: 8,
+    hasSittingDuck: true,
+    hasREG: true,
+    regCount: 2,
+    regHealth: 10,
+  },
+  // Level 9 — 1 Sitting Duck + 1 Shapeshifter + 2 REGs
+  {
+    level: 9,
+    hasSittingDuck: true,
+    hasShapeshifter: true,
+    shapeshifterCount: 1,
+    shapeshifterHealth: 10,
+    hasREG: true,
+    regCount: 2,
+    regHealth: 10,
+  },
+  // Level 10 — TBD; left as-is.
+  {
+    level: 10,
+    hasBlackHoleBoss: true,
+    bossHealth: 20,
+  },
 ];
