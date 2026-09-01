@@ -113,7 +113,8 @@ export class Player {
     // World 5 SittingDuck status: movement/jump fully unaffected, only
     // shooting is disabled, for a flat 3s. No invulnerability of its own.
     this.isDuck = false;
-    this.duckTimer = 0;
+    this.duckElapsed = 0; // counts UP from 0 to duckDuration — lets draw() derive transform-in/active/transform-out phases from a single timeline
+    this.duckDuration = 0;
     this.duckFrameIndex = 0;
     this.duckFrameTimer = 0;
 
@@ -302,14 +303,14 @@ export class Player {
     }
 
     if (this.isDuck) {
-      this.duckTimer -= dt;
-      if (this.duckTimer <= 0) {
+      this.duckElapsed += dt;
+      if (this.duckElapsed >= this.duckDuration) {
         this.isDuck = false;
       } else {
         this.duckFrameTimer += dt;
         if (this.duckFrameTimer >= 0.15) {
           this.duckFrameTimer = 0;
-          this.duckFrameIndex = (this.duckFrameIndex + 1) % 2;
+          this.duckFrameIndex = (this.duckFrameIndex + 1) % 4; // idle/walk/jump rows are 4 frames each now
         }
       }
     }
@@ -457,7 +458,8 @@ export class Player {
   enterDuck(duration = 3.0) {
     if (this.isDuck) return;
     this.isDuck = true;
-    this.duckTimer = duration;
+    this.duckElapsed = 0;
+    this.duckDuration = duration;
     this.duckFrameIndex = 0;
     this.duckFrameTimer = 0;
   }
@@ -503,15 +505,35 @@ export class Player {
   // there's never a blank gap.
   draw(ctx, mainSheet, extraSheet, freezeSheet, ghostSheet, duckSheet) {
     if (this.isDuck) {
+      const TRANSFORM_DURATION = 0.4; // 4 poof frames @ 0.1s each, bookends the SAME duckDuration window — doesn't extend the no-shoot lockout
+      let row, col;
+
+      if (this.duckElapsed < TRANSFORM_DURATION) {
+        row = 3; // transform-in poof
+        col = Math.min(3, Math.floor((this.duckElapsed / TRANSFORM_DURATION) * 4));
+      } else if (this.duckElapsed > this.duckDuration - TRANSFORM_DURATION) {
+        row = 3; // transform-out poof — same row/frames, played again at the tail end
+        const t = this.duckElapsed - (this.duckDuration - TRANSFORM_DURATION);
+        col = Math.min(3, Math.floor((t / TRANSFORM_DURATION) * 4));
+      } else if (!this.isGrounded) {
+        row = 2; // jump
+        col = this.duckFrameIndex;
+      } else if (this.vx !== 0) {
+        row = 1; // walk
+        col = this.duckFrameIndex;
+      } else {
+        row = 0; // idle
+        col = this.duckFrameIndex;
+      }
+
       if (duckSheet && duckSheet.loaded) {
-        const row = this.vx !== 0 ? 1 : 0; // row 0 = idle, row 1 = walk
         const aspect = duckSheet.frameWidth / duckSheet.frameHeight;
         const drawHeight = SPRITE_DRAW_HEIGHT;
         const drawWidth = drawHeight * aspect;
         const drawX = this.x + this.width / 2 - drawWidth / 2;
         const drawY = this.y + this.height - drawHeight;
         const flip = this.facing === 'left';
-        const drew = duckSheet.draw(ctx, row, this.duckFrameIndex, drawX, drawY, drawWidth, drawHeight, flip);
+        const drew = duckSheet.draw(ctx, row, col, drawX, drawY, drawWidth, drawHeight, flip);
         if (drew) return;
       }
       // Placeholder fallback — simple yellow duck-ish blob until real art exists.
