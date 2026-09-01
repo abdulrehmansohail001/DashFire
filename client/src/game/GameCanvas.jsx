@@ -473,6 +473,46 @@ function drawTopCenterHud(ctx, levelDisplay) {
 
   ctx.restore();
 }
+
+function drawTimeDistorterOverlay(ctx, boss) {
+  if (!(boss instanceof TimeDistorter) || !boss.alive) return;
+  if (boss.phase !== 'reversal' && boss.phase !== 'inversion') return;
+
+  const label = boss.phase === 'reversal' ? 'REVERSAL' : 'INVERSION';
+  const tint = boss.phase === 'reversal'
+    ? { r: 130, g: 255, b: 150 }
+    : { r: 255, g: 130, b: 130 };
+
+  const wave = performance.now() * 0.006;
+  const baseX = CANVAS_WIDTH / 2;
+  const baseY = CANVAS_HEIGHT / 2;
+
+  ctx.save();
+  ctx.fillStyle = `rgba(${tint.r}, ${tint.g}, ${tint.b}, 0.12)`;
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold 30px "Press Start 2P", monospace';
+  ctx.lineWidth = 2;
+
+  for (let i = -4; i <= 4; i += 1) {
+    const x = baseX + i * 2.4;
+    const y = baseY + Math.sin(wave + i * 0.7) * 12;
+    const alpha = 0.06 + ((4 - Math.abs(i)) / 20);
+    ctx.fillStyle = `rgba(${tint.r}, ${tint.g}, ${tint.b}, ${alpha})`;
+    ctx.fillText(label, x, y);
+  }
+
+  ctx.translate(baseX, baseY);
+  ctx.setTransform(1, 0, Math.sin(wave) * 0.18, 1, 0, Math.sin(wave * 1.7) * 10, 0, 0, 1);
+  ctx.fillStyle = `rgba(${tint.r}, ${tint.g}, ${tint.b}, 0.26)`;
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.strokeText(label, 0, 0);
+  ctx.fillText(label, 0, 0);
+  ctx.restore();
+}
+
 export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLevelComplete, onExitToMenu }) {
   const world = WORLDS[worldIndex] ?? WORLDS[0];
   const LEVELS = world.levels; // every existing LEVELS[...] reference below now resolves per-world, unchanged
@@ -1631,6 +1671,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
       backgroundRef.current.draw(ctx, CANVAS_WIDTH, CANVAS_HEIGHT);
+      drawTimeDistorterOverlay(ctx, bossRef.current);
 
       if (obstacleRef.current) {
         obstacleRef.current.draw(ctx, obstacleImage);
