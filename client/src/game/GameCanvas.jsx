@@ -1440,11 +1440,22 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           player.beginReversal();
         }
 
+        if (distorter.wantsToFire) {
+          distorter.wantsToFire = false;
+          const fireDirection = player.x < distorter.x ? 'left' : 'right';
+          const bulletX = fireDirection === 'right' ? distorter.x + distorter.width : distorter.x;
+          const bulletY = GUNMEN_FIRE_HEIGHT_Y;
+          const speedMult = 260 / 600;
+          enemyBulletsRef.current.push(
+            new Bullet(bulletX, bulletY, fireDirection, speedMult)
+          );
+        }
+
         if (distorter.wantsToSpawnGunman) {
           distorter.wantsToSpawnGunman = false;
           const aliveGunmanCount = timeGunmenRef.current.filter((g) => g.alive).length;
           if (aliveGunmanCount < MAX_TIME_GUNMEN) {
-            const spawnX = 150 + aliveGunmanCount * 180 + Math.random() * 60;
+            const spawnX = 500 + Math.random() * 220;
             timeGunmenRef.current.push(
               // Only override health/patrol range — World 5's level configs
               // don't define moveSpeed/fireSequence/etc at all, and passing
@@ -1454,7 +1465,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
               // never fired. Let Enemy's built-ins handle the rest.
               new Enemy(spawnX, ENEMY_GROUND_Y, {
                 health: 3,
-                patrolMinX: 0,
+                patrolMinX: 400,
                 patrolMaxX: 800,
               })
             );

@@ -23,6 +23,7 @@ const NORMAL2_START = 7.5;
 const INVERSION_START = 10.0;
 
 const GUNMAN_SPAWN_INTERVAL = 2.0;
+const BOSS_FIRE_INTERVAL = 3.0;
 
 const HIT_FLASH_DURATION = 0.18;
 const HIT_FLASH_INTERVAL = 0.06;
@@ -51,7 +52,10 @@ export class TimeDistorter {
     this.wantsReversal = false; // edge-triggered true for one frame on entering 'reversal'
 
     this.gunmanSpawnTimer = 0;
-    this.wantsToSpawnGunman = false; // edge-triggered true for one frame every 2.5s
+    this.wantsToSpawnGunman = false; // edge-triggered true for one frame every 2.0s
+
+    this.fireTimer = 0;
+    this.wantsToFire = false; // edge-triggered true for one frame every 3.0s
   }
 
   takeHit() {
@@ -95,6 +99,14 @@ export class TimeDistorter {
     if (this.gunmanSpawnTimer >= GUNMAN_SPAWN_INTERVAL) {
       this.gunmanSpawnTimer -= GUNMAN_SPAWN_INTERVAL;
       this.wantsToSpawnGunman = true;
+    }
+
+    // --- Independent boss-fire clock ---
+    this.fireTimer += dt;
+    this.wantsToFire = false;
+    if (this.fireTimer >= BOSS_FIRE_INTERVAL) {
+      this.fireTimer -= BOSS_FIRE_INTERVAL;
+      this.wantsToFire = true;
     }
   }
 
