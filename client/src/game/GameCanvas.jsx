@@ -921,7 +921,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
         if ((reg.currentFormName === 'darkMatter' || reg.currentFormName === 'enemy') && reg.wantsToFire) {
           reg.wantsToFire = false;
-          const bulletY = reg.y + reg.height * 0.35 - 2;
+          // darkMatter form must fire from the same fixed height the
+          // standalone DarkMatterBeing uses (GUNMEN_FIRE_HEIGHT_Y), not a
+          // ratio of its own (much taller) body height — that ratio only
+          // happens to line up correctly for the 'enemy' form, since its
+          // height matches a standalone gunman's.
+          const bulletY = reg.currentFormName === 'darkMatter'
+            ? GUNMEN_FIRE_HEIGHT_Y
+            : reg.y + reg.height * 0.35 - 2;
           const bulletX = reg.facing === 'right' ? reg.x + reg.width : reg.x;
           enemyBulletsRef.current.push(
             new EnemyBullet(bulletX, bulletY, reg.facing, reg.bulletSpeed)
