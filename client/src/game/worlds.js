@@ -97,8 +97,8 @@ export const WORLDS = [
   },
   {
     id: 4,
-    name: 'Void Rift',
-    missionTitle: 'VOID RIFT',
+    name: 'multiverse endgame',
+    missionTitle: 'MULTIVERSE ENDGAME',
     sprites: {
       // Placeholder: reuses World 4 sprites until World 5 art is built.
       player: { path: '/sprites/player.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
