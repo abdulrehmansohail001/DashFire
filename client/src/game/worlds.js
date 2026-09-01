@@ -116,6 +116,7 @@ export const WORLDS = [
       quicksand: null,
       smoke: { path: '/sprites/smoke.png', frameWidth: 350.5, frameHeight: 561, columns: 4, rows: 2 },
       shapeshifter: { path: '/sprites/shapeshifter.png', frameWidth: 144, frameHeight: 144, columns: 4, rows: 3 },
+      regGlitch: { path: '/sprites/reg_glitch.png', frameWidth: 423, frameHeight: 517, columns: 4, rows: 1 },
       martianCat: { path: '/sprites/martian_cat.png', frameWidth: 310, frameHeight: 310, columns: 4, rows: 4 },
       frog: { path: '/sprites/frog.png', frameWidth: 220, frameHeight: 311, columns: 8, rows: 1 },
       yeti: { path: '/sprites/yeti.png', frameWidth: 431, frameHeight: 431, columns: 4, rows: 2 },

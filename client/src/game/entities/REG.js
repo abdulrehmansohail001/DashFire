@@ -271,7 +271,7 @@ export class REG {
    * Draw the current form. `sheets` is an object:
    * { yeti, darkMatter, frog, enemy, vortex }
    */
-  draw(ctx, sheets) {
+  draw(ctx, sheets, glitchSheet) {
     if (!this.alive) return;
 
     // Hit flash blink.
@@ -280,11 +280,27 @@ export class REG {
       if (step % 2 === 0) return;
     }
 
-    // Glitch transition effect — bright white flash + scale pulse.
+    // Glitch transition effect — real sprite (reg_glitch.png, 1x4:
+    // ignition -> intensifying -> peak burst -> settling), scaled to fit
+    // whichever form's bounding box is currently active. Falls back to
+    // the old code-drawn flash if the sheet isn't loaded yet.
     if (this.glitchTimer > 0) {
+      const progress = 1 - this.glitchTimer / GLITCH_DURATION;
+      const frameIndex = Math.min(3, Math.floor(progress * 4));
+      const PAD = 10;
+      const drawX = this.x - PAD / 2;
+      const drawY = this.y - PAD / 2;
+      const drawWidth = this.width + PAD;
+      const drawHeight = this.height + PAD;
+
+      if (glitchSheet && glitchSheet.loaded) {
+        const drew = glitchSheet.draw(ctx, 0, frameIndex, drawX, drawY, drawWidth, drawHeight, false);
+        if (drew) return;
+      }
+
+      // Placeholder fallback: bright silhouette + colored energy lines
       const cx = this.x + this.width / 2;
       const cy = this.y + this.height / 2;
-      const progress = 1 - this.glitchTimer / GLITCH_DURATION;
       const scale = 1 + Math.sin(progress * Math.PI) * 0.3;
       const alpha = 0.4 + 0.6 * (1 - progress);
 
@@ -293,12 +309,10 @@ export class REG {
       ctx.scale(scale, scale);
       ctx.translate(-cx, -cy);
 
-      // Draw a glowing silhouette.
       ctx.globalAlpha = alpha;
       ctx.fillStyle = '#fff';
       ctx.fillRect(this.x - 5, this.y - 5, this.width + 10, this.height + 10);
 
-      // Multiverse energy lines.
       const colors = ['#ff3a8c', '#3affea', '#ffd93a', '#8c3aff', '#3aff5c'];
       for (let i = 0; i < 5; i++) {
         ctx.strokeStyle = colors[i];

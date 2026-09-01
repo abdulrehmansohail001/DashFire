@@ -479,6 +479,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const quicksandImage = getImage(world.sprites.quicksand);
   const icebergImage = getImage(world.sprites.iceberg);
   const vortexSheet = getSheet(world.sprites.vortex);
+  const regGlitchSheet = getSheet(world.sprites.regGlitch);
   const darkMatterSheet = getSheet(world.sprites.darkMatter);
     const shapeshifterSheet = getSheet(world.sprites.shapeshifter);
   const pullPushRaysSheet = getSheet(world.sprites.pullPushRays);
@@ -1532,7 +1533,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         frog: frogSheet,
         enemy: enemySheet ?? martianCatSheet,
         vortex: vortexSheet,
-      }));
+      }, regGlitchSheet));
       shapeshiftersRef.current.forEach((ss) => ss.draw(ctx, shapeshifterSheet, playerSheet, playerExtraSheet));
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
       yetisRef.current.forEach((yeti) => yeti.draw(ctx, yetiSheet));
