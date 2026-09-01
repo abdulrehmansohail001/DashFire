@@ -539,7 +539,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   );
   const sittingDuckRef = useRef(
     LEVELS[initialLevelIndex].hasSittingDuck
-      ? new SittingDuck(358, { ...LEVELS[initialLevelIndex], sittingDuckSpeed: 55, minX: 0, maxX: 800 - 90 })
+      ? new SittingDuck(358, { ...LEVELS[initialLevelIndex], sittingDuckSpeed: 75, minX: 0, maxX: 800 - 90 })
       : null
   );
   const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
@@ -603,7 +603,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     quicksandRef.current = buildQuicksandForLevel(config);
     icebergRef.current = config.hasIceberg ? new Iceberg(345, { ...config, minX: 0, maxX: 800 - 26 }) : null;
     sittingDuckRef.current = config.hasSittingDuck
-      ? new SittingDuck(358, { ...config, sittingDuckSpeed: 55, minX: 0, maxX: 800 - 90 })
+      ? new SittingDuck(358, { ...config, sittingDuckSpeed: 75, minX: 0, maxX: 800 - 90 })
       : null;
     eaglesRef.current = buildEaglesForLevel(config);
     vorticesRef.current = buildVorticesForLevel(config);
