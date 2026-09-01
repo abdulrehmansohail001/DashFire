@@ -7,7 +7,7 @@
 //
 // HP mechanics:
 //   - Starts at config-driven maxHealth (e.g. 14)
-//   - On every transformation: +1 HP (capped at maxHealth)
+//   - No passive heal on transformation; the REG keeps its current HP
 //   - After every transformation: 0.5s invulnerability window
 //
 // GameCanvas drives the power-specific side effects (pull, teleport,
@@ -136,10 +136,9 @@ export class REG {
         break;
     }
 
-    // Heal +1 on transform (capped).
-    if (heal && this.health < this.maxHealth) {
-      this.health = Math.min(this.maxHealth, this.health + 1);
-    }
+    // No passive heal on transform; keep REG HP flat across form swaps.
+    // Only the initial form assignment and the post-transform invulnerability
+    // window remain active.
 
     // Start invulnerability and glitch effect.
     this.invulnTimer = INVULN_DURATION;
