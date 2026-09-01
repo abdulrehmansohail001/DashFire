@@ -80,10 +80,10 @@ export const LEVELS = [
     regCount: 2,
     regHealth: 10,
   },
-  // Level 10 — TBD; left as-is.
+  // Level 10 — final boss: TimeDistorter
   {
     level: 10,
-    hasBlackHoleBoss: true,
-    bossHealth: 20,
+    hasTimeDistorter: true,
+    bossHealth: 30,
   },
 ];

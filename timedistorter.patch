@@ -1,0 +1,524 @@
+diff --git a/client/src/game/GameCanvas.jsx b/client/src/game/GameCanvas.jsx
+index d2fa26e..811120e 100644
+--- a/client/src/game/GameCanvas.jsx
++++ b/client/src/game/GameCanvas.jsx
+@@ -39,6 +39,7 @@ import { YetiProjectile } from './entities/YetiProjectile';
+ import { Spaceship } from './entities/Spaceship';
+ import { IcyBee } from './entities/IcyBee';
+ import { Boss } from './entities/Boss';
++import { TimeDistorter } from './entities/TimeDistorter';
+ import { playSound } from './sound';
+ import { IceBeeProjectile } from './entities/IceBeeProjectile';
+ import { ShipProjectile } from './entities/ShipProjectile';
+@@ -122,6 +123,7 @@ const BLACKHOLE_BEING_SLOT_X = [
+   ARENA_MIN_X + (ARENA_MAX_X - ARENA_MIN_X) * (2.5 / 3),
+ ];
+ const MAX_BOSS_SHIELD_ENEMIES = 2;
++const MAX_TIME_GUNMEN = 3; // TimeDistorter: spawn cap for its time-themed gunmen
+ const SHIELD_PATROL_MIN_X = 480;
+ const SHIELD_PATROL_MAX_X = 620;
+ 
+@@ -573,8 +575,11 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
+         })
+         : LEVELS[initialLevelIndex].hasBlackHoleBoss
+           ? new BlackHoleBoss(BLACKHOLE_HEIGHT_Y, LEVELS[initialLevelIndex], { startX: 400, minX: 0, maxX: 800 - 70 })
+-          : null
++          : LEVELS[initialLevelIndex].hasTimeDistorter
++            ? new TimeDistorter(BOSS_X, BOSS_Y, LEVELS[initialLevelIndex])
++            : null
+   );
++  const timeGunmenRef = useRef([]); // World 5 boss: spawned by TimeDistorter, capped at 3 alive
+   const levelConfigRef = useRef(LEVELS[initialLevelIndex]);
+   const keysRef = useRef({});
+   const gameStateRef = useRef('playing');
+@@ -629,7 +634,10 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
+         ? new BossFrog(FROG_GROUND_Y, { ...config, arenaMinX: BOSSFROG_ARENA_MIN_X, arenaMaxX: BOSSFROG_HOP_MAX_X })
+         : config.hasBlackHoleBoss
+           ? new BlackHoleBoss(BLACKHOLE_HEIGHT_Y, config, { startX: 400, minX: 0, maxX: 800 - 70 })
+-          : null;
++          : config.hasTimeDistorter
++            ? new TimeDistorter(BOSS_X, BOSS_Y, config)
++            : null;
++    timeGunmenRef.current = [];
+     bossSmokeRef.current = config.hasBlackHoleBoss
+       ? (() => {
+         const ZONE_WIDTH = 800 / 3;
+@@ -704,8 +712,15 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
+         shoot();
+       }
+ 
+-      if (JUMP_KEYS.includes(e.key) && !e.repeat && gameStateRef.current === 'playing') {
+-        playerRef.current.jump();
++      const invertActive = bossRef.current instanceof TimeDistorter && bossRef.current.invertActive;
++
++      if (!e.repeat && gameStateRef.current === 'playing') {
++        if (!invertActive && JUMP_KEYS.includes(e.key)) {
++          playerRef.current.jump();
++        } else if (invertActive && e.key === 'ArrowDown') {
++          // Vertical inversion: down now jumps.
++          playerRef.current.jump();
++        }
+       }
+     };
+ 
+@@ -743,12 +758,30 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
+ 
+       const wasGrounded = player.isGrounded;
+ 
+-      player.handleInput(keysRef.current);
+-      player.setSitting(!!keysRef.current['ArrowDown']);
++      const invertActive = bossRef.current instanceof TimeDistorter && bossRef.current.invertActive;
++      if (invertActive) {
++        // Horizontal: left<->right (both arrow keys and WASD-style a/d).
++        // Vertical: down now jumps (handled as a keydown edge above);
++        // jump-keys held now triggers the sit pose instead of a jump.
++        const raw = keysRef.current;
++        const shadowKeys = {
++          ...raw,
++          ArrowLeft: raw['ArrowRight'],
++          ArrowRight: raw['ArrowLeft'],
++          a: raw['d'],
++          d: raw['a'],
++        };
++        player.handleInput(shadowKeys);
++        player.setSitting(JUMP_KEYS.some((k) => !!raw[k]));
++      } else {
++        player.handleInput(keysRef.current);
++        player.setSitting(!!keysRef.current['ArrowDown']);
++      }
+ 
+       const prevPlayerX = player.x;
+       const wasPlayerVxZero = player.vx === 0;
+       player.update(dt);
++      if (!player.reversing) player.recordHistory(dt); // TimeDistorter reversal source buffer
+ 
+       // Solid wall: push the player back out if it's grounded-level overlap.
+       // No y-overlap once the player jumps above it, so this naturally lets
+@@ -1355,6 +1388,63 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
+         }
+       }
+ 
++      // TimeDistorter: reversal trigger + independent time-gunman spawn
++      // clock. Control inversion (invertActive) is read directly from
++      // input-handling code further down (handleKeyDown / the
++      // handleInput() call below) — nothing to do with it here.
++      if (bossRef.current instanceof TimeDistorter && bossRef.current.alive) {
++        const distorter = bossRef.current;
++
++        if (distorter.wantsReversal) {
++          distorter.wantsReversal = false;
++          player.beginReversal();
++        }
++
++        if (distorter.wantsToSpawnGunman) {
++          distorter.wantsToSpawnGunman = false;
++          const aliveGunmanCount = timeGunmenRef.current.filter((g) => g.alive).length;
++          if (aliveGunmanCount < MAX_TIME_GUNMEN) {
++            const spawnX = 150 + aliveGunmanCount * 180 + Math.random() * 60;
++            timeGunmenRef.current.push(
++              new Enemy(spawnX, ENEMY_GROUND_Y, {
++                health: 2,
++                moveSpeed: levelConfigRef.current.moveSpeed,
++                bulletSpeed: levelConfigRef.current.bulletSpeed,
++                actionIntervalMin: levelConfigRef.current.actionIntervalMin,
++                actionIntervalMax: levelConfigRef.current.actionIntervalMax,
++                reactionDelayMin: levelConfigRef.current.reactionDelayMin,
++                reactionDelayMax: levelConfigRef.current.reactionDelayMax,
++                fireSequence: levelConfigRef.current.fireSequence,
++                burstGap: levelConfigRef.current.burstGap,
++                patrolMinX: 0,
++                patrolMaxX: 800,
++              })
++            );
++          }
++        }
++      }
++
++      // Time gunmen: same update/fire pattern as the regular enemies loop,
++      // but each shot randomly picks between a BossFireball and a
++      // freeze-capable YetiProjectile instead of a plain EnemyBullet.
++      for (const gunman of timeGunmenRef.current) {
++        if (!gunman.alive) continue;
++        gunman.update(dt, player.x);
++
++        if (gunman.wantsToFire) {
++          gunman.wantsToFire = false;
++          const bulletX = gunman.facing === 'right' ? gunman.x + gunman.width : gunman.x;
++          if (Math.random() < 0.5) {
++            enemyBulletsRef.current.push(
++              new BossFireball(bulletX, GUNMEN_FIRE_HEIGHT_Y, gunman.facing, gunman.bulletSpeed)
++            );
++          } else {
++            yetiProjectilesRef.current.push(
++              new YetiProjectile(bulletX, GUNMEN_FIRE_HEIGHT_Y, gunman.facing, gunman.bulletSpeed)
++            );
++          }
++        }
++      }
+       for (const bullet of bulletsRef.current) {
+         if (bullet.hit) continue;
+         if (obstacleRef.current && isColliding(bullet.getBounds(), obstacleRef.current.getBounds())) {
+@@ -1503,6 +1593,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
+             break;
+           }
+         }
++        if (bullet.hit) continue;
++        for (const gunman of timeGunmenRef.current) {
++          if (!gunman.alive) continue;
++          if (isColliding(bullet.getBounds(), gunman.getBounds())) {
++            const wasAlive = gunman.alive;
++            gunman.takeHit();
++            bullet.hit = true;
++            playSound(wasAlive && !gunman.alive ? 'explosion' : 'hit', 0.6);
++            break;
++          }
++        }
+       }
+       bulletsRef.current = bulletsRef.current.filter((b) => !b.hit);
+ 
+@@ -1564,6 +1665,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
+ 
+       playerRef.current.draw(ctx, playerSheet, playerExtraSheet, freezeCrystalSheet, ghostSheet, duckSheet);
+       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
++      timeGunmenRef.current.forEach((g) => g.draw(ctx, enemySheet)); // no dedicated art yet — reuses whichever enemy sheet this world has (placeholder rectangle if none)
+       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
+       bulletsRef.current.forEach((b) => b.draw(ctx));
+       eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
+diff --git a/client/src/game/entities/Player.js b/client/src/game/entities/Player.js
+index ec41cd0..302cfc9 100644
+--- a/client/src/game/entities/Player.js
++++ b/client/src/game/entities/Player.js
+@@ -75,6 +75,9 @@ const GHOST_FRAME_COUNT = 4;
+ const GHOST_ALPHA_LEVELS = [0.75, 0.55, 0.35, 0.2];
+ const SINK_OFFSET = 35; // px the sprite draws lower while stuck in quicksand — sunk deeper into the pit
+ 
++const REVERSAL_WINDOW = 2.5;  // seconds of history kept/replayed
++const REVERSAL_SPEED = 2;     // playback speed multiplier — 2.5s of history plays back in 1.25s
++
+ export class Player {
+   constructor(x, y) {
+     this.x = x;
+@@ -143,6 +146,19 @@ export class Player {
+ 
+     this.isSitting = false; // set every frame from GameCanvas based on ArrowDown held
+ 
++    // World 5 TimeDistorter reversal: timeHistory records {t, x, y, facing,
++    // isGrounded, animState} snapshots on a rolling window (trimmed to
++    // REVERSAL_WINDOW seconds) while NOT reversing. On beginReversal(), the
++    // last REVERSAL_WINDOW seconds play back at 2x speed (so a 2.5s window
++    // replays in 1.25s) — movement input and jump() are locked out for the
++    // duration, but shooting stays available (checked via canShoot(),
++    // untouched by this flag). Position/facing/animState are driven
++    // directly from the recorded samples instead of physics.
++    this.reversing = false;
++    this.reversalElapsed = 0;
++    this.timeHistory = [];
++    this.historyClock = 0; // monotonic seconds since recording started
++
+     // Animation state
+     this.animState = 'idle';
+     this.frameIndex = 0;
+@@ -157,6 +173,11 @@ export class Player {
+   // direction DOES update from direction keys so the player can aim/shoot
+   // in different directions.
+   handleInput(keys) {
++    if (this.reversing) {
++      this.vx = 0;
++      return; // position is driven entirely by updateReversalPlayback() instead
++    }
++
+     if (this.frozen || this.pulled) {
+       this.vx = 0;
+       return;
+@@ -197,7 +218,7 @@ export class Player {
+   // Allows MAX_JUMPS total jumps before landing (MAX_JUMPS=2 -> one ground
+   // jump + one real mid-air double-jump).
+   jump() {
+-    if (this.frozen || this.pulled) return;
++    if (this.frozen || this.pulled || this.reversing) return;
+     if (this.jumpsUsed < MAX_JUMPS) {
+       this.vy = this.jumpsUsed === 0 ? JUMP_VELOCITY : DOUBLE_JUMP_VELOCITY;
+       this.isGrounded = false;
+@@ -205,6 +226,69 @@ export class Player {
+     }
+   }
+ 
++  // Called every frame GameCanvas is NOT currently reversing the player.
++  // Keeps a rolling REVERSAL_WINDOW-second buffer of snapshots, timestamped
++  // against historyClock so playback can find "how things looked X seconds
++  // ago" regardless of frame rate.
++  recordHistory(dt) {
++    this.historyClock += dt;
++    this.timeHistory.push({
++      t: this.historyClock,
++      x: this.x,
++      y: this.y,
++      facing: this.facing,
++      isGrounded: this.isGrounded,
++      animState: this.animState,
++    });
++    while (this.timeHistory.length > 1 && this.historyClock - this.timeHistory[0].t > REVERSAL_WINDOW) {
++      this.timeHistory.shift();
++    }
++  }
++
++  beginReversal() {
++    if (this.timeHistory.length < 2) return; // nothing recorded yet — no-op rather than teleporting to garbage
++    this.reversing = true;
++    this.reversalElapsed = 0;
++  }
++
++  // Steps playback backwards through timeHistory at REVERSAL_SPEED. Finds
++  // the two recorded samples bracketing the target timestamp and linearly
++  // interpolates x/y between them for smooth motion even though history is
++  // only sampled once per real frame.
++  updateReversalPlayback(dt) {
++    this.reversalElapsed += dt * REVERSAL_SPEED;
++
++    const latestT = this.timeHistory[this.timeHistory.length - 1].t;
++    const targetT = latestT - this.reversalElapsed;
++    const earliestT = this.timeHistory[0].t;
++
++    if (targetT <= earliestT) {
++      const first = this.timeHistory[0];
++      this.x = first.x;
++      this.y = first.y;
++      this.facing = first.facing;
++      this.isGrounded = first.isGrounded;
++      this.animState = first.animState;
++      this.reversing = false;
++      return;
++    }
++
++    // Find the bracketing pair (history is stored oldest-first).
++    let hi = this.timeHistory.length - 1;
++    while (hi > 0 && this.timeHistory[hi].t > targetT) hi--;
++    const lo = Math.min(hi + 1, this.timeHistory.length - 1);
++    const a = this.timeHistory[hi];
++    const b = this.timeHistory[lo];
++    const span = b.t - a.t;
++    const frac = span > 0 ? (targetT - a.t) / span : 0;
++
++    this.x = a.x + (b.x - a.x) * frac;
++    this.y = a.y + (b.y - a.y) * frac;
++    this.facing = frac < 0.5 ? a.facing : b.facing;
++    this.isGrounded = frac < 0.5 ? a.isGrounded : b.isGrounded;
++    this.animState = frac < 0.5 ? a.animState : b.animState;
++  }
++
+   triggerShoot() {
+     this.shootTimer = SHOOT_ANIM_DURATION;
+     this.shootCooldown = 1.0;
+@@ -241,10 +325,14 @@ export class Player {
+       return;
+     }
+ 
+-    this.vy += GRAVITY * dt;
++    if (this.reversing) {
++      this.updateReversalPlayback(dt);
++    } else {
++      this.vy += GRAVITY * dt;
+ 
+-    this.x += this.vx * dt;
+-    this.y += this.vy * dt;
++      this.x += this.vx * dt;
++      this.y += this.vy * dt;
++    }
+ 
+     if (this.pulled) {
+       const dir = this.pullTargetX > this.x ? 1 : -1;
+@@ -347,7 +435,11 @@ export class Player {
+     // own. Death/victory takes priority over the frozen pose-hold.
+     if (this.frozen && !this.outroLocked) return; // pose holds entirely — no state change, no frame advance
+ 
+-    if (!this.outroLocked) {
++    // Reversal: animState is already set from the recorded sample by
++    // updateReversalPlayback() this frame — skip the normal vx/isGrounded
++    // -driven state selection below so the replay shows the actual
++    // run/idle/jump sequence that happened, not whatever vx=0 would imply.
++    if (!this.outroLocked && !this.reversing) {
+       // Priority: airborne > shooting > sitting > pulled/run > idle.
+       let nextState;
+       if (!this.isGrounded) {
+diff --git a/client/src/game/entities/TimeDistorter.js b/client/src/game/entities/TimeDistorter.js
+new file mode 100644
+index 0000000..7861190
+--- /dev/null
++++ b/client/src/game/entities/TimeDistorter.js
+@@ -0,0 +1,145 @@
++// src/game/entities/TimeDistorter.js
++// World 5 final boss. Almost stationary (bob-only, same as base Boss).
++// Always damageable — no phase locks out taking hits.
++//
++// Runs one repeating 11.25s timeline:
++//   0.00 - 5.00   normal        (no effect)
++//   5.00 - 6.25   REVERSAL      (edge-triggered via wantsReversal; actual
++//                                1.25s playback is owned by Player.js)
++//   6.25 - 8.75   normal        (2.5s gap)
++//   8.75 - 11.25  INVERSION     (invertActive true; GameCanvas swaps the
++//                                player's left/right and up/down bindings
++//                                for this window)
++//   -> loops back to 0
++//
++// Separately, on its own independent clock, spawns a "time gunman" every
++// 2.5s regardless of phase (wantsToSpawnGunman, edge-triggered) — GameCanvas
++// owns the alive-count cap (3) and decides what to actually spawn, same
++// division of responsibility as BlackHoleBoss's being-spawn flag.
++
++const LOOP_DURATION = 11.25;
++const REVERSAL_START = 5.0;
++const NORMAL2_START = 6.25;
++const INVERSION_START = 8.75;
++
++const GUNMAN_SPAWN_INTERVAL = 2.5;
++
++const HIT_FLASH_DURATION = 0.18;
++const HIT_FLASH_INTERVAL = 0.06;
++
++const SPRITE_DRAW_HEIGHT = 260;
++const SPRITE_ASPECT = (500 / 3) / 250; // matches Boss.js's placeholder-era aspect until real art exists
++
++export class TimeDistorter {
++  constructor(x, y, config = {}) {
++    this.x = x;
++    this.y = y;
++    this.width = 130;
++    this.height = 200;
++    this.facing = 'left';
++
++    this.health = config.bossHealth ?? 25;
++    this.maxHealth = this.health;
++    this.alive = true;
++
++    this.bobTimer = 0;
++    this.hitFlashTimer = 0;
++
++    this.phaseTimer = 0;
++    this.phase = 'normal1'; // 'normal1' | 'reversal' | 'normal2' | 'inversion'
++    this.invertActive = false;
++    this.wantsReversal = false; // edge-triggered true for one frame on entering 'reversal'
++
++    this.gunmanSpawnTimer = 0;
++    this.wantsToSpawnGunman = false; // edge-triggered true for one frame every 2.5s
++  }
++
++  takeHit() {
++    if (!this.alive) return;
++    this.health -= 1;
++    this.hitFlashTimer = HIT_FLASH_DURATION;
++    if (this.health <= 0) {
++      this.alive = false;
++    }
++  }
++
++  update(dt) {
++    if (!this.alive) return;
++
++    this.bobTimer += dt;
++    if (this.hitFlashTimer > 0) this.hitFlashTimer -= dt;
++
++    // --- Phase timeline ---
++    const prevPhase = this.phase;
++    this.phaseTimer += dt;
++    if (this.phaseTimer >= LOOP_DURATION) {
++      this.phaseTimer -= LOOP_DURATION;
++    }
++
++    if (this.phaseTimer < REVERSAL_START) {
++      this.phase = 'normal1';
++    } else if (this.phaseTimer < NORMAL2_START) {
++      this.phase = 'reversal';
++    } else if (this.phaseTimer < INVERSION_START) {
++      this.phase = 'normal2';
++    } else {
++      this.phase = 'inversion';
++    }
++
++    this.wantsReversal = prevPhase !== 'reversal' && this.phase === 'reversal';
++    this.invertActive = this.phase === 'inversion';
++
++    // --- Independent gunman-spawn clock ---
++    this.gunmanSpawnTimer += dt;
++    this.wantsToSpawnGunman = false;
++    if (this.gunmanSpawnTimer >= GUNMAN_SPAWN_INTERVAL) {
++      this.gunmanSpawnTimer -= GUNMAN_SPAWN_INTERVAL;
++      this.wantsToSpawnGunman = true;
++    }
++  }
++
++  getBounds() {
++    return { x: this.x, y: this.y, width: this.width, height: this.height };
++  }
++
++  draw(ctx, spriteSheet) {
++    if (!this.alive) return;
++
++    if (this.hitFlashTimer > 0) {
++      const step = Math.floor(this.hitFlashTimer / HIT_FLASH_INTERVAL);
++      if (step % 2 === 0) return;
++    }
++
++    const bob = Math.sin(this.bobTimer * 2) * 3;
++
++    if (spriteSheet && spriteSheet.loaded) {
++      const drawWidth = SPRITE_DRAW_HEIGHT * SPRITE_ASPECT;
++      const drawX = this.x + this.width / 2 - drawWidth / 2;
++      const drawY = this.y + this.height - SPRITE_DRAW_HEIGHT + bob;
++      const drew = spriteSheet.draw(ctx, 0, 0, drawX, drawY, drawWidth, SPRITE_DRAW_HEIGHT, false);
++      if (drew) return;
++    }
++
++    // Placeholder — a distinct violet/clock-ish look so it doesn't read as
++    // the same fallback as the other bosses.
++    ctx.fillStyle = '#241033';
++    ctx.fillRect(this.x, this.y + bob, this.width, this.height);
++    ctx.strokeStyle = this.phase === 'reversal' ? '#ff5ad1' : this.phase === 'inversion' ? '#5ad1ff' : '#8a5aff';
++    ctx.lineWidth = 3;
++    ctx.strokeRect(this.x, this.y + bob, this.width, this.height);
++    ctx.fillStyle = '#c9a8ff';
++    ctx.beginPath();
++    ctx.arc(this.x + this.width / 2, this.y + this.height * 0.25 + bob, 14, 0, Math.PI * 2);
++    ctx.fill();
++    ctx.strokeStyle = '#241033';
++    ctx.lineWidth = 2;
++    ctx.beginPath();
++    ctx.moveTo(this.x + this.width / 2, this.y + this.height * 0.25 + bob);
++    const handAngle = this.bobTimer * 3;
++    ctx.lineTo(
++      this.x + this.width / 2 + Math.cos(handAngle) * 10,
++      this.y + this.height * 0.25 + bob + Math.sin(handAngle) * 10
++    );
++    ctx.stroke();
++  }
++}
+diff --git a/client/src/game/levels_world5.js b/client/src/game/levels_world5.js
+index 2f9a400..cd02a41 100644
+--- a/client/src/game/levels_world5.js
++++ b/client/src/game/levels_world5.js
+@@ -80,10 +80,10 @@ export const LEVELS = [
+     regCount: 2,
+     regHealth: 10,
+   },
+-  // Level 10 — TBD; left as-is.
++  // Level 10 — final boss: TimeDistorter
+   {
+     level: 10,
+-    hasBlackHoleBoss: true,
+-    bossHealth: 20,
++    hasTimeDistorter: true,
++    bossHealth: 30,
+   },
+ ];
+diff --git a/client/src/game/worlds.js b/client/src/game/worlds.js
+index a73d55b..aef1b8b 100644
+--- a/client/src/game/worlds.js
++++ b/client/src/game/worlds.js
+@@ -109,7 +109,7 @@ export const WORLDS = [
+       darkMatter: { path: '/sprites/darkmatterbeing.png', frameWidth: 435, frameHeight: 429, columns: 4, rows: 2 },
+       pullPushRays: { path: '/sprites/pull_push_rays.png', frameWidth: 384, frameHeight: 1024, columns: 4, rows: 1 },
+       pullPushRaysGreen: { path: '/sprites/pull_push_rays_green.png', frameWidth: 384, frameHeight: 1024, columns: 4, rows: 1 },
+-      boss: { path: '/sprites/blackhole_boss.png', frameWidth: 372, frameHeight: 500, columns: 4, rows: 2 },
++      boss: null, // TODO: timedistorter.png — level 10 is TimeDistorter now, not BlackHoleBoss; falls back to its own placeholder art
+             background: { path: '/sprites/multiverse_bg.png', frameWidth: 433, frameHeight: 433, columns: 4, rows: 2 },
+       obstacle: '/sprites/obstacle.png',
+       cactus: null,

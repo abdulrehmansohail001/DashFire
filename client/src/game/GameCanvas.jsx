@@ -39,6 +39,7 @@ import { YetiProjectile } from './entities/YetiProjectile';
 import { Spaceship } from './entities/Spaceship';
 import { IcyBee } from './entities/IcyBee';
 import { Boss } from './entities/Boss';
+import { TimeDistorter } from './entities/TimeDistorter';
 import { playSound } from './sound';
 import { IceBeeProjectile } from './entities/IceBeeProjectile';
 import { ShipProjectile } from './entities/ShipProjectile';
@@ -122,6 +123,7 @@ const BLACKHOLE_BEING_SLOT_X = [
   ARENA_MIN_X + (ARENA_MAX_X - ARENA_MIN_X) * (2.5 / 3),
 ];
 const MAX_BOSS_SHIELD_ENEMIES = 2;
+const MAX_TIME_GUNMEN = 3; // TimeDistorter: spawn cap for its time-themed gunmen
 const SHIELD_PATROL_MIN_X = 480;
 const SHIELD_PATROL_MAX_X = 620;
 
@@ -573,8 +575,11 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         })
         : LEVELS[initialLevelIndex].hasBlackHoleBoss
           ? new BlackHoleBoss(BLACKHOLE_HEIGHT_Y, LEVELS[initialLevelIndex], { startX: 400, minX: 0, maxX: 800 - 70 })
-          : null
+          : LEVELS[initialLevelIndex].hasTimeDistorter
+            ? new TimeDistorter(BOSS_X, BOSS_Y, LEVELS[initialLevelIndex])
+            : null
   );
+  const timeGunmenRef = useRef([]); // World 5 boss: spawned by TimeDistorter, capped at 3 alive
   const levelConfigRef = useRef(LEVELS[initialLevelIndex]);
   const keysRef = useRef({});
   const gameStateRef = useRef('playing');
@@ -629,7 +634,10 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         ? new BossFrog(FROG_GROUND_Y, { ...config, arenaMinX: BOSSFROG_ARENA_MIN_X, arenaMaxX: BOSSFROG_HOP_MAX_X })
         : config.hasBlackHoleBoss
           ? new BlackHoleBoss(BLACKHOLE_HEIGHT_Y, config, { startX: 400, minX: 0, maxX: 800 - 70 })
-          : null;
+          : config.hasTimeDistorter
+            ? new TimeDistorter(BOSS_X, BOSS_Y, config)
+            : null;
+    timeGunmenRef.current = [];
     bossSmokeRef.current = config.hasBlackHoleBoss
       ? (() => {
         const ZONE_WIDTH = 800 / 3;
@@ -704,8 +712,15 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         shoot();
       }
 
-      if (JUMP_KEYS.includes(e.key) && !e.repeat && gameStateRef.current === 'playing') {
-        playerRef.current.jump();
+      const invertActive = bossRef.current instanceof TimeDistorter && bossRef.current.invertActive;
+
+      if (!e.repeat && gameStateRef.current === 'playing') {
+        if (!invertActive && JUMP_KEYS.includes(e.key)) {
+          playerRef.current.jump();
+        } else if (invertActive && e.key === 'ArrowDown') {
+          // Vertical inversion: down now jumps.
+          playerRef.current.jump();
+        }
       }
     };
 
@@ -743,12 +758,30 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
       const wasGrounded = player.isGrounded;
 
-      player.handleInput(keysRef.current);
-      player.setSitting(!!keysRef.current['ArrowDown']);
+      const invertActive = bossRef.current instanceof TimeDistorter && bossRef.current.invertActive;
+      if (invertActive) {
+        // Horizontal: left<->right (both arrow keys and WASD-style a/d).
+        // Vertical: down now jumps (handled as a keydown edge above);
+        // jump-keys held now triggers the sit pose instead of a jump.
+        const raw = keysRef.current;
+        const shadowKeys = {
+          ...raw,
+          ArrowLeft: raw['ArrowRight'],
+          ArrowRight: raw['ArrowLeft'],
+          a: raw['d'],
+          d: raw['a'],
+        };
+        player.handleInput(shadowKeys);
+        player.setSitting(JUMP_KEYS.some((k) => !!raw[k]));
+      } else {
+        player.handleInput(keysRef.current);
+        player.setSitting(!!keysRef.current['ArrowDown']);
+      }
 
       const prevPlayerX = player.x;
       const wasPlayerVxZero = player.vx === 0;
       player.update(dt);
+      if (!player.reversing) player.recordHistory(dt); // TimeDistorter reversal source buffer
 
       // Solid wall: push the player back out if it's grounded-level overlap.
       // No y-overlap once the player jumps above it, so this naturally lets
@@ -1355,6 +1388,63 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         }
       }
 
+      // TimeDistorter: reversal trigger + independent time-gunman spawn
+      // clock. Control inversion (invertActive) is read directly from
+      // input-handling code further down (handleKeyDown / the
+      // handleInput() call below) — nothing to do with it here.
+      if (bossRef.current instanceof TimeDistorter && bossRef.current.alive) {
+        const distorter = bossRef.current;
+
+        if (distorter.wantsReversal) {
+          distorter.wantsReversal = false;
+          player.beginReversal();
+        }
+
+        if (distorter.wantsToSpawnGunman) {
+          distorter.wantsToSpawnGunman = false;
+          const aliveGunmanCount = timeGunmenRef.current.filter((g) => g.alive).length;
+          if (aliveGunmanCount < MAX_TIME_GUNMEN) {
+            const spawnX = 150 + aliveGunmanCount * 180 + Math.random() * 60;
+            timeGunmenRef.current.push(
+              new Enemy(spawnX, ENEMY_GROUND_Y, {
+                health: 2,
+                moveSpeed: levelConfigRef.current.moveSpeed,
+                bulletSpeed: levelConfigRef.current.bulletSpeed,
+                actionIntervalMin: levelConfigRef.current.actionIntervalMin,
+                actionIntervalMax: levelConfigRef.current.actionIntervalMax,
+                reactionDelayMin: levelConfigRef.current.reactionDelayMin,
+                reactionDelayMax: levelConfigRef.current.reactionDelayMax,
+                fireSequence: levelConfigRef.current.fireSequence,
+                burstGap: levelConfigRef.current.burstGap,
+                patrolMinX: 0,
+                patrolMaxX: 800,
+              })
+            );
+          }
+        }
+      }
+
+      // Time gunmen: same update/fire pattern as the regular enemies loop,
+      // but each shot randomly picks between a BossFireball and a
+      // freeze-capable YetiProjectile instead of a plain EnemyBullet.
+      for (const gunman of timeGunmenRef.current) {
+        if (!gunman.alive) continue;
+        gunman.update(dt, player.x);
+
+        if (gunman.wantsToFire) {
+          gunman.wantsToFire = false;
+          const bulletX = gunman.facing === 'right' ? gunman.x + gunman.width : gunman.x;
+          if (Math.random() < 0.5) {
+            enemyBulletsRef.current.push(
+              new BossFireball(bulletX, GUNMEN_FIRE_HEIGHT_Y, gunman.facing, gunman.bulletSpeed)
+            );
+          } else {
+            yetiProjectilesRef.current.push(
+              new YetiProjectile(bulletX, GUNMEN_FIRE_HEIGHT_Y, gunman.facing, gunman.bulletSpeed)
+            );
+          }
+        }
+      }
       for (const bullet of bulletsRef.current) {
         if (bullet.hit) continue;
         if (obstacleRef.current && isColliding(bullet.getBounds(), obstacleRef.current.getBounds())) {
@@ -1503,6 +1593,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
             break;
           }
         }
+        if (bullet.hit) continue;
+        for (const gunman of timeGunmenRef.current) {
+          if (!gunman.alive) continue;
+          if (isColliding(bullet.getBounds(), gunman.getBounds())) {
+            const wasAlive = gunman.alive;
+            gunman.takeHit();
+            bullet.hit = true;
+            playSound(wasAlive && !gunman.alive ? 'explosion' : 'hit', 0.6);
+            break;
+          }
+        }
       }
       bulletsRef.current = bulletsRef.current.filter((b) => !b.hit);
 
@@ -1564,6 +1665,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
       playerRef.current.draw(ctx, playerSheet, playerExtraSheet, freezeCrystalSheet, ghostSheet, duckSheet);
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
+      timeGunmenRef.current.forEach((g) => g.draw(ctx, enemySheet)); // no dedicated art yet — reuses whichever enemy sheet this world has (placeholder rectangle if none)
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));
       eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));

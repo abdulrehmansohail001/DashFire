@@ -75,6 +75,9 @@ const GHOST_FRAME_COUNT = 4;
 const GHOST_ALPHA_LEVELS = [0.75, 0.55, 0.35, 0.2];
 const SINK_OFFSET = 35; // px the sprite draws lower while stuck in quicksand — sunk deeper into the pit
 
+const REVERSAL_WINDOW = 2.5;  // seconds of history kept/replayed
+const REVERSAL_SPEED = 2;     // playback speed multiplier — 2.5s of history plays back in 1.25s
+
 export class Player {
   constructor(x, y) {
     this.x = x;
@@ -143,6 +146,19 @@ export class Player {
 
     this.isSitting = false; // set every frame from GameCanvas based on ArrowDown held
 
+    // World 5 TimeDistorter reversal: timeHistory records {t, x, y, facing,
+    // isGrounded, animState} snapshots on a rolling window (trimmed to
+    // REVERSAL_WINDOW seconds) while NOT reversing. On beginReversal(), the
+    // last REVERSAL_WINDOW seconds play back at 2x speed (so a 2.5s window
+    // replays in 1.25s) — movement input and jump() are locked out for the
+    // duration, but shooting stays available (checked via canShoot(),
+    // untouched by this flag). Position/facing/animState are driven
+    // directly from the recorded samples instead of physics.
+    this.reversing = false;
+    this.reversalElapsed = 0;
+    this.timeHistory = [];
+    this.historyClock = 0; // monotonic seconds since recording started
+
     // Animation state
     this.animState = 'idle';
     this.frameIndex = 0;
@@ -157,6 +173,11 @@ export class Player {
   // direction DOES update from direction keys so the player can aim/shoot
   // in different directions.
   handleInput(keys) {
+    if (this.reversing) {
+      this.vx = 0;
+      return; // position is driven entirely by updateReversalPlayback() instead
+    }
+
     if (this.frozen || this.pulled) {
       this.vx = 0;
       return;
@@ -197,12 +218,75 @@ export class Player {
   // Allows MAX_JUMPS total jumps before landing (MAX_JUMPS=2 -> one ground
   // jump + one real mid-air double-jump).
   jump() {
-    if (this.frozen || this.pulled) return;
+    if (this.frozen || this.pulled || this.reversing) return;
     if (this.jumpsUsed < MAX_JUMPS) {
       this.vy = this.jumpsUsed === 0 ? JUMP_VELOCITY : DOUBLE_JUMP_VELOCITY;
       this.isGrounded = false;
       this.jumpsUsed += 1;
     }
+  }
+
+  // Called every frame GameCanvas is NOT currently reversing the player.
+  // Keeps a rolling REVERSAL_WINDOW-second buffer of snapshots, timestamped
+  // against historyClock so playback can find "how things looked X seconds
+  // ago" regardless of frame rate.
+  recordHistory(dt) {
+    this.historyClock += dt;
+    this.timeHistory.push({
+      t: this.historyClock,
+      x: this.x,
+      y: this.y,
+      facing: this.facing,
+      isGrounded: this.isGrounded,
+      animState: this.animState,
+    });
+    while (this.timeHistory.length > 1 && this.historyClock - this.timeHistory[0].t > REVERSAL_WINDOW) {
+      this.timeHistory.shift();
+    }
+  }
+
+  beginReversal() {
+    if (this.timeHistory.length < 2) return; // nothing recorded yet — no-op rather than teleporting to garbage
+    this.reversing = true;
+    this.reversalElapsed = 0;
+  }
+
+  // Steps playback backwards through timeHistory at REVERSAL_SPEED. Finds
+  // the two recorded samples bracketing the target timestamp and linearly
+  // interpolates x/y between them for smooth motion even though history is
+  // only sampled once per real frame.
+  updateReversalPlayback(dt) {
+    this.reversalElapsed += dt * REVERSAL_SPEED;
+
+    const latestT = this.timeHistory[this.timeHistory.length - 1].t;
+    const targetT = latestT - this.reversalElapsed;
+    const earliestT = this.timeHistory[0].t;
+
+    if (targetT <= earliestT) {
+      const first = this.timeHistory[0];
+      this.x = first.x;
+      this.y = first.y;
+      this.facing = first.facing;
+      this.isGrounded = first.isGrounded;
+      this.animState = first.animState;
+      this.reversing = false;
+      return;
+    }
+
+    // Find the bracketing pair (history is stored oldest-first).
+    let hi = this.timeHistory.length - 1;
+    while (hi > 0 && this.timeHistory[hi].t > targetT) hi--;
+    const lo = Math.min(hi + 1, this.timeHistory.length - 1);
+    const a = this.timeHistory[hi];
+    const b = this.timeHistory[lo];
+    const span = b.t - a.t;
+    const frac = span > 0 ? (targetT - a.t) / span : 0;
+
+    this.x = a.x + (b.x - a.x) * frac;
+    this.y = a.y + (b.y - a.y) * frac;
+    this.facing = frac < 0.5 ? a.facing : b.facing;
+    this.isGrounded = frac < 0.5 ? a.isGrounded : b.isGrounded;
+    this.animState = frac < 0.5 ? a.animState : b.animState;
   }
 
   triggerShoot() {
@@ -241,10 +325,14 @@ export class Player {
       return;
     }
 
-    this.vy += GRAVITY * dt;
+    if (this.reversing) {
+      this.updateReversalPlayback(dt);
+    } else {
+      this.vy += GRAVITY * dt;
 
-    this.x += this.vx * dt;
-    this.y += this.vy * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+    }
 
     if (this.pulled) {
       const dir = this.pullTargetX > this.x ? 1 : -1;
@@ -347,7 +435,11 @@ export class Player {
     // own. Death/victory takes priority over the frozen pose-hold.
     if (this.frozen && !this.outroLocked) return; // pose holds entirely — no state change, no frame advance
 
-    if (!this.outroLocked) {
+    // Reversal: animState is already set from the recorded sample by
+    // updateReversalPlayback() this frame — skip the normal vx/isGrounded
+    // -driven state selection below so the replay shows the actual
+    // run/idle/jump sequence that happened, not whatever vx=0 would imply.
+    if (!this.outroLocked && !this.reversing) {
       // Priority: airborne > shooting > sitting > pulled/run > idle.
       let nextState;
       if (!this.isGrounded) {
