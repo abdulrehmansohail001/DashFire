@@ -109,7 +109,7 @@ const FROG_WIDTH = 44;
 // Boss sits fixed near the right edge; the shield gunmen it spawns patrol
 // a lane in front of it so they never overlap the boss's own hitbox.
 const BOSS_X = 640;
-const BOSS_Y = 200; // feet at y=400, same ground line as everything else
+const BOSS_Y = 220; // feet at y=400, same ground line as everything else; lowered slightly so it sits cleaner with the arena
 const BLACKHOLE_HEIGHT_Y = 100; // fixed flight height, same idea as SHIP_HEIGHT_Y
 
 // 3 fixed spawn slots for the black hole's beings — evenly spread across
@@ -1458,7 +1458,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           distorter.wantsToSpawnGunman = false;
           const aliveGunmanCount = timeGunmenRef.current.filter((g) => g.alive).length;
           if (aliveGunmanCount < MAX_TIME_GUNMEN) {
-            const spawnX = 500 + Math.random() * 220;
+            const minSpawnX = BOSS_X + 75;
+            const maxSpawnX = 760;
+            const spawnX = minSpawnX + Math.random() * (maxSpawnX - minSpawnX);
             timeGunmenRef.current.push(
               // Only override health/patrol range — World 5's level configs
               // don't define moveSpeed/fireSequence/etc at all, and passing
@@ -1468,8 +1470,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
               // never fired. Let Enemy's built-ins handle the rest.
               new Enemy(spawnX, ENEMY_GROUND_Y, {
                 health: 3,
-                patrolMinX: 400,
-                patrolMaxX: 800,
+                patrolMinX: BOSS_X + 75,
+                patrolMaxX: 760,
               })
             );
           }
