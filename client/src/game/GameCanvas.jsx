@@ -1406,16 +1406,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (aliveGunmanCount < MAX_TIME_GUNMEN) {
             const spawnX = 150 + aliveGunmanCount * 180 + Math.random() * 60;
             timeGunmenRef.current.push(
+              // Only override health/patrol range — World 5's level configs
+              // don't define moveSpeed/fireSequence/etc at all, and passing
+              // those through as `undefined` would silently blank out
+              // Enemy.js's own DEFAULTS (spreading a key that's present but
+              // undefined still wins over the default), which is why these
+              // never fired. Let Enemy's built-ins handle the rest.
               new Enemy(spawnX, ENEMY_GROUND_Y, {
                 health: 2,
-                moveSpeed: levelConfigRef.current.moveSpeed,
-                bulletSpeed: levelConfigRef.current.bulletSpeed,
-                actionIntervalMin: levelConfigRef.current.actionIntervalMin,
-                actionIntervalMax: levelConfigRef.current.actionIntervalMax,
-                reactionDelayMin: levelConfigRef.current.reactionDelayMin,
-                reactionDelayMax: levelConfigRef.current.reactionDelayMax,
-                fireSequence: levelConfigRef.current.fireSequence,
-                burstGap: levelConfigRef.current.burstGap,
                 patrolMinX: 0,
                 patrolMaxX: 800,
               })
