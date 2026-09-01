@@ -29,7 +29,17 @@ const HIT_FLASH_DURATION = 0.18;
 const HIT_FLASH_INTERVAL = 0.06;
 
 const SPRITE_DRAW_HEIGHT = 260;
-const SPRITE_ASPECT = (500 / 3) / 250; // matches Boss.js's placeholder-era aspect until real art exists
+
+// Row-wise animation: row 0 idle/breathe, row 1 shoot, row 2 reversal
+// (pulls out the big watch), row 3 inversion (arms spread, absorbing).
+const IDLE_FRAME_DURATION = 0.28;
+const SHOOT_FRAME_DURATION = 0.1;
+const SHOOT_POSE_DURATION = SHOOT_FRAME_DURATION * 4;
+// Reversal/inversion are gameplay phases, but their sprite animation should
+// be a brief pose burst instead of lingering for the full 2.5s effect window.
+// The actual phase logic still lasts the full duration; only the visual
+// sequence is kept quick so it reads like a trigger animation.
+const PHASE_ANIM_FRAME_DURATION = 0.08;
 
 export class TimeDistorter {
   constructor(x, y, config = {}) {
@@ -56,6 +66,12 @@ export class TimeDistorter {
 
     this.fireTimer = 0;
     this.wantsToFire = false; // edge-triggered true for one frame every 3.0s
+
+    // Animation state — 'idle' | 'shoot' | 'reversal' | 'inversion'
+    this.animState = 'idle';
+    this.frameIndex = 0;
+    this.frameTimer = 0;
+    this.shootPoseTimer = 0; // holds the shoot pose independent of the transient wantsToFire flag
   }
 
   takeHit() {
@@ -67,8 +83,12 @@ export class TimeDistorter {
     }
   }
 
-  update(dt) {
+  update(dt, playerX = this.x) {
     if (!this.alive) return;
+
+    if (typeof playerX === 'number') {
+      this.facing = playerX < this.x ? 'left' : 'right';
+    }
 
     this.bobTimer += dt;
     if (this.hitFlashTimer > 0) this.hitFlashTimer -= dt;
@@ -107,6 +127,60 @@ export class TimeDistorter {
     if (this.fireTimer >= BOSS_FIRE_INTERVAL) {
       this.fireTimer -= BOSS_FIRE_INTERVAL;
       this.wantsToFire = true;
+      this.shootPoseTimer = SHOOT_POSE_DURATION;
+    }
+    if (this.shootPoseTimer > 0) this.shootPoseTimer -= dt;
+
+    // --- Animation state ---
+    // Keep the actual phase windows long enough for gameplay, but make the
+    // visual reversal/inversion burst quick so it reads like a trigger rather
+    // than a full 2.5s pose. Once the burst completes, fall back to idle or a
+    // pending shoot pose.
+    const phaseChanged = prevPhase !== this.phase;
+    if (phaseChanged && (this.phase === 'reversal' || this.phase === 'inversion')) {
+      this.animState = this.phase;
+      this.frameIndex = 0;
+      this.frameTimer = 0;
+    }
+
+    let nextState;
+    if (this.animState === 'reversal' || this.animState === 'inversion') {
+      nextState = this.animState;
+    } else if (this.shootPoseTimer > 0) {
+      nextState = 'shoot';
+    } else {
+      nextState = 'idle';
+    }
+
+    if (nextState !== this.animState) {
+      this.animState = nextState;
+      this.frameIndex = 0;
+      this.frameTimer = 0;
+    }
+
+    this.frameTimer += dt;
+    const duration =
+      this.animState === 'idle' ? IDLE_FRAME_DURATION :
+      this.animState === 'shoot' ? SHOOT_FRAME_DURATION :
+      PHASE_ANIM_FRAME_DURATION;
+
+    if (this.frameTimer >= duration) {
+      this.frameTimer = 0;
+      if (this.animState === 'idle') {
+        this.frameIndex = (this.frameIndex + 1) % 4; // idle loops
+      } else if (this.animState === 'shoot') {
+        if (this.frameIndex < 3) {
+          this.frameIndex += 1;
+        } else {
+          this.animState = this.shootPoseTimer > 0 ? 'shoot' : 'idle';
+          this.frameIndex = 0;
+        }
+      } else if (this.frameIndex < 3) {
+        this.frameIndex += 1;
+      } else {
+        this.animState = this.shootPoseTimer > 0 ? 'shoot' : 'idle';
+        this.frameIndex = 0;
+      }
     }
   }
 
@@ -125,10 +199,13 @@ export class TimeDistorter {
     const bob = Math.sin(this.bobTimer * 2) * 3;
 
     if (spriteSheet && spriteSheet.loaded) {
-      const drawWidth = SPRITE_DRAW_HEIGHT * SPRITE_ASPECT;
+      const row = { idle: 0, shoot: 1, reversal: 2, inversion: 3 }[this.animState];
+      const aspect = spriteSheet.frameWidth / spriteSheet.frameHeight;
+      const drawWidth = SPRITE_DRAW_HEIGHT * aspect;
       const drawX = this.x + this.width / 2 - drawWidth / 2;
       const drawY = this.y + this.height - SPRITE_DRAW_HEIGHT + bob;
-      const drew = spriteSheet.draw(ctx, 0, 0, drawX, drawY, drawWidth, SPRITE_DRAW_HEIGHT, false);
+      const flip = this.facing === 'right';
+      const drew = spriteSheet.draw(ctx, row, this.frameIndex, drawX, drawY, drawWidth, SPRITE_DRAW_HEIGHT, flip);
       if (drew) return;
     }
 

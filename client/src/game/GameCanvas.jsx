@@ -1348,7 +1348,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       // its spawned gunmen are still alive.
       const boss = bossRef.current;
       if (boss && boss.alive) {
-        boss.update(dt);
+        boss.update(dt, player.x);
 
         // Contact damage, same as a frog — player.takeHit() already has
         // its own invulnerability window, so standing against it doesn't

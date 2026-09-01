@@ -109,7 +109,7 @@ export const WORLDS = [
       darkMatter: { path: '/sprites/darkmatterbeing.png', frameWidth: 435, frameHeight: 429, columns: 4, rows: 2 },
       pullPushRays: { path: '/sprites/pull_push_rays.png', frameWidth: 384, frameHeight: 1024, columns: 4, rows: 1 },
       pullPushRaysGreen: { path: '/sprites/pull_push_rays_green.png', frameWidth: 384, frameHeight: 1024, columns: 4, rows: 1 },
-      boss: null, // TODO: timedistorter.png — level 10 is TimeDistorter now, not BlackHoleBoss; falls back to its own placeholder art
+      boss: { path: '/sprites/timedistorter.png', frameWidth: 305, frameHeight: 306, columns: 4, rows: 4 },
             background: { path: '/sprites/multiverse_bg.png', frameWidth: 433, frameHeight: 433, columns: 4, rows: 2 },
       obstacle: '/sprites/obstacle.png',
       cactus: null,
