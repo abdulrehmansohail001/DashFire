@@ -11,13 +11,12 @@ export const LEVELS = [
         shapeshifterCount: 1,
         shapeshifterHealth: 6,
     },
-    // Level 2 — 1 vortex (10 HP) + quicksand
+    // Level 2 — 1 REG (14 HP) — the multiverse shapeshifter
     {
         level: 2,
-        hasVortex: true,
-        vortexCount: 1,
-        vortexHealth: 10,
-        hasQuicksand: true,
+        hasREG: true,
+        regCount: 1,
+        regHealth: 14,
     },
     // Level 3 — 1 dark matter being (12 HP) + quicksand
     {

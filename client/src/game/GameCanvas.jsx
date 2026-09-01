@@ -44,6 +44,7 @@ import { ShipProjectile } from './entities/ShipProjectile';
 import { BossFireball } from './entities/BossFireball';
 import { Frog } from './entities/Frog';
 import { BossFrog } from './entities/BossFrog';
+import { REG } from './entities/REG';
 import { ENEMY_GROUND_Y as GUNMAN_REST_Y } from './entities/Enemy'; // Enemy.js's OWN ground constant (310) — different from this file's local ENEMY_GROUND_Y (340), which is only the pre-physics spawn y
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
@@ -217,6 +218,25 @@ function buildEnemiesForLevel(levelConfig) {
 
   return enemies;
 }
+function buildREGsForLevel(levelConfig) {
+  if (!levelConfig.hasREG) return [];
+  const regCount = levelConfig.regCount ?? 1;
+  const slotWidth = (ARENA_MAX_X - ARENA_MIN_X) / regCount;
+  const regs = [];
+
+  for (let i = 0; i < regCount; i++) {
+    const startX = ARENA_MIN_X + slotWidth * (i + 0.5);
+    regs.push(new REG(startX, 310, {
+      ...levelConfig,
+      regHealth: levelConfig.regHealth ?? 14,
+      regArenaMinX: ARENA_MIN_X,
+      regArenaMaxX: ARENA_MAX_X,
+    }));
+  }
+
+  return regs;
+}
+
 function buildShapeshiftersForLevel(levelConfig) {
   if (!levelConfig.hasShapeshifter) return [];
   const count = levelConfig.shapeshifterCount ?? 1;
@@ -445,7 +465,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
   const playerSheet = getSheet(world.sprites.player);
   const playerExtraSheet = getSheet(world.sprites.playerExtra);
-  const enemySheet = getSheet(world.sprites.enemy);
+  const enemySheet = getSheet(world.sprites.enemy ?? world.sprites.martianCat);
+  const martianCatSheet = getSheet(world.sprites.martianCat ?? world.sprites.enemy);
   const eagleSheet = getSheet(world.sprites.eagle);
   const yetiSheet = getSheet(world.sprites.yeti);
   const shipSheet = getSheet(world.sprites.spaceship);
@@ -505,6 +526,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
   const vorticesRef = useRef(buildVorticesForLevel(LEVELS[initialLevelIndex]));
   const darkMattersRef = useRef(buildDarkMatterBeingsForLevel(LEVELS[initialLevelIndex]));
+  const regsRef = useRef(buildREGsForLevel(LEVELS[initialLevelIndex]));
   const shapeshiftersRef = useRef(buildShapeshiftersForLevel(LEVELS[initialLevelIndex]));
   const rayEffectRef = useRef(new RayEffect());
   const rayEffectGreenRef = useRef(new RayEffect());
@@ -564,6 +586,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     eaglesRef.current = buildEaglesForLevel(config);
     vorticesRef.current = buildVorticesForLevel(config);
     darkMattersRef.current = buildDarkMatterBeingsForLevel(config);
+    regsRef.current = buildREGsForLevel(config);
     shapeshiftersRef.current = buildShapeshiftersForLevel(config);
     yetisRef.current = buildYetisForLevel(config);
     yetiProjectilesRef.current = [];
@@ -880,6 +903,41 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         }
       }
 
+      const regs = regsRef.current;
+      for (const reg of regs) {
+        if (!reg.alive) continue;
+
+        reg.update(dt, player.x);
+
+        if (reg.currentFormName === 'yeti' && reg.wantsToThrow) {
+          reg.wantsToThrow = false;
+          const throwY = reg.y + reg.height * 0.05;
+          const throwX = reg.facing === 'right' ? reg.x + reg.width : reg.x;
+          yetiProjectilesRef.current.push(
+            new YetiProjectile(throwX, throwY, reg.facing, reg.projectileSpeed)
+          );
+        }
+
+        if ((reg.currentFormName === 'darkMatter' || reg.currentFormName === 'enemy') && reg.wantsToFire) {
+          reg.wantsToFire = false;
+          const bulletY = reg.y + reg.height * 0.35 - 2;
+          const bulletX = reg.facing === 'right' ? reg.x + reg.width : reg.x;
+          enemyBulletsRef.current.push(
+            new EnemyBullet(bulletX, bulletY, reg.facing, reg.bulletSpeed)
+          );
+        }
+
+        if (reg.currentFormName === 'frog' && isColliding(playerBounds, reg.getBounds())) {
+          player.takeHit();
+          playSound('hit', 0.6);
+        }
+
+        if (reg.currentFormName === 'vortex' && isColliding(playerBounds, reg.getBounds())) {
+          player.takeHit();
+          player.teleportMirror(CANVAS_WIDTH);
+        }
+      }
+
       // Shapeshifter: fires on its own timer in both phases, PLUS one
       // bonus shot the instant the player starts moving on the x-axis
       // while disguised (edge-triggered — only on the frame vx goes from
@@ -981,7 +1039,10 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         }
       }
 
-      const aliveBeings = darkMatters.filter((b) => b.alive);
+      const aliveBeings = [
+        ...darkMatters.filter((b) => b.alive),
+        ...regs.filter((r) => r.alive && r.currentFormName === 'darkMatter').map((r) => r.currentForm),
+      ].filter(Boolean);
       const pullSafetyGap = 16;
       if (player.pulled) {
         if (aliveBeings.length === 0) {
@@ -1357,6 +1418,18 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           }
         }
         if (hitDarkMatter) continue;
+        let hitReg = false;
+        for (const reg of regs) {
+          if (!reg.alive) continue;
+          if (isColliding(bullet.getBounds(), reg.getBounds())) {
+            reg.takeHit();
+            bullet.hit = true;
+            hitReg = true;
+            player.escapeQuicksand();
+            break;
+          }
+        }
+        if (hitReg) continue;
         let hitShapeshifter = false;
         for (const ss of shapeshifters) {
           if (!ss.alive) continue;
@@ -1395,7 +1468,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
       const allEnemiesDead = bossRef.current
         ? !bossRef.current.alive
-        : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && vortices.every((v) => !v.alive) && darkMattersRef.current.every((b) => !b.alive) && shapeshiftersRef.current.every((s) => !s.alive) && spaceshipsRef.current.every((s) => !s.alive) && (levelConfigRef.current.hasTwinGlaciers || iceBeesRef.current.every((b) => !b.alive)) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
+        : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && vortices.every((v) => !v.alive) && darkMattersRef.current.every((b) => !b.alive) && regsRef.current.every((r) => !r.alive) && shapeshiftersRef.current.every((s) => !s.alive) && spaceshipsRef.current.every((s) => !s.alive) && (levelConfigRef.current.hasTwinGlaciers || iceBeesRef.current.every((b) => !b.alive)) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
@@ -1453,6 +1526,13 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       eaglesRef.current.forEach((eagle) => eagle.draw(ctx, eagleSheet));
       vorticesRef.current.forEach((vortex) => vortex.draw(ctx, vortexSheet));
       darkMattersRef.current.forEach((being) => being.draw(ctx, darkMatterSheet));
+      regsRef.current.forEach((reg) => reg.draw(ctx, {
+        yeti: yetiSheet,
+        darkMatter: darkMatterSheet,
+        frog: frogSheet,
+        enemy: enemySheet ?? martianCatSheet,
+        vortex: vortexSheet,
+      }));
       shapeshiftersRef.current.forEach((ss) => ss.draw(ctx, shapeshifterSheet, playerSheet, playerExtraSheet));
       eagleProjectilesRef.current.forEach((p) => p.draw(ctx));
       yetisRef.current.forEach((yeti) => yeti.draw(ctx, yetiSheet));
@@ -1616,6 +1696,16 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           const pct = Math.max(shifter.health, 0) / shifter.maxHealth;
           drawHpBar(ctx, barX, rowY - 8, barWidth, 16, pct, label, 'right');
           drawHudPortrait(ctx, null, enemyCircleX, rowY, circleRadius, '#6a4a4a', 'S');
+        });
+
+        const preRegRows = preShapeshifterRows + shapeshiftersRef.current.length;
+        regsRef.current.forEach((reg, i) => {
+          if (!reg.maxHealth) return;
+          const rowY = 34 + (preRegRows + i) * ENEMY_ROW_HEIGHT;
+          const label = regsRef.current.length > 1 ? `REG ${i + 1} HP` : 'REG HP';
+          const pct = Math.max(reg.health, 0) / reg.maxHealth;
+          drawHpBar(ctx, barX, rowY - 8, barWidth, 16, pct, label, 'right');
+          drawHudPortrait(ctx, enemySheet ?? martianCatSheet, enemyCircleX, rowY, circleRadius, '#8b5cf6', 'R');
         });
       }
 
