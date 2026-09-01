@@ -25,6 +25,7 @@ export const LEVELS = [
         darkMatterCount: 1,
         darkMatterHealth: 12,
         hasQuicksand: true,
+        hasSittingDuck: true,
     },
     // Level 4 — 2 vortices (10 HP each) + quicksand
     {
