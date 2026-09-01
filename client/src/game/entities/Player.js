@@ -76,7 +76,7 @@ const GHOST_ALPHA_LEVELS = [0.75, 0.55, 0.35, 0.2];
 const SINK_OFFSET = 35; // px the sprite draws lower while stuck in quicksand — sunk deeper into the pit
 
 const REVERSAL_WINDOW = 2.5;  // seconds of history kept/replayed
-const REVERSAL_SPEED = 2;     // playback speed multiplier — 2.5s of history plays back in 1.25s
+const REVERSAL_SPEED = 1;     // playback speed multiplier — 1x, so the full 2.5s plays back over 2.5s
 
 export class Player {
   constructor(x, y) {

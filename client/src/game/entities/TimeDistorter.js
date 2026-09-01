@@ -4,10 +4,10 @@
 //
 // Runs one repeating 11.25s timeline:
 //   0.00 - 5.00   normal        (no effect)
-//   5.00 - 6.25   REVERSAL      (edge-triggered via wantsReversal; actual
-//                                1.25s playback is owned by Player.js)
-//   6.25 - 8.75   normal        (2.5s gap)
-//   8.75 - 11.25  INVERSION     (invertActive true; GameCanvas swaps the
+//   5.00 - 7.50   REVERSAL      (edge-triggered via wantsReversal; actual
+//                                2.5s playback, real-time, is owned by Player.js)
+//   7.50 - 10.00  normal        (2.5s gap)
+//   10.00 - 12.50 INVERSION     (invertActive true; GameCanvas swaps the
 //                                player's left/right and up/down bindings
 //                                for this window)
 //   -> loops back to 0
@@ -17,10 +17,10 @@
 // owns the alive-count cap (3) and decides what to actually spawn, same
 // division of responsibility as BlackHoleBoss's being-spawn flag.
 
-const LOOP_DURATION = 11.25;
+const LOOP_DURATION = 12.5;
 const REVERSAL_START = 5.0;
-const NORMAL2_START = 6.25;
-const INVERSION_START = 8.75;
+const NORMAL2_START = 7.5;
+const INVERSION_START = 10.0;
 
 const GUNMAN_SPAWN_INTERVAL = 2.5;
 
