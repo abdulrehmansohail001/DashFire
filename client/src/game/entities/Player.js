@@ -512,9 +512,9 @@ export class Player {
         row = 3; // transform-in poof
         col = Math.min(3, Math.floor((this.duckElapsed / TRANSFORM_DURATION) * 4));
       } else if (this.duckElapsed > this.duckDuration - TRANSFORM_DURATION) {
-        row = 3; // transform-out poof — same row/frames, played again at the tail end
+        row = 3; // transform-out poof — same frames as transform-in, but REVERSED (dematerializing, not materializing)
         const t = this.duckElapsed - (this.duckDuration - TRANSFORM_DURATION);
-        col = Math.min(3, Math.floor((t / TRANSFORM_DURATION) * 4));
+        col = 3 - Math.min(3, Math.floor((t / TRANSFORM_DURATION) * 4));
       } else if (!this.isGrounded) {
         row = 2; // jump
         col = this.duckFrameIndex;
@@ -527,11 +527,12 @@ export class Player {
       }
 
       if (duckSheet && duckSheet.loaded) {
+        const DUCK_Y_NUDGE = 14; // sits it a bit lower, feet more grounded
         const aspect = duckSheet.frameWidth / duckSheet.frameHeight;
         const drawHeight = SPRITE_DRAW_HEIGHT;
         const drawWidth = drawHeight * aspect;
         const drawX = this.x + this.width / 2 - drawWidth / 2;
-        const drawY = this.y + this.height - drawHeight;
+        const drawY = this.y + this.height - drawHeight + DUCK_Y_NUDGE;
         const flip = this.facing === 'left';
         const drew = duckSheet.draw(ctx, row, col, drawX, drawY, drawWidth, drawHeight, flip);
         if (drew) return;
