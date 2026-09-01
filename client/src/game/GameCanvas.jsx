@@ -1458,8 +1458,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           distorter.wantsToSpawnGunman = false;
           const aliveGunmanCount = timeGunmenRef.current.filter((g) => g.alive).length;
           if (aliveGunmanCount < MAX_TIME_GUNMEN) {
-            const minSpawnX = BOSS_X + 75;
-            const maxSpawnX = 760;
+            const minSpawnX = 520;
+            const maxSpawnX = BOSS_X - 30;
             const spawnX = minSpawnX + Math.random() * (maxSpawnX - minSpawnX);
             timeGunmenRef.current.push(
               // Only override health/patrol range — World 5's level configs
@@ -1470,8 +1470,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
               // never fired. Let Enemy's built-ins handle the rest.
               new Enemy(spawnX, ENEMY_GROUND_Y, {
                 health: 3,
-                patrolMinX: BOSS_X + 75,
-                patrolMaxX: 760,
+                patrolMinX: 520,
+                patrolMaxX: BOSS_X - 30,
               })
             );
           }
