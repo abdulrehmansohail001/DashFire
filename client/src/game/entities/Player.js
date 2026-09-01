@@ -505,6 +505,14 @@ export class Player {
   // there's never a blank gap.
   draw(ctx, mainSheet, extraSheet, freezeSheet, ghostSheet, duckSheet) {
     if (this.isDuck) {
+      // Same blink-on-damage flicker the normal sprite gets — duck form
+      // was skipping this entirely since this branch returns before ever
+      // reaching that check, so it never blinked, not even from the exact
+      // hit that triggered enterDuck() in the first place.
+      if (!this.outroLocked && this.invulnerable && Math.floor(this.invulnerableTimer * 10) % 2 === 0) {
+        return;
+      }
+
       const TRANSFORM_DURATION = 0.4; // 4 poof frames @ 0.1s each, bookends the SAME duckDuration window — doesn't extend the no-shoot lockout
       let row, col;
 
