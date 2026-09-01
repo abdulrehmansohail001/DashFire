@@ -37,9 +37,8 @@ const SHOOT_FRAME_DURATION = 0.1;
 const SHOOT_POSE_DURATION = SHOOT_FRAME_DURATION * 4;
 // Reversal/inversion are gameplay phases, but their sprite animation should
 // be a brief pose burst instead of lingering for the full 2.5s effect window.
-// The actual phase logic still lasts the full duration; only the visual
-// sequence is kept quick so it reads like a trigger animation.
-const PHASE_ANIM_FRAME_DURATION = 0.08;
+// Keep it quick but readable — about the same pace as a fire trigger.
+const PHASE_ANIM_FRAME_DURATION = 0.12;
 
 export class TimeDistorter {
   constructor(x, y, config = {}) {
@@ -204,7 +203,7 @@ export class TimeDistorter {
       const drawWidth = SPRITE_DRAW_HEIGHT * aspect;
       const drawX = this.x + this.width / 2 - drawWidth / 2;
       const drawY = this.y + this.height - SPRITE_DRAW_HEIGHT + bob;
-      const flip = this.facing === 'right';
+      const flip = this.facing === 'left';
       const drew = spriteSheet.draw(ctx, row, this.frameIndex, drawX, drawY, drawWidth, SPRITE_DRAW_HEIGHT, flip);
       if (drew) return;
     }
