@@ -191,14 +191,13 @@ const freezeCrystalSheet = getSheet({
 // asset, same reasoning as freezeCrystalSheet/ghostSheet above (not
 // per-world). TODO: once duck.png exists, uncomment and fill in its real
 // frame dimensions (2 rows: row 0 idle, row 1 walk, at least 2 columns):
-// const duckSheet = getSheet({
-//   path: '/sprites/duck.png',
-//   frameWidth: 0,   // TODO
-//   frameHeight: 0,  // TODO
-//   columns: 2,
-//   rows: 2,
-// });
-const duckSheet = null; // falls back to Player.js's own placeholder blob until real art exists
+const duckSheet = getSheet({
+  path: '/sprites/duck.png',
+  frameWidth: 301,
+  frameHeight: 301,
+  columns: 4,
+  rows: 4,
+});
 // Builds N enemies for a level config, splitting the arena into N
 // non-overlapping patrol slots and starting each enemy in the middle of its slot.
 function buildEnemiesForLevel(levelConfig) {
