@@ -110,6 +110,13 @@ export class Player {
     this.teleportGhostActive = false; // true for the 4-step ghost-blink window right after a teleport
     this.teleportGhostTimer = 0;
 
+    // World 5 SittingDuck status: movement/jump fully unaffected, only
+    // shooting is disabled, for a flat 3s. No invulnerability of its own.
+    this.isDuck = false;
+    this.duckTimer = 0;
+    this.duckFrameIndex = 0;
+    this.duckFrameTimer = 0;
+
     // World 4 DarkMatterBeing pull: stillTimer counts up while grounded +
     // not moving (shooting does NOT reset it); GameCanvas starts a pull
     // once it hits 1.0s and at least one being is alive. pullSpeed/
@@ -203,7 +210,7 @@ export class Player {
   }
 
   canShoot() {
-    return this.shootCooldown <= 0 && !this.frozen && !this.teleportGhostActive;
+    return this.shootCooldown <= 0 && !this.frozen && !this.teleportGhostActive && !this.isDuck;
   }
 
   // Locks the player into the death sequence: freezes physics, plays the
@@ -291,6 +298,19 @@ export class Player {
       this.teleportGhostTimer += dt;
       if (this.teleportGhostTimer >= GHOST_FRAME_DURATION * GHOST_FRAME_COUNT) {
         this.teleportGhostActive = false;
+      }
+    }
+
+    if (this.isDuck) {
+      this.duckTimer -= dt;
+      if (this.duckTimer <= 0) {
+        this.isDuck = false;
+      } else {
+        this.duckFrameTimer += dt;
+        if (this.duckFrameTimer >= 0.15) {
+          this.duckFrameTimer = 0;
+          this.duckFrameIndex = (this.duckFrameIndex + 1) % 2;
+        }
       }
     }
 
@@ -432,6 +452,16 @@ export class Player {
     this.stillTimer = 0;
   }
 
+  // Starts the duck status if not already active — touching SittingDuck
+  // again mid-duck does NOT reset or extend this timer.
+  enterDuck(duration = 3.0) {
+    if (this.isDuck) return;
+    this.isDuck = true;
+    this.duckTimer = duration;
+    this.duckFrameIndex = 0;
+    this.duckFrameTimer = 0;
+  }
+
   teleportMirror(canvasWidth = 800) {
     if (this.teleportCooldownTimer > 0) return;
     this.x = canvasWidth - this.x - this.width;
@@ -471,7 +501,27 @@ export class Player {
   // mainSheet/extraSheet are optional — if the one this animState needs
   // isn't loaded yet, falls back to the original placeholder rectangle so
   // there's never a blank gap.
-  draw(ctx, mainSheet, extraSheet, freezeSheet, ghostSheet) {
+  draw(ctx, mainSheet, extraSheet, freezeSheet, ghostSheet, duckSheet) {
+    if (this.isDuck) {
+      if (duckSheet && duckSheet.loaded) {
+        const row = this.vx !== 0 ? 1 : 0; // row 0 = idle, row 1 = walk
+        const aspect = duckSheet.frameWidth / duckSheet.frameHeight;
+        const drawHeight = SPRITE_DRAW_HEIGHT;
+        const drawWidth = drawHeight * aspect;
+        const drawX = this.x + this.width / 2 - drawWidth / 2;
+        const drawY = this.y + this.height - drawHeight;
+        const flip = this.facing === 'left';
+        const drew = duckSheet.draw(ctx, row, this.duckFrameIndex, drawX, drawY, drawWidth, drawHeight, flip);
+        if (drew) return;
+      }
+      // Placeholder fallback — simple yellow duck-ish blob until real art exists.
+      ctx.fillStyle = '#f5d13a';
+      ctx.beginPath();
+      ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, this.height / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+
     const sinkOffset = this.stuck ? SINK_OFFSET : 0; // visual-only — sunk to "knee" depth in quicksand
     // Only the player's OWN sprite should flicker during invulnerability —
     // the freeze crystal overlay is drawn unconditionally further down, so

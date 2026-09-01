@@ -18,6 +18,7 @@ import { isColliding, Obstacle } from './entities/Obstacle';
 import { Cactus } from './entities/Cactus';
 import { QuicksandPatch } from './entities/QuicksandPatch';
 import { Iceberg } from './entities/Iceberg';
+import { SittingDuck } from './entities/SittingDuck';
 import { Glacier } from './entities/Glacier';
 import { GlacierProjectile } from './entities/GlacierProjectile';
 import { Vortex } from './entities/Vortex';
@@ -186,6 +187,18 @@ const freezeCrystalSheet = getSheet({
   columns: 4,
   rows: 1,
 });
+// Duck costume for SittingDuck's transformation — universal player-status
+// asset, same reasoning as freezeCrystalSheet/ghostSheet above (not
+// per-world). TODO: once duck.png exists, uncomment and fill in its real
+// frame dimensions (2 rows: row 0 idle, row 1 walk, at least 2 columns):
+// const duckSheet = getSheet({
+//   path: '/sprites/duck.png',
+//   frameWidth: 0,   // TODO
+//   frameHeight: 0,  // TODO
+//   columns: 2,
+//   rows: 2,
+// });
+const duckSheet = null; // falls back to Player.js's own placeholder blob until real art exists
 // Builds N enemies for a level config, splitting the arena into N
 // non-overlapping patrol slots and starting each enemy in the middle of its slot.
 function buildEnemiesForLevel(levelConfig) {
@@ -476,6 +489,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const moonBgSheet = getSheet(world.sprites.background);
   const obstacleImage = getImage(world.sprites.obstacle);
   const cactusImage = getImage(world.sprites.cactus);
+  const sittingDuckImage = getImage(world.sprites.sittingDuck);
   const quicksandImage = getImage(world.sprites.quicksand);
   const icebergImage = getImage(world.sprites.iceberg);
   const vortexSheet = getSheet(world.sprites.vortex);
@@ -523,6 +537,11 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   );
   const icebergRef = useRef(
     LEVELS[initialLevelIndex].hasIceberg ? new Iceberg(345, { ...LEVELS[initialLevelIndex], minX: 0, maxX: 800 - 26 }) : null
+  );
+  const sittingDuckRef = useRef(
+    LEVELS[initialLevelIndex].hasSittingDuck
+      ? new SittingDuck(345, { ...LEVELS[initialLevelIndex], minX: 0, maxX: 800 - 90 })
+      : null
   );
   const eaglesRef = useRef(buildEaglesForLevel(LEVELS[initialLevelIndex]));
   const vorticesRef = useRef(buildVorticesForLevel(LEVELS[initialLevelIndex]));
@@ -584,6 +603,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     cactusRef.current = config.hasCactus ? new Cactus(380, 310) : null;
     quicksandRef.current = buildQuicksandForLevel(config);
     icebergRef.current = config.hasIceberg ? new Iceberg(345, { ...config, minX: 0, maxX: 800 - 26 }) : null;
+    sittingDuckRef.current = config.hasSittingDuck
+      ? new SittingDuck(345, { ...config, minX: 0, maxX: 800 - 90 })
+      : null;
     eaglesRef.current = buildEaglesForLevel(config);
     vorticesRef.current = buildVorticesForLevel(config);
     darkMattersRef.current = buildDarkMatterBeingsForLevel(config);
@@ -787,6 +809,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
             player.x = iceberg.x + iceberg.width + ICEBERG_PUSHBACK_MARGIN;
           }
           player.freezeOnly(1.0, 1.0);
+        }
+      }
+
+      // SittingDuck: not solid — simple overlap check, no pushback.
+      // Damages once (gated by the hit's own invulnerability window) and
+      // triggers the duck status (gated separately on the player side).
+      if (sittingDuckRef.current) {
+        sittingDuckRef.current.update(dt);
+        if (isColliding(player.getBounds(), sittingDuckRef.current.getBounds())) {
+          player.takeHit();
+          player.enterDuck(3.0);
         }
       }
 
@@ -1520,6 +1553,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       if (icebergRef.current) {
         icebergRef.current.draw(ctx, icebergImage);
       }
+      if (sittingDuckRef.current) {
+        sittingDuckRef.current.draw(ctx, sittingDuckImage);
+      }
 
       ctx.strokeStyle = '#666';
       ctx.beginPath();
@@ -1527,7 +1563,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       ctx.lineTo(800, 400);
       ctx.stroke();
 
-      playerRef.current.draw(ctx, playerSheet, playerExtraSheet, freezeCrystalSheet, ghostSheet);
+      playerRef.current.draw(ctx, playerSheet, playerExtraSheet, freezeCrystalSheet, ghostSheet, duckSheet);
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
       bulletsRef.current.forEach((b) => b.draw(ctx));

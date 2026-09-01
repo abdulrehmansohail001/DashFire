@@ -114,6 +114,7 @@ export const WORLDS = [
       obstacle: '/sprites/obstacle.png',
       cactus: null,
       quicksand: null,
+      sittingDuck: null, // TODO: sittingduck_pit.png (the pit hazard's own look — the player's duck COSTUME is a separate universal asset declared in GameCanvas.jsx, not here)
       smoke: { path: '/sprites/smoke.png', frameWidth: 350.5, frameHeight: 561, columns: 4, rows: 2 },
       shapeshifter: { path: '/sprites/shapeshifter.png', frameWidth: 144, frameHeight: 144, columns: 4, rows: 3 },
       regGlitch: { path: '/sprites/reg_glitch.png', frameWidth: 226, frameHeight: 276, columns: 4, rows: 1 },
