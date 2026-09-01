@@ -14,7 +14,7 @@ function App() {
   // Per-world unlock counts: { 0: 6, 1: 1 } means World 1 has levels 1-6
   // unlocked, World 2 only has level 1. Defaults to 1 for any world not
   // yet in the saved object (i.e. only its first level is playable).
-  const [unlockedByWorld, setUnlockedByWorld] = useState({ 0: 10, 1: 10, 2: 10, 3: 10 }); // TESTING: all levels unlocked — revert to { 0: 1 } before shipping
+  const [unlockedByWorld, setUnlockedByWorld] = useState({ 0: 10, 1: 10, 2: 10, 3: 10, 4: 10 }); // TESTING: all levels unlocked — revert to { 0: 1 } before shipping
 
   // Load saved progress once on mount. No backend yet — localStorage is a
   // fine stand-in until the server/database side is built out; swapping
