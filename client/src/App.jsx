@@ -8,6 +8,11 @@ import { getPlayerProgress, saveLevelClear, getAuthenticatedUser, saveAuth, clea
 import { registerUser, loginUser } from './services/authApi';
 import './App.css';
 
+const GAME_BACKGROUND_STYLE = {
+  backgroundImage: "url('/sprites/game_bg.png')",
+  backgroundSize: '400% 200%',
+};
+
 const DEFAULT_UNLOCKED_BY_WORLD = { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1 };
 
 function App() {
@@ -146,7 +151,7 @@ function App() {
   if (screen === 'auth') {
     return (
       <div className="app-container auth-page-shell">
-        <div className="auth-page-shell__backdrop-anim" />
+        <div className="auth-page-shell__backdrop-anim" style={GAME_BACKGROUND_STYLE} />
         <div className="auth-page-shell__backdrop" />
         <div className="auth-page-shell__scanlines" />
         <div className="auth-card">
@@ -224,7 +229,7 @@ function App() {
       {screen === 'leaderboard' && <Leaderboard onBack={handleBackToMainMenu} />}
       {screen === 'mainMenu' && (
         <div className="main-menu">
-          <div className="main-menu__backdrop-anim" />
+          <div className="main-menu__backdrop-anim" style={GAME_BACKGROUND_STYLE} />
           <div className="main-menu__backdrop" />
           <div className="main-menu__scanlines" />
           <div className="main-menu__content">

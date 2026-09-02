@@ -28,7 +28,7 @@ export default function Leaderboard({ onBack }) {
 
   return (
     <div className="leaderboard-screen">
-      <div className="leaderboard-screen__backdrop-anim" />
+      <div className="leaderboard-screen__backdrop-anim" style={{ backgroundImage: "url('/sprites/game_bg.png')" }} />
       <div className="leaderboard-screen__backdrop" />
       <div className="leaderboard-screen__scanlines" />
 

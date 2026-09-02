@@ -12,7 +12,7 @@ import { WORLDS } from './worlds';
 export default function WorldSelect({ onSelectWorld }) {
   return (
     <div className="world-select">
-      <div className="world-select__backdrop-anim" />
+      <div className="world-select__backdrop-anim" style={{ backgroundImage: "url('/sprites/game_bg.png')" }} />
       <div className="world-select__backdrop" />
       <div className="world-select__scanlines" />
 

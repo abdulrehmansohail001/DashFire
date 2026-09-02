@@ -23,15 +23,25 @@
   inset: 0;
   /* Placeholder art — swap the path once dedicated login-screen art
      exists. Same animated-strip technique as WorldSelect/LevelSelect. */
-  background-image: url('/sprites/moon_bg.jpg');
   background-repeat: no-repeat;
-  background-size: 800vw 100vh;
-  animation: auth-menu-cycle 1.6s steps(7) infinite;
+  background-size: 400% 200%;
+  animation: game-bg-cycle 1.6s steps(8) infinite;
 }
 
 @keyframes auth-menu-cycle {
   from { background-position-x: 0vw; }
   to { background-position-x: -700vw; }
+}
+
+@keyframes game-bg-cycle {
+  0%, 12.49% { background-position: 0% 0%; }
+  12.5%, 24.99% { background-position: 33.333% 0%; }
+  25%, 37.49% { background-position: 66.667% 0%; }
+  37.5%, 49.99% { background-position: 100% 0%; }
+  50%, 62.49% { background-position: 0% 100%; }
+  62.5%, 74.99% { background-position: 33.333% 100%; }
+  75%, 87.49% { background-position: 66.667% 100%; }
+  87.5%, 100% { background-position: 100% 100%; }
 }
 
 .auth-page-shell__backdrop {
@@ -244,10 +254,9 @@
 }
 
 .main-menu__backdrop-anim {
-  background-image: url('/sprites/moon_bg.jpg');
   background-repeat: no-repeat;
-  background-size: 800vw 100vh;
-  animation: auth-menu-cycle 1.6s steps(7) infinite;
+  background-size: 400% 200%;
+  animation: game-bg-cycle 1.6s steps(8) infinite;
 }
 
 .main-menu__backdrop {

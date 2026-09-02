@@ -19,10 +19,9 @@
 }
 
 .leaderboard-screen__backdrop-anim {
-  background-image: url('/sprites/moon_bg.jpg');
   background-repeat: no-repeat;
-  background-size: 800vw 100vh;
-  animation: auth-menu-cycle 1.6s steps(7) infinite;
+  background-size: 400% 200%;
+  animation: game-bg-cycle 1.6s steps(8) infinite;
 }
 
 .leaderboard-screen__backdrop {
