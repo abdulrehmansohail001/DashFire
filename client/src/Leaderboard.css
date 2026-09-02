@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+.leaderboard-screen {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-family: 'Press Start 2P', monospace;
+  background: #000;
+}
+
+.leaderboard-screen__backdrop-anim,
+.leaderboard-screen__backdrop,
+.leaderboard-screen__scanlines {
+  position: absolute;
+  inset: 0;
+}
+
+.leaderboard-screen__backdrop-anim {
+  background-image: url('/sprites/moon_bg.jpg');
+  background-repeat: no-repeat;
+  background-size: 800vw 100vh;
+  animation: auth-menu-cycle 1.6s steps(7) infinite;
+}
+
+.leaderboard-screen__backdrop {
+  background: rgba(4, 8, 16, 0.72);
+}
+
+.leaderboard-screen__scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0px,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.5;
+}
+
+.leaderboard-screen__back {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 2;
+  padding: 8px 10px;
+  border: 2px solid #3ad1ff88;
+  background-image: url('/sprites/auth_button_bg.png');
+  background-size: cover;
+  color: #9fb3c8;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  cursor: pointer;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.leaderboard-screen__back:hover {
+  color: #fff;
+  border-color: #3ad1ff;
+}
+
+.leaderboard-panel {
+  position: relative;
+  z-index: 1;
+  width: min(88vw, 620px);
+  max-height: 86vh;
+  overflow: auto;
+  text-align: center;
+}
+
+.leaderboard-panel h1 {
+  margin: 14px 0 28px;
+  color: #ffffffb7;
+  font-size: clamp(1.1rem, 4vw, 1.8rem);
+  letter-spacing: 3px;
+  text-shadow: 3px 3px 0 #000, 6px 6px 0 rgba(58, 209, 255, 0.3);
+}
+
+.leaderboard-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) 100px;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 2px solid #3ad1ff55;
+  background-image: url('/sprites/auth_button_bg.png');
+  background-size: cover;
+  background-position: center;
+  color: #eef8ff;
+  font-size: 0.62rem;
+  text-align: left;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.leaderboard-row--header {
+  min-height: 34px;
+  border-color: #3ad1ff99;
+  background: rgba(13, 20, 32, 0.9);
+  color: #8ae8ff;
+  font-size: 0.52rem;
+}
+
+.leaderboard-row span:last-child,
+.leaderboard-row--header span:last-child {
+  color: #ffe08a;
+  text-align: right;
+}
+
+.leaderboard-row__player {
+  overflow: hidden;
+  color: #fff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-status {
+  margin: 22px 0;
+  color: #9fb3c8;
+  font-size: 0.58rem;
+}
+
+.leaderboard-status--error {
+  color: #ff7777;
+}
+
+@media (max-width: 560px) {
+  .leaderboard-panel {
+    width: min(92vw, 620px);
+  }
+
+  .leaderboard-row {
+    grid-template-columns: 62px minmax(0, 1fr) 72px;
+    padding: 0 10px;
+    font-size: 0.5rem;
+  }
+
+  .leaderboard-row--header {
+    font-size: 0.42rem;
+  }
+}

@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import authRoutes from './routes/authRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
+import leaderboardRoutes from './routes/leaderboardRoutes.js';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 mongoose.connect(MONGO_URI)
   .then(() => {

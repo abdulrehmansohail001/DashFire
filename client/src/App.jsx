@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import GameCanvas from './game/GameCanvas';
 import LevelSelect from './game/LevelSelect';
 import WorldSelect from './game/WorldSelect';
+import Leaderboard from './Leaderboard';
 import { WORLDS } from './game/worlds';
 import { getPlayerProgress, saveLevelClear, getAuthenticatedUser, saveAuth, clearAuth } from './services/progressApi';
 import { registerUser, loginUser } from './services/authApi';
@@ -84,6 +85,14 @@ function App() {
 
   const handlePlay = () => {
     setScreen('worldSelect');
+  };
+
+  const handleLeaderboard = () => {
+    setScreen('leaderboard');
+  };
+
+  const handleBackToMainMenu = () => {
+    setScreen('mainMenu');
   };
 
   const handleSelectLevel = (index) => {
@@ -212,6 +221,7 @@ function App() {
         <button type="button" className="logout-button" onClick={handleLogout}>Logout</button>
       </div>
 
+      {screen === 'leaderboard' && <Leaderboard onBack={handleBackToMainMenu} />}
       {screen === 'mainMenu' && (
         <div className="main-menu">
           <div className="main-menu__backdrop-anim" />
@@ -226,7 +236,7 @@ function App() {
               <button type="button" className="main-menu__button" onClick={handlePlay}>
                 PLAY
               </button>
-              <button type="button" className="main-menu__button" disabled>
+              <button type="button" className="main-menu__button" onClick={handleLeaderboard}>
                 LEADERBOARD
               </button>
               <button type="button" className="main-menu__button" disabled>
