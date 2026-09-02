@@ -1452,9 +1452,17 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
             : distorter.x - muzzleOffset - 10;
           const bulletY = GUNMEN_FIRE_HEIGHT_Y;
 
-          enemyBulletsRef.current.push(
-            new EnemyBullet(bulletX, bulletY, fireDirection, 260)
-          );
+          if (distorter.projectileMode === 'fireball') {
+            distorter.projectileMode = 'yeti';
+            enemyBulletsRef.current.push(
+              new BossFireball(bulletX, bulletY, fireDirection, 260)
+            );
+          } else {
+            distorter.projectileMode = 'fireball';
+            yetiProjectilesRef.current.push(
+              new YetiProjectile(bulletX, bulletY, fireDirection, 260)
+            );
+          }
         }
 
         if (distorter.wantsToSpawnGunman) {
@@ -1481,9 +1489,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         }
       }
 
-      // Time gunmen: same update/fire pattern as the regular enemies loop,
-      // but each shot randomly picks between a BossFireball and a
-      // freeze-capable YetiProjectile instead of a plain EnemyBullet.
+      // Time gunmen: they use the same regular EnemyBullet pattern as the
+      // normal world 1/2 gunmen; the TimeDistorter itself alternates between
+      // its special fireball and YetiProjectile attacks.
       for (const gunman of timeGunmenRef.current) {
         if (!gunman.alive) continue;
         gunman.update(dt, player.x);
@@ -1491,15 +1499,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         if (gunman.wantsToFire) {
           gunman.wantsToFire = false;
           const bulletX = gunman.facing === 'right' ? gunman.x + gunman.width : gunman.x;
-          if (Math.random() < 0.5) {
-            enemyBulletsRef.current.push(
-              new BossFireball(bulletX, GUNMEN_FIRE_HEIGHT_Y, gunman.facing, gunman.bulletSpeed)
-            );
-          } else {
-            yetiProjectilesRef.current.push(
-              new YetiProjectile(bulletX, GUNMEN_FIRE_HEIGHT_Y, gunman.facing, gunman.bulletSpeed)
-            );
-          }
+          enemyBulletsRef.current.push(
+            new EnemyBullet(bulletX, GUNMEN_FIRE_HEIGHT_Y, gunman.facing, gunman.bulletSpeed)
+          );
         }
       }
       for (const bullet of bulletsRef.current) {

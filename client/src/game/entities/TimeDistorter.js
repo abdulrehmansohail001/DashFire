@@ -65,6 +65,7 @@ export class TimeDistorter {
 
     this.fireTimer = 0;
     this.wantsToFire = false; // edge-triggered true for one frame every 3.0s
+    this.projectileMode = 'fireball'; // alternates between fireball and YetiProjectile shots
 
     // Animation state — 'idle' | 'shoot' | 'reversal' | 'inversion'
     this.animState = 'idle';
