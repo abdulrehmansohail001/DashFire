@@ -546,6 +546,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const [health, setHealth] = useState(10);
   const [levelNumber, setLevelNumber] = useState(LEVELS[initialLevelIndex].level);
   const [runSummary, setRunSummary] = useState({ stars: 0, coins: 0, hp: PLAYER_MAX_HEALTH, rewarded: false });
+  const runSummaryRef = useRef(runSummary);
   const [resultOverlay, setResultOverlay] = useState(null);
   // 'playing' | 'dying' | 'gameover' | 'celebrating' | 'levelComplete' | 'gameComplete'
   // 'dying'/'celebrating' are animation-only holds: the death/victory sprite
@@ -632,13 +633,19 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const awardCoinReward = () => {
     const reward = 200 + Math.floor(Math.random() * 51);
     coinsEarnedRef.current += reward;
-    setRunSummary((prev) => ({
-      ...prev,
+    const nextSummary = {
+      ...runSummaryRef.current,
       coins: coinsEarnedRef.current,
       hp: Math.max(playerRef.current.health, 0),
       rewarded: true,
-    }));
+    };
+    runSummaryRef.current = nextSummary;
+    setRunSummary(nextSummary);
   };
+
+  useEffect(() => {
+    runSummaryRef.current = runSummary;
+  }, [runSummary]);
 
   const startLevel = (index, keepHealth = true) => {
     levelIndexRef.current = index;
@@ -655,7 +662,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     }
 
     coinsEarnedRef.current = 0;
-    setRunSummary({ stars: 0, coins: 0, hp: playerRef.current.health, rewarded: false });
+    const resetSummary = { stars: 0, coins: 0, hp: playerRef.current.health, rewarded: false };
+    runSummaryRef.current = resetSummary;
+    setRunSummary(resetSummary);
     setResultOverlay(null);
 
     enemiesRef.current = buildEnemiesForLevel(config);
@@ -730,6 +739,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const finalizeRunSummary = (hpLeft) => {
     const stars = computeStarsForHp(hpLeft);
     const summary = { stars, coins: coinsEarnedRef.current, hp: hpLeft, rewarded: true };
+    runSummaryRef.current = summary;
     setRunSummary(summary);
     return summary;
   };
@@ -765,12 +775,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         restartCurrentLevel();
       }
 
+      const latestSummary = runSummaryRef.current;
+
       if (gameStateRef.current === 'levelComplete' && (e.key === 'n' || e.key === 'N' || e.key === ' ')) {
-        onLevelComplete && onLevelComplete(levelIndexRef.current, runSummary);
+        onLevelComplete && onLevelComplete(levelIndexRef.current, latestSummary);
       }
 
       if (gameStateRef.current === 'gameComplete' && (e.key === 'r' || e.key === 'R')) {
-        onLevelComplete && onLevelComplete(levelIndexRef.current, runSummary);
+        onLevelComplete && onLevelComplete(levelIndexRef.current, latestSummary);
       }
 
       if (gameStateRef.current === 'levelComplete' && (e.key === 'r' || e.key === 'R')) {
@@ -778,7 +790,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       }
 
       if (gameStateRef.current === 'gameComplete' && (e.key === 'n' || e.key === 'N' || e.key === ' ')) {
-        onLevelComplete && onLevelComplete(levelIndexRef.current, runSummary);
+        onLevelComplete && onLevelComplete(levelIndexRef.current, latestSummary);
       }
 
       if (e.key === 'Escape' && gameStateRef.current === 'playing') {
@@ -1758,6 +1770,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         const summary = finalizeRunSummary(finalHp);
         if (onLevelComplete) {
           // Preserve the summary for the button action after the outro overlay.
+          runSummaryRef.current = summary;
           setRunSummary(summary);
         }
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
@@ -2028,9 +2041,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         ctx.font = '14px "Press Start 2P", monospace';
         ctx.fillText(subtitle, 400, 170);
         ctx.fillText('STARS SECURED', 400, 210);
-        ctx.fillText(`${runSummary.stars} / 3`, 400, 235);
+        ctx.fillText(`${runSummaryRef.current.stars} / 3`, 400, 235);
         ctx.fillText('COINS GOT', 400, 270);
-        ctx.fillText(`${runSummary.coins}`, 400, 295);
+        ctx.fillText(`${runSummaryRef.current.coins}`, 400, 295);
       };
 
       if (gameStateRef.current === 'gameover') {
@@ -2076,7 +2089,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     }
 
     if (action === 'proceed') {
-      onLevelComplete && onLevelComplete(levelIndexRef.current, runSummary);
+      onLevelComplete && onLevelComplete(levelIndexRef.current, runSummaryRef.current);
     }
   };
 
