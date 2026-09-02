@@ -28,11 +28,6 @@ const progressSchema = new mongoose.Schema({
   minimize: false,
 });
 
-progressSchema.pre('save', function preSave(next) {
-  this.updatedAt = new Date();
-  next();
-});
-
 const Progress = mongoose.model('Progress', progressSchema);
 
 export default Progress;
