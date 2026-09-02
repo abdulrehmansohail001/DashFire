@@ -519,6 +519,22 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
 
   const playerSheet = getSheet(world.sprites.player);
   const playerExtraSheet = getSheet(world.sprites.playerExtra);
+  const player2Sheet = getSheet({
+    path: '/sprites/player2.png',
+    frameWidth: 320,
+    frameHeight: 320,
+    columns: 4,
+    rows: 4,
+  });
+  const player2ExtraSheet = getSheet({
+    path: '/sprites/player2_extra.png',
+    frameWidth: 320,
+    frameHeight: 320,
+    columns: 4,
+    rows: 4,
+  });
+  const equippedPlayerSheet = equippedSkin === 'skin_02' ? player2Sheet : playerSheet;
+  const equippedPlayerExtraSheet = equippedSkin === 'skin_02' ? player2ExtraSheet : playerExtraSheet;
   const enemySheet = getSheet(world.sprites.enemy ?? world.sprites.martianCat);
   const martianCatSheet = getSheet(world.sprites.martianCat ?? world.sprites.enemy);
   const eagleSheet = getSheet(world.sprites.eagle);
@@ -1827,7 +1843,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
       ctx.lineTo(800, 400);
       ctx.stroke();
 
-      playerRef.current.draw(ctx, playerSheet, playerExtraSheet, freezeCrystalSheet, ghostSheet, duckSheet, equippedSkin);
+      playerRef.current.draw(ctx, equippedPlayerSheet, equippedPlayerExtraSheet, freezeCrystalSheet, ghostSheet, duckSheet, equippedSkin);
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       timeGunmenRef.current.forEach((g) => g.draw(ctx, enemySheet)); // no dedicated art yet — reuses whichever enemy sheet this world has (placeholder rectangle if none)
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
@@ -1879,7 +1895,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
       const playerCircleX = 40;
       const circleY = 40;
       const circleRadius = 24;
-      drawHudPortrait(ctx, playerSheet, playerCircleX, circleY, circleRadius, '#3ad1ff', 'P');
+      drawHudPortrait(ctx, equippedPlayerSheet, playerCircleX, circleY, circleRadius, '#3ad1ff', 'P');
       drawHpBar(
         ctx,
         playerCircleX + circleRadius + 12,

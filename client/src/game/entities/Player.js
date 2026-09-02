@@ -690,7 +690,7 @@ export class Player {
           ctx.globalAlpha = GHOST_ALPHA_LEVELS[ghostStep];
         }
 
-        if (skinId === 'skin_01' && sheet && sheet.loaded) {
+        if ((skinId === 'skin_01' || skinId === 'skin_02') && sheet && sheet.loaded) {
           let row, col;
           if (config.cells) {
             [row, col] = config.cells[this.frameIndex];
