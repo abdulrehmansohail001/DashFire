@@ -7,13 +7,15 @@
 import { useEffect, useState } from 'react';
 import './LevelSelect.css';
 import { playSound } from './sound';
-import { PixelLock, PixelCheck } from './PixelIcon';
+import { PixelLock } from './PixelIcon';
 
 const BACKDROP_FRAME_INTERVAL = 200; // ms per frame — matches the old 1.6s/8-step cycle
 
 export default function LevelSelect({
   levels,
   unlockedCount,
+  starsByLevel = {},
+  worldIndex = 0,
   missionTitle,
   backgroundPath,
   backgroundColumns = 8,
@@ -61,6 +63,7 @@ export default function LevelSelect({
         {levels.map((levelConfig, index) => {
           const isUnlocked = index < unlockedCount;
           const isCleared = index < unlockedCount - 1;
+          const starCount = Math.min(3, Math.max(0, Number(starsByLevel[`${worldIndex}:${index}`]) || 0));
 
           return (
             <button
@@ -80,9 +83,9 @@ export default function LevelSelect({
                 isUnlocked ? `Play level ${levelConfig.level}` : `Level ${levelConfig.level} locked`
               }
             >
-                            {isCleared && (
-                <span className="level-node__cleared-badge">
-                  <PixelCheck size={20} color="#04140a" />
+              {isCleared && starCount > 0 && (
+                <span className="level-node__stars" aria-label={`${starCount} stars`}>
+                  {'⭐'.repeat(starCount)}
                 </span>
               )}
               {isUnlocked ? (

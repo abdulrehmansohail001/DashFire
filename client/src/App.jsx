@@ -14,8 +14,8 @@ function App() {
   const [selectedWorldIndex, setSelectedWorldIndex] = useState(0);
   const [selectedLevelIndex, setSelectedLevelIndex] = useState(0);
   const [unlockedByWorld, setUnlockedByWorld] = useState(DEFAULT_UNLOCKED_BY_WORLD);
-  const [totalStars, setTotalStars] = useState(0);
   const [totalCoins, setTotalCoins] = useState(0);
+  const [starsByLevel, setStarsByLevel] = useState({});
   const [authMode, setAuthMode] = useState('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -33,17 +33,17 @@ function App() {
       try {
         const progress = await getPlayerProgress(currentUser.username);
         setUnlockedByWorld(progress.unlockedByWorld || DEFAULT_UNLOCKED_BY_WORLD);
-        setTotalStars(Number(progress.totalStars) || 0);
         setTotalCoins(Number(progress.totalCoins) || 0);
+        setStarsByLevel(progress.starsByLevel || {});
       } catch {
         setUnlockedByWorld(DEFAULT_UNLOCKED_BY_WORLD);
-        setTotalStars(0);
         setTotalCoins(0);
+        setStarsByLevel({});
       }
     };
 
     loadProgress();
-    setScreen('worldSelect');
+    setScreen('mainMenu');
   }, [currentUser]);
 
   const handleAuthSubmit = async (event) => {
@@ -82,6 +82,10 @@ function App() {
     setScreen('menu');
   };
 
+  const handlePlay = () => {
+    setScreen('worldSelect');
+  };
+
   const handleSelectLevel = (index) => {
     setSelectedLevelIndex(index);
     setScreen('game');
@@ -115,8 +119,8 @@ function App() {
         Number(summary.coins) || 0,
       );
       setUnlockedByWorld(progress.unlockedByWorld || unlockedByWorld);
-      setTotalStars(Number(progress.totalStars) || 0);
       setTotalCoins(Number(progress.totalCoins) || 0);
+      setStarsByLevel(progress.starsByLevel || starsByLevel);
     } catch {
       // keep local state so the session still feels responsive if the API is offline
     }
@@ -208,11 +212,37 @@ function App() {
         <button type="button" className="logout-button" onClick={handleLogout}>Logout</button>
       </div>
 
+      {screen === 'mainMenu' && (
+        <div className="main-menu">
+          <div className="main-menu__backdrop-anim" />
+          <div className="main-menu__backdrop" />
+          <div className="main-menu__scanlines" />
+          <div className="main-menu__content">
+            <div className="main-menu__title-block">
+              <p className="eyebrow">Game progress</p>
+              <h1>Dashfire</h1>
+            </div>
+            <div className="main-menu__options">
+              <button type="button" className="main-menu__button" onClick={handlePlay}>
+                PLAY
+              </button>
+              <button type="button" className="main-menu__button" disabled>
+                LEADERBOARD
+              </button>
+              <button type="button" className="main-menu__button" disabled>
+                SHOP
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {screen === 'worldSelect' && <WorldSelect onSelectWorld={handleSelectWorld} />}
       {screen === 'menu' && (
         <LevelSelect
           levels={currentWorld.levels}
           unlockedCount={unlockedByWorld[selectedWorldIndex] ?? 1}
+          starsByLevel={starsByLevel}
+          worldIndex={selectedWorldIndex}
           missionTitle={currentWorld.missionTitle}
           backgroundPath={currentWorld.sprites.background?.path}
           backgroundColumns={currentWorld.sprites.background?.columns ?? 8}
@@ -225,7 +255,6 @@ function App() {
         <GameCanvas
           worldIndex={selectedWorldIndex}
           initialLevelIndex={selectedLevelIndex}
-          totalStars={totalStars}
           totalCoins={totalCoins}
           onLevelComplete={handleLevelComplete}
           onExitToMenu={handleExitToMenu}

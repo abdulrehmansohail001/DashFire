@@ -30,6 +30,19 @@ function normalizeUnlockedByWorld(value) {
   return normalized;
 }
 
+function normalizeStarsByLevel(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+
+  const normalized = {};
+  for (const [levelKey, rawValue] of Object.entries(value)) {
+    const stars = Number(rawValue);
+    if (Number.isFinite(stars) && stars >= 0) {
+      normalized[levelKey] = Math.min(3, Math.floor(stars));
+    }
+  }
+  return normalized;
+}
+
 router.get('/:userId', requireAuth, async (req, res) => {
   try {
     const { userId } = req.params;
@@ -45,6 +58,7 @@ router.get('/:userId', requireAuth, async (req, res) => {
         unlockedByWorld: existing.unlockedByWorld,
         totalStars: existing.totalStars ?? 0,
         totalCoins: existing.totalCoins ?? 0,
+        starsByLevel: normalizeStarsByLevel(existing.starsByLevel),
       });
     }
 
@@ -53,6 +67,7 @@ router.get('/:userId', requireAuth, async (req, res) => {
       unlockedByWorld: DEFAULT_UNLOCKED_BY_WORLD,
       totalStars: 0,
       totalCoins: 0,
+      starsByLevel: {},
     });
 
     return res.json({
@@ -60,6 +75,7 @@ router.get('/:userId', requireAuth, async (req, res) => {
       unlockedByWorld: created.unlockedByWorld,
       totalStars: created.totalStars ?? 0,
       totalCoins: created.totalCoins ?? 0,
+      starsByLevel: {},
     });
   } catch (error) {
     console.error('GET /api/progress error:', error.message);
@@ -70,7 +86,7 @@ router.get('/:userId', requireAuth, async (req, res) => {
 router.put('/:userId', requireAuth, async (req, res) => {
   try {
     const { userId } = req.params;
-    const { unlockedByWorld, totalStars, totalCoins } = req.body || {};
+    const { unlockedByWorld, totalStars, totalCoins, starsByLevel } = req.body || {};
 
     if (req.user.userId !== userId && req.user.username !== userId) {
       return res.status(403).json({ error: 'forbidden' });
@@ -87,6 +103,7 @@ router.put('/:userId', requireAuth, async (req, res) => {
         unlockedByWorld: sanitizedUnlocked,
         totalStars: safeStars,
         totalCoins: safeCoins,
+        starsByLevel: normalizeStarsByLevel(starsByLevel),
         updatedAt: Date.now(),
       },
       {
@@ -101,6 +118,7 @@ router.put('/:userId', requireAuth, async (req, res) => {
       unlockedByWorld: progress.unlockedByWorld,
       totalStars: progress.totalStars ?? 0,
       totalCoins: progress.totalCoins ?? 0,
+      starsByLevel: normalizeStarsByLevel(progress.starsByLevel),
     });
   } catch (error) {
     console.error('PUT /api/progress error:', error.message);
@@ -132,8 +150,15 @@ router.post('/:userId/level-clear', requireAuth, async (req, res) => {
     const nextUnlocked = Math.max(currentUnlocked, clearedLevel + 2);
     unlockedByWorld[worldId] = nextUnlocked;
 
-    const totalStars = Math.max(0, Number(currentProgress?.totalStars ?? 0) + (Number(stars) || 0));
-    const totalCoins = Math.max(0, Number(currentProgress?.totalCoins ?? 0) + (Number(coins) || 0));
+    const starsByLevel = normalizeStarsByLevel(currentProgress?.starsByLevel);
+    const levelKey = `${worldId}:${clearedLevel}`;
+    const submittedStars = Math.min(3, Math.max(0, Math.floor(Number(stars) || 0)));
+    const previousBestStars = starsByLevel[levelKey] ?? 0;
+    const improvedStars = Math.max(0, submittedStars - previousBestStars);
+    starsByLevel[levelKey] = Math.max(previousBestStars, submittedStars);
+    const totalStars = Math.max(0, Number(currentProgress?.totalStars ?? 0) + improvedStars);
+    const submittedCoins = Math.max(0, Math.floor(Number(coins) || 0));
+    const totalCoins = Math.max(0, Number(currentProgress?.totalCoins ?? 0) + submittedCoins);
 
     const progress = await Progress.findOneAndUpdate(
       { userId },
@@ -142,6 +167,7 @@ router.post('/:userId/level-clear', requireAuth, async (req, res) => {
         unlockedByWorld,
         totalStars,
         totalCoins,
+        starsByLevel,
         updatedAt: Date.now(),
       },
       {
@@ -156,6 +182,7 @@ router.post('/:userId/level-clear', requireAuth, async (req, res) => {
       unlockedByWorld: progress.unlockedByWorld,
       totalStars: progress.totalStars ?? 0,
       totalCoins: progress.totalCoins ?? 0,
+      starsByLevel: normalizeStarsByLevel(progress.starsByLevel),
     });
   } catch (error) {
     console.error('POST /api/progress/level-clear error:', error.message);

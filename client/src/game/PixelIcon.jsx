@@ -30,6 +30,19 @@ const CHECK_PATTERN = [
   '0000000000',
 ];
 
+const COIN_PATTERN = [
+  '0011111000',
+  '0111111110',
+  '1110111011',
+  '1111111111',
+  '1110111011',
+  '1111111111',
+  '0111111110',
+  '0011111000',
+  '0000000000',
+  '0000000000',
+];
+
 function PixelIcon({ pattern, size = 20, color = '#fff' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 10 10" shapeRendering="crispEdges">
@@ -48,4 +61,8 @@ export function PixelLock({ size, color }) {
 
 export function PixelCheck({ size, color }) {
   return <PixelIcon pattern={CHECK_PATTERN} size={size} color={color} />;
+}
+
+export function PixelCoin({ size, color }) {
+  return <PixelIcon pattern={COIN_PATTERN} size={size} color={color} />;
 }

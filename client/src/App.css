@@ -226,6 +226,102 @@
   text-shadow: 1px 1px 0 #000;
 }
 
+.main-menu {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-family: 'Press Start 2P', monospace;
+  background: #000;
+}
+
+.main-menu__backdrop-anim,
+.main-menu__backdrop,
+.main-menu__scanlines {
+  position: absolute;
+  inset: 0;
+}
+
+.main-menu__backdrop-anim {
+  background-image: url('/sprites/moon_bg.jpg');
+  background-repeat: no-repeat;
+  background-size: 800vw 100vh;
+  animation: auth-menu-cycle 1.6s steps(7) infinite;
+}
+
+.main-menu__backdrop {
+  background: rgba(4, 8, 16, 0.72);
+}
+
+.main-menu__scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0px,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.5;
+}
+
+.main-menu__content {
+  position: relative;
+  z-index: 1;
+  width: min(86vw, 430px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 42px;
+}
+
+.main-menu__title-block {
+  text-align: center;
+}
+
+.main-menu__title-block h1 {
+  margin: 12px 0 0;
+  color: #ffffffb7;
+  font-size: clamp(1.3rem, 4vw, 2rem);
+  letter-spacing: 3px;
+  text-shadow: 3px 3px 0 #000, 6px 6px 0 rgba(58, 209, 255, 0.3);
+}
+
+.main-menu__options {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.main-menu__button {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 18px;
+  border: 2px solid #3ad1ff88;
+  border-radius: 0;
+  background-image: url('/sprites/auth_button_bg.png');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(0.62rem, 2vw, 0.78rem);
+  letter-spacing: 1px;
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
+  cursor: pointer;
+  transition: transform 0.1s steps(2, end), border-color 0.1s ease;
+}
+
+.main-menu__button:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  border-color: #3ad1ff;
+}
+
+.main-menu__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .topbar-user {
   position: absolute;
   top: 16px;
@@ -296,21 +392,14 @@
   min-width: 86px;
 }
 
-.game-total-hud__icon {
-  display: inline-grid;
-  place-items: center;
-  width: 17px;
-  height: 17px;
-  border: 2px solid currentColor;
-  font-size: 0.65rem;
-}
-
-.game-total-hud__item--stars {
-  color: #ffe08a;
-}
-
 .game-total-hud__item--coins {
   color: #8ae8ff;
+}
+
+.game-total-hud__coin {
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .result-button {

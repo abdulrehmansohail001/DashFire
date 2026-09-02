@@ -110,6 +110,7 @@
   color: #fff;
   font-size: 22px;
   pointer-events: none;
+  margin-top: 12px;
   text-shadow:
     2px 2px 0 #000, -2px -2px 0 #000,
     2px -2px 0 #000, -2px 2px 0 #000,
@@ -117,17 +118,19 @@
     0 2px 0 #000, 0 -2px 0 #000;
 }
 
-.level-node__cleared-badge {
+.level-node__stars {
   position: absolute;
-  top: -11px;
-  right: -11px;
-  width: 26px;
-  height: 26px;
-  background: #34c85a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #000;
+  top: 4px;
+  left: 0;
+  right: 0;
+  color: #ffe08a;
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 1px;
+  text-align: center;
+  text-shadow: 1px 1px 0 #000;
+  pointer-events: none;
   z-index: 1;
 }
 

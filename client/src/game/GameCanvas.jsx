@@ -513,7 +513,7 @@ function drawTimeDistorterOverlay(ctx, boss) {
   ctx.restore();
 }
 
-export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, totalStars = 0, totalCoins = 0, onLevelComplete, onExitToMenu }) {
+export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, totalCoins = 0, onLevelComplete, onExitToMenu }) {
   const world = WORLDS[worldIndex] ?? WORLDS[0];
   const LEVELS = world.levels; // every existing LEVELS[...] reference below now resolves per-world, unchanged
 
@@ -2130,13 +2130,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         }}
       />
 
-      <div className="game-total-hud" aria-label="Total rewards">
-        <span className="game-total-hud__item game-total-hud__item--stars">
-          <span className="game-total-hud__icon" aria-hidden="true">*</span>
-          <span>{totalStars}</span>
-        </span>
+      <div className="game-total-hud" aria-label="Total coins">
         <span className="game-total-hud__item game-total-hud__item--coins">
-          <span className="game-total-hud__icon" aria-hidden="true">$</span>
+          <span className="game-total-hud__coin" aria-hidden="true">🪙</span>
           <span>{totalCoins}</span>
         </span>
       </div>

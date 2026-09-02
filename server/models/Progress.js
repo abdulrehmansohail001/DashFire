@@ -30,6 +30,10 @@ const progressSchema = new mongoose.Schema({
     default: 0,
     min: 0,
   },
+  starsByLevel: {
+    type: Object,
+    default: () => ({}),
+  },
   updatedAt: {
     type: Date,
     default: Date.now,
