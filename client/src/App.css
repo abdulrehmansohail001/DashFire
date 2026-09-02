@@ -144,11 +144,11 @@
 }
 
 .auth-toggle button.active {
-  border-color: #3ad1ff;
+  border-color: #3ad1ff88;
 }
 
 .auth-toggle button.active::before {
-  background: rgba(58, 209, 255, 0.35);
+  background: rgba(20, 30, 45, 0.55);
 }
 
 .auth-form {
@@ -182,7 +182,7 @@
 
 .auth-submit {
   position: relative;
-  border: 2px solid #3ad1ff;
+  border: 2px solid #3ad1ff88;
   border-radius: 0;
   background-image: url('/sprites/auth_button_bg.png');
   background-size: cover;
@@ -201,7 +201,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(58, 209, 255, 0.3);
+  background: rgba(20, 30, 45, 0.55);
   z-index: 0;
 }
 
