@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import progressRoutes from './routes/progressRoutes.js';
 
 dotenv.config();
 
@@ -17,9 +18,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Routes will be mounted here as they're built, e.g.:
-// import scoreRoutes from './routes/scoreRoutes.js';
-// app.use('/api/scores', scoreRoutes);
+app.use('/api/progress', progressRoutes);
 
 mongoose.connect(MONGO_URI)
   .then(() => {

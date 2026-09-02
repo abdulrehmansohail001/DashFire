@@ -3,34 +3,30 @@ import GameCanvas from './game/GameCanvas';
 import LevelSelect from './game/LevelSelect';
 import WorldSelect from './game/WorldSelect';
 import { WORLDS } from './game/worlds';
+import { getPlayerProgress, saveLevelClear, getUserId, loadUserId } from './services/progressApi';
 import './App.css';
 
-const UNLOCKED_KEY = 'dashfire_unlocked_by_world';
+const DEFAULT_UNLOCKED_BY_WORLD = { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1 };
 
 function App() {
-  const [screen, setScreen] = useState('worldSelect'); // 'worldSelect' | 'menu' | 'game'
+  const [screen, setScreen] = useState('worldSelect');
   const [selectedWorldIndex, setSelectedWorldIndex] = useState(0);
-  const [selectedLevelIndex, setSelectedLevelIndex] = useState(0); // 0-based
-  // Per-world unlock counts: { 0: 6, 1: 1 } means World 1 has levels 1-6
-  // unlocked, World 2 only has level 1. Defaults to 1 for any world not
-  // yet in the saved object (i.e. only its first level is playable).
-  const [unlockedByWorld, setUnlockedByWorld] = useState({ 0: 10, 1: 10, 2: 10, 3: 10, 4: 10 }); // TESTING: all levels unlocked — revert to { 0: 1 } before shipping
+  const [selectedLevelIndex, setSelectedLevelIndex] = useState(0);
+  const [unlockedByWorld, setUnlockedByWorld] = useState(DEFAULT_UNLOCKED_BY_WORLD);
 
-  // Load saved progress once on mount. No backend yet — localStorage is a
-  // fine stand-in until the server/database side is built out; swapping
-  // this for a real API call later only touches this effect + the setter
-  // below, nothing else in the app needs to change.
   useEffect(() => {
-    const saved = localStorage.getItem(UNLOCKED_KEY);
-    if (!saved) return;
-    try {
-      const parsed = JSON.parse(saved);
-      if (parsed && typeof parsed === 'object') {
-        setUnlockedByWorld(parsed);
+    const userId = loadUserId();
+
+    const loadProgress = async () => {
+      try {
+        const progress = await getPlayerProgress(userId);
+        setUnlockedByWorld(progress.unlockedByWorld || DEFAULT_UNLOCKED_BY_WORLD);
+      } catch {
+        setUnlockedByWorld(DEFAULT_UNLOCKED_BY_WORLD);
       }
-    } catch {
-      // ignore malformed/old-format save data
-    }
+    };
+
+    loadProgress();
   }, []);
 
   const handleSelectWorld = (index) => {
@@ -47,17 +43,22 @@ function App() {
     setScreen('worldSelect');
   };
 
-  // Called by GameCanvas when the player clears `clearedIndex` (0-based)
-  // in the currently-selected world. Unlocks the next level in THAT world
-  // (if it wasn't already) and returns to the level-select menu.
-  const handleLevelComplete = (clearedIndex) => {
+  const handleLevelComplete = async (clearedIndex) => {
+    const userId = getUserId();
     const currentUnlocked = unlockedByWorld[selectedWorldIndex] ?? 1;
     const newUnlocked = Math.max(currentUnlocked, clearedIndex + 2);
+
     if (newUnlocked !== currentUnlocked) {
       const next = { ...unlockedByWorld, [selectedWorldIndex]: newUnlocked };
       setUnlockedByWorld(next);
-      localStorage.setItem(UNLOCKED_KEY, JSON.stringify(next));
+
+      try {
+        await saveLevelClear(userId, selectedWorldIndex, clearedIndex);
+      } catch {
+        // keep local state so the session still feels responsive if the API is offline
+      }
     }
+
     setScreen('menu');
   };
 
