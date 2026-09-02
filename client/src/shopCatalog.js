@@ -2,7 +2,7 @@ export const SHOP_CATALOG = [
   {
     id: 'skin_01',
     category: 'skin',
-    name: 'Skin 01',
+    name: 'Starfall Trooper',
     price: 200,
     description: 'Placeholder character skin 01',
     spritePath: '/sprites/player.png',
@@ -12,7 +12,7 @@ export const SHOP_CATALOG = [
   {
     id: 'skin_02',
     category: 'skin',
-    name: 'Skin 02',
+    name: 'Iron Horse Outlaw',
     price: 300,
     description: 'Placeholder character skin 02',
     spritePath: '/sprites/player2.png',
@@ -22,7 +22,7 @@ export const SHOP_CATALOG = [
   {
     id: 'skin_03',
     category: 'skin',
-    name: 'Skin 03',
+    name: 'Titan Plate',
     price: 400,
     description: 'Placeholder character skin 03',
     spritePath: '/sprites/player3.png',
@@ -32,7 +32,7 @@ export const SHOP_CATALOG = [
   {
     id: 'skin_04',
     category: 'skin',
-    name: 'Skin 04',
+    name: 'Carn-evil',
     price: 500,
     description: 'Placeholder character skin 04',
     spritePath: '/sprites/player4.png',
@@ -42,7 +42,7 @@ export const SHOP_CATALOG = [
   {
     id: 'skin_05',
     category: 'skin',
-    name: 'Skin 05',
+    name: 'Blood Baddie',
     price: 600,
     description: 'Placeholder character skin 05',
     spritePath: '/sprites/player5.png',
