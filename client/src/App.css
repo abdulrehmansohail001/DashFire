@@ -15,12 +15,33 @@
   place-items: center;
   position: fixed;
   inset: 0;
-  background: radial-gradient(ellipse at top, #1a0f2e 0%, #0a0612 55%, #030208 100%);
   overflow: hidden;
 }
 
-.auth-page-shell::before {
-  content: '';
+.auth-page-shell__backdrop-anim {
+  position: absolute;
+  inset: 0;
+  /* Placeholder art — swap the path once dedicated login-screen art
+     exists. Same animated-strip technique as WorldSelect/LevelSelect. */
+  background-image: url('/sprites/moon_bg.jpg');
+  background-repeat: no-repeat;
+  background-size: 800vw 100vh;
+  animation: auth-menu-cycle 1.6s steps(7) infinite;
+}
+
+@keyframes auth-menu-cycle {
+  from { background-position-x: 0vw; }
+  to { background-position-x: -700vw; }
+}
+
+.auth-page-shell__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 8, 16, 0.72);
+  pointer-events: none;
+}
+
+.auth-page-shell__scanlines {
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(
@@ -38,10 +59,9 @@
   position: relative;
   z-index: 1;
   width: min(92vw, 420px);
-  background: rgba(6, 8, 18, 0.9);
-  border: 2px solid #3ad1ff88;
-  border-radius: 0;
-  box-shadow: 0 0 0 4px #000, 6px 6px 0 rgba(0, 0, 0, 0.6);
+  background: none;
+  border: none;
+  box-shadow: none;
   padding: 24px 20px;
 }
 

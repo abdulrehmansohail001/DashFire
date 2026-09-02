@@ -118,6 +118,9 @@ function App() {
   if (screen === 'auth') {
     return (
       <div className="app-container auth-page-shell">
+        <div className="auth-page-shell__backdrop-anim" />
+        <div className="auth-page-shell__backdrop" />
+        <div className="auth-page-shell__scanlines" />
         <div className="auth-card">
           <div className="auth-header">
             <span className="auth-badge">D</span>
