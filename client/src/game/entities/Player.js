@@ -595,7 +595,7 @@ export class Player {
   // mainSheet/extraSheet are optional — if the one this animState needs
   // isn't loaded yet, falls back to the original placeholder rectangle so
   // there's never a blank gap.
-  draw(ctx, mainSheet, extraSheet, freezeSheet, ghostSheet, duckSheet) {
+  draw(ctx, mainSheet, extraSheet, freezeSheet, ghostSheet, duckSheet, skinId = 'skin_01') {
     if (this.isDuck) {
       // Same blink-on-damage flicker the normal sprite gets — duck form
       // was skipping this entirely since this branch returns before ever
@@ -690,7 +690,7 @@ export class Player {
           ctx.globalAlpha = GHOST_ALPHA_LEVELS[ghostStep];
         }
 
-        if (sheet && sheet.loaded) {
+        if (skinId === 'skin_01' && sheet && sheet.loaded) {
           let row, col;
           if (config.cells) {
             [row, col] = config.cells[this.frameIndex];
@@ -712,7 +712,13 @@ export class Player {
 
         if (!drew) {
           // Placeholder rectangle fallback (sheet missing/not loaded yet)
-          ctx.fillStyle = this.facing === 'right' ? '#3ad1ff' : '#3affb0';
+          const placeholderColors = {
+            skin_02: '#ff7777',
+            skin_03: '#ffe08a',
+            skin_04: '#b88cff',
+            skin_05: '#8ae8ff',
+          };
+          ctx.fillStyle = placeholderColors[skinId] || (this.facing === 'right' ? '#3ad1ff' : '#3affb0');
           ctx.fillRect(this.x, this.y + sinkOffset, this.width, this.height);
 
           ctx.fillStyle = '#111';

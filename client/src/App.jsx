@@ -8,6 +8,7 @@ import SkinsShop from './SkinsShop';
 import BulletsShop from './BulletsShop';
 import { WORLDS } from './game/worlds';
 import { getPlayerProgress, saveLevelClear, getAuthenticatedUser, saveAuth, clearAuth } from './services/progressApi';
+import { getInventory } from './services/shopApi';
 import { registerUser, loginUser } from './services/authApi';
 import AnimatedGameBackground from './game/AnimatedGameBackground';
 import './App.css';
@@ -26,6 +27,8 @@ function App() {
   const [unlockedByWorld, setUnlockedByWorld] = useState(DEFAULT_UNLOCKED_BY_WORLD);
   const [totalCoins, setTotalCoins] = useState(0);
   const [starsByLevel, setStarsByLevel] = useState({});
+  const [equippedSkin, setEquippedSkin] = useState('skin_01');
+  const [equippedBulletSkin, setEquippedBulletSkin] = useState('bullet_01');
   const [authMode, setAuthMode] = useState('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -49,6 +52,15 @@ function App() {
         setUnlockedByWorld(DEFAULT_UNLOCKED_BY_WORLD);
         setTotalCoins(0);
         setStarsByLevel({});
+      }
+
+      try {
+        const inventory = await getInventory();
+        setEquippedSkin(inventory.equippedSkin || 'skin_01');
+        setEquippedBulletSkin(inventory.equippedBulletSkin || 'bullet_01');
+      } catch {
+        setEquippedSkin('skin_01');
+        setEquippedBulletSkin('bullet_01');
       }
     };
 
@@ -112,7 +124,15 @@ function App() {
     setScreen('shop');
   };
 
-  const handleSelectLevel = (index) => {
+  const handleSelectLevel = async (index) => {
+    try {
+      const inventory = await getInventory();
+      setEquippedSkin(inventory.equippedSkin || 'skin_01');
+      setEquippedBulletSkin(inventory.equippedBulletSkin || 'bullet_01');
+    } catch {
+      setEquippedSkin('skin_01');
+      setEquippedBulletSkin('bullet_01');
+    }
     setSelectedLevelIndex(index);
     setScreen('game');
   };
@@ -286,6 +306,8 @@ function App() {
           worldIndex={selectedWorldIndex}
           initialLevelIndex={selectedLevelIndex}
           totalCoins={totalCoins}
+          equippedSkin={equippedSkin}
+          equippedBulletSkin={equippedBulletSkin}
           onLevelComplete={handleLevelComplete}
           onExitToMenu={handleExitToMenu}
         />

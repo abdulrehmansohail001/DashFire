@@ -513,7 +513,7 @@ function drawTimeDistorterOverlay(ctx, boss) {
   ctx.restore();
 }
 
-export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, totalCoins = 0, onLevelComplete, onExitToMenu }) {
+export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, totalCoins = 0, equippedSkin = 'skin_01', equippedBulletSkin = 'bullet_01', onLevelComplete, onExitToMenu }) {
   const world = WORLDS[worldIndex] ?? WORLDS[0];
   const LEVELS = world.levels; // every existing LEVELS[...] reference below now resolves per-world, unchanged
 
@@ -761,7 +761,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
       // where the player is standing.
       const blackHoleZone = bossRef.current && bossRef.current.currentZone ? bossRef.current.currentZone : null;
       const bulletSpeedMultiplier = blackHoleZone === 'left' ? 0.5 : 1;
-      bulletsRef.current.push(new Bullet(bulletX, bulletY, direction, bulletSpeedMultiplier));
+      bulletsRef.current.push(new Bullet(bulletX, bulletY, direction, bulletSpeedMultiplier, equippedBulletSkin));
       player.triggerShoot();
       playSound('shoot', 0.5);
     }
@@ -1827,7 +1827,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
       ctx.lineTo(800, 400);
       ctx.stroke();
 
-      playerRef.current.draw(ctx, playerSheet, playerExtraSheet, freezeCrystalSheet, ghostSheet, duckSheet);
+      playerRef.current.draw(ctx, playerSheet, playerExtraSheet, freezeCrystalSheet, ghostSheet, duckSheet, equippedSkin);
       enemiesRef.current.forEach((e) => e.draw(ctx, enemySheet));
       timeGunmenRef.current.forEach((g) => g.draw(ctx, enemySheet)); // no dedicated art yet — reuses whichever enemy sheet this world has (placeholder rectangle if none)
       enemyBulletsRef.current.forEach((o) => o.draw(ctx));
