@@ -1481,8 +1481,15 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
               // never fired. Let Enemy's built-ins handle the rest.
               new Enemy(spawnX, ENEMY_GROUND_Y, {
                 health: 3,
+                bulletSpeed: 260,
                 patrolMinX: 520,
                 patrolMaxX: BOSS_X - 30,
+                actionIntervalMin: 3.0,
+                actionIntervalMax: 3.0,
+                reactionDelayMin: 0.0,
+                reactionDelayMax: 0.0,
+                fireSequence: [1],
+                burstGap: 0.0,
               })
             );
           }
