@@ -22,8 +22,14 @@ function progressFields(progress) {
 
 async function getOrCreateProgress(req) {
   const userIds = getUserIds(req);
-  const existing = await Progress.findOne({ userId: { $in: userIds } });
-  if (existing) return existing;
+  const existingRecords = await Progress.find({ userId: { $in: userIds } });
+  if (existingRecords.length > 0) {
+    return existingRecords.reduce((bestRecord, record) => {
+      const bestCoins = Number(bestRecord.totalCoins) || 0;
+      const recordCoins = Number(record.totalCoins) || 0;
+      return recordCoins > bestCoins ? record : bestRecord;
+    });
+  }
 
   return Progress.create({ userId: userIds[0] });
 }
