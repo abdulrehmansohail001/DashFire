@@ -698,8 +698,6 @@ export class Player {
             row = config.row;
             col = this.frameIndex;
           }
-          if (skinId === 'skin_05' && row === 3) row = 2;
-
           const aspect = sheet.frameWidth / sheet.frameHeight;
           const drawHeight = SPRITE_DRAW_HEIGHT;
           const drawWidth = SPRITE_DRAW_HEIGHT * aspect;

@@ -45,9 +45,9 @@ export const SHOP_CATALOG = [
     name: 'Skin 05',
     price: 600,
     description: 'Placeholder character skin 05',
-    spritePath: '/sprites/shapeshifter.png',
+    spritePath: '/sprites/player5.png',
     spriteColumns: 4,
-    spriteRows: 3,
+    spriteRows: 4,
   },
   ...Array.from({ length: 5 }, (_, index) => ({
     id: `bullet_${String(index + 1).padStart(2, '0')}`,

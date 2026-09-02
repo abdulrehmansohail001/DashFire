@@ -163,7 +163,7 @@ const SKIN_SPRITES = {
   skin_02: { path: '/sprites/player2.png', frameWidth: 323, frameHeight: 313.5, columns: 4, rows: 4 },
   skin_03: { path: '/sprites/player3.png', frameWidth: 256, frameHeight: 253, columns: 4, rows: 4 },
   skin_04: { path: '/sprites/time_gunman.png', frameWidth: 304, frameHeight: 295, columns: 4, rows: 4 },
-  skin_05: { path: '/sprites/shapeshifter.png', frameWidth: 144, frameHeight: 144, columns: 4, rows: 3 },
+  skin_05: { path: '/sprites/player5.png', frameWidth: 353, frameHeight: 334, columns: 4, rows: 4 },
 };
 
 const imageCache = {};
@@ -548,12 +548,21 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     columns: 4,
     rows: 4,
   });
+  const player5ExtraSheet = getSheet({
+    path: '/sprites/player5_extra.png',
+    frameWidth: 352,
+    frameHeight: 383,
+    columns: 4,
+    rows: 4,
+  });
   const equippedPlayerSheet = getSheet(SKIN_SPRITES[equippedSkin]) ?? playerSheet;
   const equippedPlayerExtraSheet = equippedSkin === 'skin_02'
     ? player2ExtraSheet
     : equippedSkin === 'skin_03'
       ? player3ExtraSheet
-      : playerExtraSheet;
+      : equippedSkin === 'skin_05'
+        ? player5ExtraSheet
+        : playerExtraSheet;
   const enemySheet = getSheet(world.sprites.enemy ?? world.sprites.martianCat);
   const martianCatSheet = getSheet(world.sprites.martianCat ?? world.sprites.enemy);
   const eagleSheet = getSheet(world.sprites.eagle);
