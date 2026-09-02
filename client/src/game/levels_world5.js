@@ -82,6 +82,6 @@ export const LEVELS = [
   {
     level: 10,
     hasTimeDistorter: true,
-    bossHealth: 30,
+    bossHealth: 20,
   },
 ];
