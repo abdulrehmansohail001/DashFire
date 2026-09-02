@@ -14,6 +14,8 @@ function App() {
   const [selectedWorldIndex, setSelectedWorldIndex] = useState(0);
   const [selectedLevelIndex, setSelectedLevelIndex] = useState(0);
   const [unlockedByWorld, setUnlockedByWorld] = useState(DEFAULT_UNLOCKED_BY_WORLD);
+  const [totalStars, setTotalStars] = useState(0);
+  const [totalCoins, setTotalCoins] = useState(0);
   const [authMode, setAuthMode] = useState('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -31,8 +33,12 @@ function App() {
       try {
         const progress = await getPlayerProgress(currentUser.username);
         setUnlockedByWorld(progress.unlockedByWorld || DEFAULT_UNLOCKED_BY_WORLD);
+        setTotalStars(Number(progress.totalStars) || 0);
+        setTotalCoins(Number(progress.totalCoins) || 0);
       } catch {
         setUnlockedByWorld(DEFAULT_UNLOCKED_BY_WORLD);
+        setTotalStars(0);
+        setTotalCoins(0);
       }
     };
 
@@ -109,6 +115,8 @@ function App() {
         Number(summary.coins) || 0,
       );
       setUnlockedByWorld(progress.unlockedByWorld || unlockedByWorld);
+      setTotalStars(Number(progress.totalStars) || 0);
+      setTotalCoins(Number(progress.totalCoins) || 0);
     } catch {
       // keep local state so the session still feels responsive if the API is offline
     }
@@ -217,6 +225,8 @@ function App() {
         <GameCanvas
           worldIndex={selectedWorldIndex}
           initialLevelIndex={selectedLevelIndex}
+          totalStars={totalStars}
+          totalCoins={totalCoins}
           onLevelComplete={handleLevelComplete}
           onExitToMenu={handleExitToMenu}
         />

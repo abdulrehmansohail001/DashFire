@@ -263,11 +263,54 @@
   position: fixed;
   inset: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   gap: 26px;
+  padding: 0 20px clamp(24px, 10vh, 72px);
   pointer-events: none;
   z-index: 20;
+}
+
+.game-total-hud {
+  position: fixed;
+  top: 84px;
+  left: max(20px, calc(50vw - 400px));
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 2px solid rgba(58, 209, 255, 0.45);
+  background: rgba(6, 8, 18, 0.78);
+  color: #eef8ff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.52rem;
+  line-height: 1;
+  text-shadow: 2px 2px 0 #000;
+  z-index: 10;
+}
+
+.game-total-hud__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 86px;
+}
+
+.game-total-hud__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border: 2px solid currentColor;
+  font-size: 0.65rem;
+}
+
+.game-total-hud__item--stars {
+  color: #ffe08a;
+}
+
+.game-total-hud__item--coins {
+  color: #8ae8ff;
 }
 
 .result-button {
@@ -296,4 +339,24 @@
 
 .result-button--proceed {
   color: #8ae8ff;
+}
+
+@media (max-width: 560px) {
+  .result-overlay {
+    gap: 10px;
+    padding-inline: 10px;
+  }
+
+  .result-button {
+    min-width: 0;
+    flex: 1;
+    padding-inline: 8px;
+    font-size: 0.58rem;
+  }
+
+  .game-total-hud {
+    left: 12px;
+    top: 72px;
+    font-size: 0.44rem;
+  }
 }
