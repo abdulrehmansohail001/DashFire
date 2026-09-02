@@ -8,6 +8,7 @@
   overflow: hidden;
   font-family: 'Press Start 2P', monospace;
   background: #000;
+  text-transform: uppercase;
 }
 
 .leaderboard-screen__backdrop-anim,
