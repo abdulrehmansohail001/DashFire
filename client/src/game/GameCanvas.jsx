@@ -162,7 +162,7 @@ const SKIN_SPRITES = {
   skin_01: { path: '/sprites/player.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
   skin_02: { path: '/sprites/player2.png', frameWidth: 323, frameHeight: 313.5, columns: 4, rows: 4 },
   skin_03: { path: '/sprites/player3.png', frameWidth: 256, frameHeight: 253, columns: 4, rows: 4 },
-  skin_04: { path: '/sprites/time_gunman.png', frameWidth: 304, frameHeight: 295, columns: 4, rows: 4 },
+  skin_04: { path: '/sprites/player4.png', frameWidth: 342, frameHeight: 305, columns: 4, rows: 4 },
   skin_05: { path: '/sprites/player5.png', frameWidth: 353, frameHeight: 334, columns: 4, rows: 4 },
 };
 
@@ -548,6 +548,13 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     columns: 4,
     rows: 4,
   });
+  const player4ExtraSheet = getSheet({
+    path: '/sprites/player4_extra.png',
+    frameWidth: 325,
+    frameHeight: 358,
+    columns: 4,
+    rows: 4,
+  });
   const player5ExtraSheet = getSheet({
     path: '/sprites/player5_extra.png',
     frameWidth: 352,
@@ -560,6 +567,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     ? player2ExtraSheet
     : equippedSkin === 'skin_03'
       ? player3ExtraSheet
+      : equippedSkin === 'skin_04'
+        ? player4ExtraSheet
       : equippedSkin === 'skin_05'
         ? player5ExtraSheet
         : playerExtraSheet;
