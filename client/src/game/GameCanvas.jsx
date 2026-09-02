@@ -1358,7 +1358,10 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           playSound('hit', 0.6);
         }
 
-        if (boss.wantsToFire) {
+        // World 5's TimeDistorter intentionally uses the same straight
+        // EnemyBullet pattern as the World 1/2 gunmen instead of the
+        // oversized Level 1 boss fireball.
+        if (!(boss instanceof TimeDistorter) && boss.wantsToFire) {
           boss.wantsToFire = false;
           // Anchored to the same muzzle height gunmen/cats fire from,
           // not boss.height-derived — the boss's hitbox is much taller,
