@@ -11,10 +11,10 @@ const DEFAULT_UNLOCKED_BY_WORLD = {
 };
 
 function normalizeUnlockedByWorld(value) {
-  const next = { ...DEFAULT_UNLOCKED_BY_WORLD };
+  const normalized = { ...DEFAULT_UNLOCKED_BY_WORLD };
 
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return next;
+    return normalized;
   }
 
   for (const [worldKey, rawValue] of Object.entries(value)) {
@@ -22,11 +22,11 @@ function normalizeUnlockedByWorld(value) {
     const unlockedCount = Number(rawValue);
 
     if (Number.isInteger(worldIndex) && Number.isFinite(unlockedCount) && unlockedCount >= 1) {
-      next[worldIndex] = Math.max(1, Math.floor(unlockedCount));
+      normalized[worldIndex] = Math.max(1, Math.floor(unlockedCount));
     }
   }
 
-  return next;
+  return normalized;
 }
 
 router.get('/:userId', async (req, res) => {
