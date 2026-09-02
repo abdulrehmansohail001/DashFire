@@ -527,13 +527,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
   const glacierSheet = getSheet(world.sprites.glacier);
   const iceBeeSheet = getSheet(world.sprites.iceBee);
   const bossSheet = getSheet(world.sprites.boss);
-  const gameBgSheet = getSheet({
-    path: '/sprites/game_bg.png',
-    frameWidth: 418,
-    frameHeight: 470,
-    columns: 4,
-    rows: 2,
-  });
+  const moonBgSheet = getSheet(world.sprites.background);
   const obstacleImage = getImage(world.sprites.obstacle);
   const cactusImage = getImage(world.sprites.cactus);
   const sittingDuckImage = getImage(world.sprites.sittingDuck);
@@ -562,7 +556,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
 
   const playerRef = useRef(new Player(100, 310));
   const enemiesRef = useRef(buildEnemiesForLevel(LEVELS[initialLevelIndex]));
-  const backgroundRef = useRef(new Background(gameBgSheet, 0.20));
+  const backgroundRef = useRef(new Background(moonBgSheet, 0.20));
   const enemyBulletsRef = useRef([]);
   const bulletsRef = useRef([]);
   const obstacleRef = useRef(LEVELS[initialLevelIndex].hasObstacle ? new Obstacle(380, 300) : null);
