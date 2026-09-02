@@ -6,6 +6,7 @@ import Leaderboard from './Leaderboard';
 import { WORLDS } from './game/worlds';
 import { getPlayerProgress, saveLevelClear, getAuthenticatedUser, saveAuth, clearAuth } from './services/progressApi';
 import { registerUser, loginUser } from './services/authApi';
+import AnimatedGameBackground from './game/AnimatedGameBackground';
 import './App.css';
 
 const GAME_BACKGROUND_STYLE = {
@@ -151,7 +152,7 @@ function App() {
   if (screen === 'auth') {
     return (
       <div className="app-container auth-page-shell">
-        <div className="auth-page-shell__backdrop-anim" style={GAME_BACKGROUND_STYLE} />
+        <AnimatedGameBackground className="auth-page-shell__backdrop-anim" style={GAME_BACKGROUND_STYLE} />
         <div className="auth-page-shell__backdrop" />
         <div className="auth-page-shell__scanlines" />
         <div className="auth-card">
@@ -229,7 +230,7 @@ function App() {
       {screen === 'leaderboard' && <Leaderboard onBack={handleBackToMainMenu} />}
       {screen === 'mainMenu' && (
         <div className="main-menu">
-          <div className="main-menu__backdrop-anim" style={GAME_BACKGROUND_STYLE} />
+          <AnimatedGameBackground className="main-menu__backdrop-anim" style={GAME_BACKGROUND_STYLE} />
           <div className="main-menu__backdrop" />
           <div className="main-menu__scanlines" />
           <div className="main-menu__content">

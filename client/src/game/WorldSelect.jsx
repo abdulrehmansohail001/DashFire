@@ -8,11 +8,12 @@ import './WorldSelect.css';
 import { playSound } from './sound';
 import { PixelLock } from './PixelIcon';
 import { WORLDS } from './worlds';
+import AnimatedGameBackground from './AnimatedGameBackground';
 
 export default function WorldSelect({ onSelectWorld }) {
   return (
     <div className="world-select">
-      <div className="world-select__backdrop-anim" style={{ backgroundImage: "url('/sprites/game_bg.png')" }} />
+      <AnimatedGameBackground className="world-select__backdrop-anim" style={{ backgroundImage: "url('/sprites/game_bg.png')" }} />
       <div className="world-select__backdrop" />
       <div className="world-select__scanlines" />
 

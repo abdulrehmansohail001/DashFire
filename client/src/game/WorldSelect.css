@@ -17,8 +17,9 @@
   position: absolute;
   inset: 0;
   background-repeat: no-repeat;
+  background-position: 0% 0%;
   background-size: 400% 200%;
-  animation: game-bg-cycle 1.6s steps(8) infinite;
+  animation: none;
 }
 
 @keyframes world-menu-cycle {

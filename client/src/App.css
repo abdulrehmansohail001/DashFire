@@ -24,8 +24,9 @@
   /* Placeholder art — swap the path once dedicated login-screen art
      exists. Same animated-strip technique as WorldSelect/LevelSelect. */
   background-repeat: no-repeat;
+  background-position: 0% 0%;
   background-size: 400% 200%;
-  animation: game-bg-cycle 1.6s steps(8) infinite;
+  animation: none;
 }
 
 @keyframes auth-menu-cycle {
@@ -255,8 +256,9 @@
 
 .main-menu__backdrop-anim {
   background-repeat: no-repeat;
+  background-position: 0% 0%;
   background-size: 400% 200%;
-  animation: game-bg-cycle 1.6s steps(8) infinite;
+  animation: none;
 }
 
 .main-menu__backdrop {

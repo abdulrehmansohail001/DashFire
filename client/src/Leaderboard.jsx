@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getLeaderboard } from './services/leaderboardApi';
 import './Leaderboard.css';
+import AnimatedGameBackground from './game/AnimatedGameBackground';
 
 export default function Leaderboard({ onBack }) {
   const [entries, setEntries] = useState([]);
@@ -28,7 +29,7 @@ export default function Leaderboard({ onBack }) {
 
   return (
     <div className="leaderboard-screen">
-      <div className="leaderboard-screen__backdrop-anim" style={{ backgroundImage: "url('/sprites/game_bg.png')" }} />
+      <AnimatedGameBackground className="leaderboard-screen__backdrop-anim" style={{ backgroundImage: "url('/sprites/game_bg.png')" }} />
       <div className="leaderboard-screen__backdrop" />
       <div className="leaderboard-screen__scanlines" />
 
