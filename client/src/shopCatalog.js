@@ -25,7 +25,7 @@ export const SHOP_CATALOG = [
     name: 'Skin 03',
     price: 400,
     description: 'Placeholder character skin 03',
-    spritePath: '/sprites/martian_cat.png',
+    spritePath: '/sprites/player3.png',
     spriteColumns: 4,
     spriteRows: 4,
   },
