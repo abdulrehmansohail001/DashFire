@@ -1,23 +1,44 @@
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
-const USER_ID_KEY = 'dashfire_user_id';
+const TOKEN_KEY = 'dashfire_auth_token';
+const USER_KEY = 'dashfire_auth_user';
 
-function createUserId() {
-  const id = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-  localStorage.setItem(USER_ID_KEY, id);
-  return id;
+export function getAuthToken() {
+  return localStorage.getItem(TOKEN_KEY) || '';
 }
 
-export function loadUserId() {
-  const saved = localStorage.getItem(USER_ID_KEY);
-  return saved || createUserId();
+export function getAuthenticatedUser() {
+  const savedUser = localStorage.getItem(USER_KEY);
+  if (!savedUser) return null;
+
+  try {
+    return JSON.parse(savedUser);
+  } catch {
+    return null;
+  }
 }
 
-export function getUserId() {
-  return loadUserId();
+export function clearAuth() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+}
+
+export function saveAuth(payload) {
+  localStorage.setItem(TOKEN_KEY, payload.token);
+  localStorage.setItem(USER_KEY, JSON.stringify(payload.user));
+}
+
+function getAuthHeaders() {
+  const token = getAuthToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 }
 
 export async function getPlayerProgress(userId) {
-  const response = await fetch(`${API_BASE}/api/progress/${encodeURIComponent(userId)}`);
+  const response = await fetch(`${API_BASE}/api/progress/${encodeURIComponent(userId)}`, {
+    headers: getAuthHeaders(),
+  });
 
   if (!response.ok) {
     throw new Error('Failed to fetch progress');
@@ -29,9 +50,7 @@ export async function getPlayerProgress(userId) {
 export async function saveLevelClear(userId, worldIndex, clearedIndex) {
   const response = await fetch(`${API_BASE}/api/progress/${encodeURIComponent(userId)}/level-clear`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ worldIndex, clearedIndex }),
   });
 
