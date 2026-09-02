@@ -3,6 +3,9 @@ import GameCanvas from './game/GameCanvas';
 import LevelSelect from './game/LevelSelect';
 import WorldSelect from './game/WorldSelect';
 import Leaderboard from './Leaderboard';
+import Shop from './Shop';
+import SkinsShop from './SkinsShop';
+import BulletsShop from './BulletsShop';
 import { WORLDS } from './game/worlds';
 import { getPlayerProgress, saveLevelClear, getAuthenticatedUser, saveAuth, clearAuth } from './services/progressApi';
 import { registerUser, loginUser } from './services/authApi';
@@ -99,6 +102,14 @@ function App() {
 
   const handleBackToMainMenu = () => {
     setScreen('mainMenu');
+  };
+
+  const handleShop = () => {
+    setScreen('shop');
+  };
+
+  const handleBackToShop = () => {
+    setScreen('shop');
   };
 
   const handleSelectLevel = (index) => {
@@ -228,6 +239,9 @@ function App() {
       </div>
 
       {screen === 'leaderboard' && <Leaderboard onBack={handleBackToMainMenu} />}
+      {screen === 'shop' && <Shop onNavigate={setScreen} onBack={handleBackToMainMenu} />}
+      {screen === 'skinsShop' && <SkinsShop onBack={handleBackToShop} />}
+      {screen === 'bulletsShop' && <BulletsShop onBack={handleBackToShop} />}
       {screen === 'mainMenu' && (
         <div className="main-menu">
           <AnimatedGameBackground className="main-menu__backdrop-anim" style={GAME_BACKGROUND_STYLE} />
@@ -245,7 +259,7 @@ function App() {
               <button type="button" className="main-menu__button" onClick={handleLeaderboard}>
                 LEADERBOARD
               </button>
-              <button type="button" className="main-menu__button" disabled>
+              <button type="button" className="main-menu__button" onClick={handleShop}>
                 SHOP
               </button>
             </div>

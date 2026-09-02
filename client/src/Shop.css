@@ -1,0 +1,187 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+.shop-screen {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-family: 'Press Start 2P', monospace;
+  background: #000;
+  text-transform: uppercase;
+}
+
+.shop-screen__backdrop-anim,
+.shop-screen__backdrop,
+.shop-screen__scanlines {
+  position: absolute;
+  inset: 0;
+}
+
+.shop-screen__backdrop-anim {
+  background-repeat: no-repeat;
+  background-position: 0% 0%;
+  background-size: 400% 200%;
+  animation: none;
+}
+
+.shop-screen__backdrop {
+  background: rgba(4, 8, 16, 0.72);
+}
+
+.shop-screen__scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0px,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.5;
+}
+
+.shop-screen__back,
+.shop-items-screen__back {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 2;
+  padding: 8px 10px;
+  border: 2px solid #3ad1ff88;
+  background-image: url('/sprites/auth_button_bg.png');
+  background-size: cover;
+  color: #9fb3c8;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  cursor: pointer;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.shop-screen__back:hover,
+.shop-items-screen__back:hover {
+  color: #fff;
+  border-color: #3ad1ff;
+}
+
+.shop-panel {
+  position: relative;
+  z-index: 1;
+  width: min(88vw, 720px);
+  text-align: center;
+}
+
+.shop-panel h1,
+.shop-items-panel h1 {
+  margin: 14px 0 24px;
+  color: #ffffffb7;
+  font-size: clamp(1.1rem, 4vw, 1.8rem);
+  letter-spacing: 3px;
+  text-shadow: 3px 3px 0 #000, 6px 6px 0 rgba(58, 209, 255, 0.3);
+}
+
+.shop-balance,
+.shop-items-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+  padding: 12px 18px;
+  border: 2px solid #3ad1ff99;
+  background: rgba(13, 20, 32, 0.9);
+  color: #ffe08a;
+  font-size: 0.78rem;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.shop-balance__coin {
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.shop-balance__value {
+  font-size: 1.15rem;
+}
+
+.shop-balance__label {
+  color: #8ae8ff;
+  font-size: 0.55rem;
+}
+
+.shop-status {
+  margin: 0 0 18px;
+  color: #9fb3c8;
+  font-size: 0.58rem;
+}
+
+.shop-status--error {
+  color: #ff7777;
+}
+
+.shop-categories {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.shop-category {
+  min-height: 128px;
+  padding: 18px 12px;
+  border: 2px solid #3ad1ff55;
+  background-image: url('/sprites/auth_button_bg.png');
+  background-size: cover;
+  background-position: center;
+  color: #eef8ff;
+  font-family: 'Press Start 2P', monospace;
+  cursor: pointer;
+  text-shadow: 2px 2px 0 #000;
+  transition: transform 0.1s steps(2, end), border-color 0.1s ease;
+}
+
+.shop-category:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  border-color: #3ad1ff;
+}
+
+.shop-category__title,
+.shop-category__detail {
+  display: block;
+}
+
+.shop-category__title {
+  margin-bottom: 18px;
+  color: #8ae8ff;
+  font-size: 0.7rem;
+}
+
+.shop-category__detail {
+  color: #9fb3c8;
+  font-size: 0.45rem;
+  line-height: 1.8;
+}
+
+.shop-category--locked {
+  border-color: #66708066;
+  filter: grayscale(1);
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.shop-category--locked .shop-category__detail {
+  color: #ffcc77;
+}
+
+@media (max-width: 620px) {
+  .shop-categories {
+    grid-template-columns: 1fr;
+  }
+
+  .shop-category {
+    min-height: 74px;
+    padding: 12px;
+  }
+
+  .shop-category__title {
+    margin-bottom: 8px;
+  }
+}

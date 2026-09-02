@@ -1,0 +1,215 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+.shop-items-screen {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-family: 'Press Start 2P', monospace;
+  background: #000;
+  text-transform: uppercase;
+}
+
+.shop-items-screen__backdrop-anim,
+.shop-items-screen__backdrop,
+.shop-items-screen__scanlines {
+  position: absolute;
+  inset: 0;
+}
+
+.shop-items-screen__backdrop-anim {
+  background-repeat: no-repeat;
+  background-position: 0% 0%;
+  background-size: 400% 200%;
+  animation: none;
+}
+
+.shop-items-screen__backdrop {
+  background: rgba(4, 8, 16, 0.72);
+}
+
+.shop-items-screen__scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0px,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.5;
+}
+
+.shop-items-screen__back {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 2;
+  padding: 8px 10px;
+  border: 2px solid #3ad1ff88;
+  background-image: url('/sprites/auth_button_bg.png');
+  background-size: cover;
+  color: #9fb3c8;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  cursor: pointer;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.shop-items-screen__back:hover {
+  color: #fff;
+  border-color: #3ad1ff;
+}
+
+.shop-items-panel {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 920px);
+  max-height: 88vh;
+  overflow: auto;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.shop-items-panel h1 {
+  margin: 14px 0 20px;
+  color: #ffffffb7;
+  font-size: clamp(1.1rem, 4vw, 1.8rem);
+  letter-spacing: 3px;
+  text-shadow: 3px 3px 0 #000, 6px 6px 0 rgba(58, 209, 255, 0.3);
+}
+
+.shop-items-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 10px 14px;
+  border: 2px solid #3ad1ff99;
+  background: rgba(13, 20, 32, 0.9);
+  color: #ffe08a;
+  font-size: 0.68rem;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.shop-items-status {
+  margin: 28px 0;
+  color: #9fb3c8;
+  font-size: 0.58rem;
+}
+
+.shop-items-status--error {
+  color: #ff7777;
+}
+
+.shop-items-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.shop-item-card {
+  min-width: 0;
+  padding: 12px 10px;
+  border: 2px solid #3ad1ff55;
+  background: rgba(13, 20, 32, 0.9);
+  color: #eef8ff;
+  text-align: center;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.shop-item-card--equipped {
+  border-color: #ffe08a;
+  box-shadow: 0 0 0 2px rgba(255, 224, 138, 0.2);
+}
+
+.shop-item-card__image-wrap {
+  display: grid;
+  place-items: center;
+  height: 116px;
+  margin-bottom: 10px;
+  border: 2px solid #3ad1ff33;
+  background: rgba(4, 8, 16, 0.72);
+}
+
+.shop-item-card__image {
+  width: 92px;
+  height: 92px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.shop-item-card h2 {
+  min-height: 2.8em;
+  margin: 8px 0;
+  color: #fff;
+  font-size: 0.55rem;
+  line-height: 1.5;
+}
+
+.shop-item-card__price {
+  min-height: 2.5em;
+  margin: 8px 0 12px;
+  color: #ffe08a;
+  font-size: 0.55rem;
+  line-height: 1.5;
+}
+
+.shop-item-card__price--unaffordable {
+  color: #ff7777;
+}
+
+.shop-item-card__action {
+  width: 100%;
+  min-height: 34px;
+  padding: 8px 4px;
+  border: 2px solid #3ad1ff88;
+  background-image: url('/sprites/auth_button_bg.png');
+  background-size: cover;
+  color: #8ae8ff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.5rem;
+  cursor: pointer;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.shop-item-card__action:hover:not(:disabled) {
+  border-color: #3ad1ff;
+  color: #fff;
+}
+
+.shop-item-card__action:disabled {
+  border-color: #66708066;
+  color: #6c7a8a;
+  cursor: not-allowed;
+}
+
+.shop-item-card__equipped {
+  display: block;
+  min-height: 34px;
+  padding: 9px 4px;
+  border: 2px solid #ffe08a99;
+  color: #ffe08a;
+  font-size: 0.45rem;
+  line-height: 1.5;
+}
+
+.shop-item-card__error {
+  min-height: 2.4em;
+  margin: 8px 0 0;
+  color: #ff7777;
+  font-size: 0.4rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .shop-items-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .shop-items-grid {
+    grid-template-columns: 1fr;
+  }
+}
