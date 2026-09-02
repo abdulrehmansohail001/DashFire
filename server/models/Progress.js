@@ -34,6 +34,18 @@ const progressSchema = new mongoose.Schema({
     type: Object,
     default: () => ({}),
   },
+  ownedItems: {
+    type: [String],
+    default: [],
+  },
+  equippedSkin: {
+    type: String,
+    default: 'skin_01',
+  },
+  equippedBulletSkin: {
+    type: String,
+    default: 'bullet_01',
+  },
   updatedAt: {
     type: Date,
     default: Date.now,
