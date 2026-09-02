@@ -158,6 +158,14 @@ function getSheet(spec) {
   return spriteSheetCache[key];
 }
 
+const SKIN_SPRITES = {
+  skin_01: { path: '/sprites/player.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
+  skin_02: { path: '/sprites/enemy.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
+  skin_03: { path: '/sprites/martian_cat.png', frameWidth: 310, frameHeight: 310, columns: 4, rows: 4 },
+  skin_04: { path: '/sprites/time_gunman.png', frameWidth: 304, frameHeight: 295, columns: 4, rows: 4 },
+  skin_05: { path: '/sprites/shapeshifter.png', frameWidth: 144, frameHeight: 144, columns: 4, rows: 3 },
+};
+
 const imageCache = {};
 function getImage(path) {
   if (!path) return null;
@@ -521,19 +529,19 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
   const playerExtraSheet = getSheet(world.sprites.playerExtra);
   const player2Sheet = getSheet({
     path: '/sprites/player2.png',
-    frameWidth: 320,
-    frameHeight: 320,
+    frameWidth: 323,
+    frameHeight: 313.5, // actual image is 1254x1230 — NOT 320x320; the mismatch was bleeding the next row's frame in at the bottom of each crop
     columns: 4,
     rows: 4,
   });
   const player2ExtraSheet = getSheet({
     path: '/sprites/player2_extra.png',
-    frameWidth: 320,
-    frameHeight: 320,
+    frameWidth: 384,
+    frameHeight: 256, // actual image is 1254x1254
     columns: 4,
     rows: 4,
   });
-  const equippedPlayerSheet = equippedSkin === 'skin_02' ? player2Sheet : playerSheet;
+  const equippedPlayerSheet = getSheet(SKIN_SPRITES[equippedSkin]) ?? playerSheet;
   const equippedPlayerExtraSheet = equippedSkin === 'skin_02' ? player2ExtraSheet : playerExtraSheet;
   const enemySheet = getSheet(world.sprites.enemy ?? world.sprites.martianCat);
   const martianCatSheet = getSheet(world.sprites.martianCat ?? world.sprites.enemy);

@@ -690,7 +690,7 @@ export class Player {
           ctx.globalAlpha = GHOST_ALPHA_LEVELS[ghostStep];
         }
 
-        if ((skinId === 'skin_01' || skinId === 'skin_02') && sheet && sheet.loaded) {
+        if (skinId && sheet && sheet.loaded) {
           let row, col;
           if (config.cells) {
             [row, col] = config.cells[this.frameIndex];
@@ -698,6 +698,7 @@ export class Player {
             row = config.row;
             col = this.frameIndex;
           }
+          if (skinId === 'skin_05' && row === 3) row = 2;
 
           const aspect = sheet.frameWidth / sheet.frameHeight;
           const drawHeight = SPRITE_DRAW_HEIGHT;
