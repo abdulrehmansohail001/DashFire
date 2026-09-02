@@ -8,6 +8,7 @@ export default function ShopItemCard({ item, inventory, onPurchase, onEquip }) {
     ? inventory.equippedSkin === item.id
     : inventory.equippedBulletSkin === item.id;
   const affordable = inventory.totalCoins >= item.price;
+  const isSkinPreview = item.category === 'skin' && item.spriteColumns && item.spriteRows;
 
   const handleAction = async () => {
     setError('');
@@ -29,7 +30,20 @@ export default function ShopItemCard({ item, inventory, onPurchase, onEquip }) {
   return (
     <article className={`shop-item-card${equipped ? ' shop-item-card--equipped' : ''}`}>
       <div className="shop-item-card__image-wrap">
-        <img src={item.spritePath} alt={item.name} className="shop-item-card__image" />
+        {isSkinPreview ? (
+          <div
+            role="img"
+            aria-label={item.name}
+            className="shop-item-card__image shop-item-card__image--sheet"
+            style={{
+              backgroundImage: `url(${item.spritePath})`,
+              '--sprite-columns': item.spriteColumns,
+              '--sprite-rows': item.spriteRows,
+            }}
+          />
+        ) : (
+          <img src={item.spritePath} alt={item.name} className="shop-item-card__image" />
+        )}
       </div>
       <h2>{item.name}</h2>
       <p className={`shop-item-card__price${!owned && !affordable ? ' shop-item-card__price--unaffordable' : ''}`}>

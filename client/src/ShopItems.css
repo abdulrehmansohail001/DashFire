@@ -129,7 +129,8 @@
   height: 116px;
   margin-bottom: 10px;
   border: 2px solid #3ad1ff33;
-  background: rgba(4, 8, 16, 0.72);
+  background: #fff;
+  overflow: hidden;
 }
 
 .shop-item-card__image {
@@ -137,6 +138,12 @@
   height: 92px;
   object-fit: contain;
   image-rendering: pixelated;
+}
+
+.shop-item-card__image--sheet {
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: calc(var(--sprite-columns) * 100%) calc(var(--sprite-rows) * 100%);
 }
 
 .shop-item-card h2 {
