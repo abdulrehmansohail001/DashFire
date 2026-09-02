@@ -103,7 +103,7 @@ export const WORLDS = [
       // Placeholder: reuses World 4 sprites until World 5 art is built.
       player: { path: '/sprites/player.png', frameWidth: 313, frameHeight: 313, columns: 4, rows: 4 },
       playerExtra: { path: '/sprites/player_extra.png', frameWidth: 125, frameHeight: 125, columns: 4, rows: 4 },
-      enemy: { path: '/sprites/time_gunman.png', frameWidth: 256, frameHeight: 256, columns: 4, rows: 4 },
+      enemy: { path: '/sprites/time_gunman.png', frameWidth: 304, frameHeight: 295, columns: 4, rows: 4 },
       eagle: null,
       vortex: { path: '/sprites/vortex.png', frameWidth: 418, frameHeight: 470, columns: 4, rows: 2 },
       darkMatter: { path: '/sprites/darkmatterbeing.png', frameWidth: 435, frameHeight: 429, columns: 4, rows: 2 },
