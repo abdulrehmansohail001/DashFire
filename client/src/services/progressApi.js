@@ -47,11 +47,11 @@ export async function getPlayerProgress(userId) {
   return response.json();
 }
 
-export async function saveLevelClear(userId, worldIndex, clearedIndex) {
+export async function saveLevelClear(userId, worldIndex, clearedIndex, stars = 0, coins = 0) {
   const response = await fetch(`${API_BASE}/api/progress/${encodeURIComponent(userId)}/level-clear`, {
     method: 'POST',
     headers: getAuthHeaders(),
-    body: JSON.stringify({ worldIndex, clearedIndex }),
+    body: JSON.stringify({ worldIndex, clearedIndex, stars, coins }),
   });
 
   if (!response.ok) {

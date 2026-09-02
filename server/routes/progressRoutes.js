@@ -43,17 +43,23 @@ router.get('/:userId', requireAuth, async (req, res) => {
       return res.json({
         userId: existing.userId,
         unlockedByWorld: existing.unlockedByWorld,
+        totalStars: existing.totalStars ?? 0,
+        totalCoins: existing.totalCoins ?? 0,
       });
     }
 
     const created = await Progress.create({
       userId,
       unlockedByWorld: DEFAULT_UNLOCKED_BY_WORLD,
+      totalStars: 0,
+      totalCoins: 0,
     });
 
     return res.json({
       userId: created.userId,
       unlockedByWorld: created.unlockedByWorld,
+      totalStars: created.totalStars ?? 0,
+      totalCoins: created.totalCoins ?? 0,
     });
   } catch (error) {
     console.error('GET /api/progress error:', error.message);
@@ -64,19 +70,23 @@ router.get('/:userId', requireAuth, async (req, res) => {
 router.put('/:userId', requireAuth, async (req, res) => {
   try {
     const { userId } = req.params;
-    const { unlockedByWorld } = req.body || {};
+    const { unlockedByWorld, totalStars, totalCoins } = req.body || {};
 
     if (req.user.userId !== userId && req.user.username !== userId) {
       return res.status(403).json({ error: 'forbidden' });
     }
 
     const sanitizedUnlocked = normalizeUnlockedByWorld(unlockedByWorld);
+    const safeStars = Number(totalStars) || 0;
+    const safeCoins = Number(totalCoins) || 0;
 
     const progress = await Progress.findOneAndUpdate(
       { userId },
       {
         userId,
         unlockedByWorld: sanitizedUnlocked,
+        totalStars: safeStars,
+        totalCoins: safeCoins,
         updatedAt: Date.now(),
       },
       {
@@ -89,6 +99,8 @@ router.put('/:userId', requireAuth, async (req, res) => {
     return res.json({
       userId: progress.userId,
       unlockedByWorld: progress.unlockedByWorld,
+      totalStars: progress.totalStars ?? 0,
+      totalCoins: progress.totalCoins ?? 0,
     });
   } catch (error) {
     console.error('PUT /api/progress error:', error.message);
@@ -99,7 +111,7 @@ router.put('/:userId', requireAuth, async (req, res) => {
 router.post('/:userId/level-clear', requireAuth, async (req, res) => {
   try {
     const { userId } = req.params;
-    const { worldIndex, clearedIndex } = req.body || {};
+    const { worldIndex, clearedIndex, stars, coins } = req.body || {};
 
     if (req.user.userId !== userId && req.user.username !== userId) {
       return res.status(403).json({ error: 'forbidden' });
@@ -120,11 +132,16 @@ router.post('/:userId/level-clear', requireAuth, async (req, res) => {
     const nextUnlocked = Math.max(currentUnlocked, clearedLevel + 2);
     unlockedByWorld[worldId] = nextUnlocked;
 
+    const totalStars = Math.max(0, Number(currentProgress?.totalStars ?? 0) + (Number(stars) || 0));
+    const totalCoins = Math.max(0, Number(currentProgress?.totalCoins ?? 0) + (Number(coins) || 0));
+
     const progress = await Progress.findOneAndUpdate(
       { userId },
       {
         userId,
         unlockedByWorld,
+        totalStars,
+        totalCoins,
         updatedAt: Date.now(),
       },
       {
@@ -137,6 +154,8 @@ router.post('/:userId/level-clear', requireAuth, async (req, res) => {
     return res.json({
       userId: progress.userId,
       unlockedByWorld: progress.unlockedByWorld,
+      totalStars: progress.totalStars ?? 0,
+      totalCoins: progress.totalCoins ?? 0,
     });
   } catch (error) {
     console.error('POST /api/progress/level-clear error:', error.message);

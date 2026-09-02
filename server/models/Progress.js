@@ -20,6 +20,16 @@ const progressSchema = new mongoose.Schema({
     type: Object,
     default: DEFAULT_UNLOCKED_BY_WORLD,
   },
+  totalStars: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  totalCoins: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
   updatedAt: {
     type: Date,
     default: Date.now,

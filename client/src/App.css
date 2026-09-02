@@ -258,3 +258,42 @@
   color: #fff;
   border-color: #3ad1ff;
 }
+
+.result-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.result-button {
+  pointer-events: auto;
+  min-width: 160px;
+  padding: 14px 18px;
+  border: 2px solid #3ad1ff;
+  background: rgba(13, 20, 32, 0.86);
+  color: #eef8ff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(58, 209, 255, 0.2);
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.result-button:hover {
+  transform: translateY(-2px);
+  border-color: #8ee8ff;
+}
+
+.result-button--retry {
+  color: #ffe08a;
+}
+
+.result-button--proceed {
+  color: #8ae8ff;
+}

@@ -85,7 +85,7 @@ function App() {
     setScreen('worldSelect');
   };
 
-  const handleLevelComplete = async (clearedIndex) => {
+  const handleLevelComplete = async (clearedIndex, summary = {}) => {
     if (!currentUser) {
       setScreen('auth');
       return;
@@ -98,12 +98,19 @@ function App() {
     if (newUnlocked !== currentUnlocked) {
       const next = { ...unlockedByWorld, [selectedWorldIndex]: newUnlocked };
       setUnlockedByWorld(next);
+    }
 
-      try {
-        await saveLevelClear(userId, selectedWorldIndex, clearedIndex);
-      } catch {
-        // keep local state so the session still feels responsive if the API is offline
-      }
+    try {
+      const progress = await saveLevelClear(
+        userId,
+        selectedWorldIndex,
+        clearedIndex,
+        Number(summary.stars) || 0,
+        Number(summary.coins) || 0,
+      );
+      setUnlockedByWorld(progress.unlockedByWorld || unlockedByWorld);
+    } catch {
+      // keep local state so the session still feels responsive if the API is offline
     }
 
     setScreen('menu');

@@ -545,6 +545,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const canvasRef = useRef(null);
   const [health, setHealth] = useState(10);
   const [levelNumber, setLevelNumber] = useState(LEVELS[initialLevelIndex].level);
+  const [runSummary, setRunSummary] = useState({ stars: 0, coins: 0, hp: PLAYER_MAX_HEALTH, rewarded: false });
+  const [resultOverlay, setResultOverlay] = useState(null);
   // 'playing' | 'dying' | 'gameover' | 'celebrating' | 'levelComplete' | 'gameComplete'
   // 'dying'/'celebrating' are animation-only holds: the death/victory sprite
   // sequence plays out (gameplay paused) before flipping to the actual
@@ -625,6 +627,18 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
   const gameStateRef = useRef('playing');
   const levelIndexRef = useRef(initialLevelIndex); // 0-based index into LEVELS
   const outroTargetRef = useRef(null); // 'levelComplete' | 'gameComplete' — which screen to show once the victory animation finishes
+  const coinsEarnedRef = useRef(0);
+
+  const awardCoinReward = () => {
+    const reward = 200 + Math.floor(Math.random() * 51);
+    coinsEarnedRef.current += reward;
+    setRunSummary((prev) => ({
+      ...prev,
+      coins: coinsEarnedRef.current,
+      hp: Math.max(playerRef.current.health, 0),
+      rewarded: true,
+    }));
+  };
 
   const startLevel = (index, keepHealth = true) => {
     levelIndexRef.current = index;
@@ -639,6 +653,10 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     } else {
       playerRef.current.health = Math.min(PLAYER_MAX_HEALTH, playerRef.current.health + 1);
     }
+
+    coinsEarnedRef.current = 0;
+    setRunSummary({ stars: 0, coins: 0, hp: playerRef.current.health, rewarded: false });
+    setResultOverlay(null);
 
     enemiesRef.current = buildEnemiesForLevel(config);
     enemyBulletsRef.current = [];
@@ -702,6 +720,20 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
     startLevel(levelIndexRef.current, false);
   };
 
+  const computeStarsForHp = (hpLeft) => {
+    if (hpLeft >= 8) return 3;
+    if (hpLeft >= 4) return 2;
+    if (hpLeft >= 1) return 1;
+    return 0;
+  };
+
+  const finalizeRunSummary = (hpLeft) => {
+    const stars = computeStarsForHp(hpLeft);
+    const summary = { stars, coins: coinsEarnedRef.current, hp: hpLeft, rewarded: true };
+    setRunSummary(summary);
+    return summary;
+  };
+
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -733,15 +765,20 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         restartCurrentLevel();
       }
 
-      if (
-        gameStateRef.current === 'levelComplete' &&
-        (e.key === 'n' || e.key === 'N' || e.key === ' ')
-      ) {
-        onLevelComplete && onLevelComplete(levelIndexRef.current);
+      if (gameStateRef.current === 'levelComplete' && (e.key === 'n' || e.key === 'N' || e.key === ' ')) {
+        onLevelComplete && onLevelComplete(levelIndexRef.current, runSummary);
       }
 
       if (gameStateRef.current === 'gameComplete' && (e.key === 'r' || e.key === 'R')) {
-        onLevelComplete && onLevelComplete(levelIndexRef.current);
+        onLevelComplete && onLevelComplete(levelIndexRef.current, runSummary);
+      }
+
+      if (gameStateRef.current === 'levelComplete' && (e.key === 'r' || e.key === 'R')) {
+        restartCurrentLevel();
+      }
+
+      if (gameStateRef.current === 'gameComplete' && (e.key === 'n' || e.key === 'N' || e.key === ' ')) {
+        onLevelComplete && onLevelComplete(levelIndexRef.current, runSummary);
       }
 
       if (e.key === 'Escape' && gameStateRef.current === 'playing') {
@@ -1530,6 +1567,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (!eagle.alive) continue;
           if (isColliding(bullet.getBounds(), eagle.getBounds())) {
             eagle.takeHit();
+            if (!eagle.alive) {
+              awardCoinReward();
+            }
             bullet.hit = true;
             hitEagle = true;
             break;
@@ -1542,6 +1582,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (!glacier || !glacier.alive) continue;
           if (isColliding(bullet.getBounds(), glacier.getBounds())) {
             glacier.takeHit();
+            if (!glacier.alive) {
+              awardCoinReward();
+            }
             glacierStallTimerRef.current = 0; // successful hit on EITHER glacier resets the stall clock
             bullet.hit = true;
             hitShipOrBee = true;
@@ -1553,6 +1596,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (!ship.alive) continue;
           if (isColliding(bullet.getBounds(), ship.getBounds())) {
             ship.takeHit();
+            if (!ship.alive) {
+              awardCoinReward();
+            }
             bullet.hit = true;
             hitShipOrBee = true;
             break;
@@ -1563,6 +1609,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (!bee.alive) continue;
           if (isColliding(bullet.getBounds(), bee.getBounds())) {
             bee.takeHit();
+            if (!bee.alive) {
+              awardCoinReward();
+            }
             bullet.hit = true;
             hitShipOrBee = true;
             break;
@@ -1573,6 +1622,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (!yeti.alive) continue;
           if (isColliding(bullet.getBounds(), yeti.getBounds())) {
             yeti.takeHit();
+            if (!yeti.alive) {
+              awardCoinReward();
+            }
             bullet.hit = true;
             hitYeti = true;
             break;
@@ -1584,6 +1636,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (!frog.alive) continue;
           if (isColliding(bullet.getBounds(), frog.getBounds())) {
             frog.takeHit();
+            if (!frog.alive) {
+              awardCoinReward();
+            }
             bullet.hit = true;
             hitFrog = true;
             break;
@@ -1595,6 +1650,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (!vortex.alive) continue;
           if (isColliding(bullet.getBounds(), vortex.getBounds())) {
             vortex.takeHit();
+            if (!vortex.alive) {
+              awardCoinReward();
+            }
             bullet.hit = true;
             hitVortex = true;
             player.escapeQuicksand(); // no-op if the player wasn't stuck
@@ -1607,6 +1665,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (!being.alive) continue;
           if (isColliding(bullet.getBounds(), being.getBounds())) {
             being.takeHit();
+            if (!being.alive) {
+              awardCoinReward();
+            }
             bullet.hit = true;
             hitDarkMatter = true;
             player.escapeQuicksand(); // no-op if the player wasn't stuck
@@ -1619,6 +1680,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (!reg.alive) continue;
           if (isColliding(bullet.getBounds(), reg.getBounds())) {
             reg.takeHit();
+            if (!reg.alive) {
+              awardCoinReward();
+            }
             bullet.hit = true;
             hitReg = true;
             player.escapeQuicksand();
@@ -1638,6 +1702,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
               player.takeHit();
             } else {
               ss.takeHit();
+              if (!ss.alive) {
+                awardCoinReward();
+              }
             }
             break;
           }
@@ -1645,6 +1712,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         if (hitShapeshifter) continue;
         if (bossRef.current && bossRef.current.alive && isColliding(bullet.getBounds(), bossRef.current.getBounds())) {
           bossRef.current.takeHit();
+          if (!bossRef.current.alive) {
+            awardCoinReward();
+          }
           player.escapeQuicksand(); // no-op if the player wasn't stuck
           bullet.hit = true;
           continue;
@@ -1654,6 +1724,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (isColliding(bullet.getBounds(), enemy.getBounds())) {
             const wasAlive = enemy.alive;
             enemy.takeHit();
+            if (wasAlive && !enemy.alive) {
+              awardCoinReward();
+            }
             bullet.hit = true;
             playSound(wasAlive && !enemy.alive ? 'explosion' : 'hit', 0.6);
             break;
@@ -1665,6 +1738,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           if (isColliding(bullet.getBounds(), gunman.getBounds())) {
             const wasAlive = gunman.alive;
             gunman.takeHit();
+            if (wasAlive && !gunman.alive) {
+              awardCoinReward();
+            }
             bullet.hit = true;
             playSound(wasAlive && !gunman.alive ? 'explosion' : 'hit', 0.6);
             break;
@@ -1678,6 +1754,12 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
         : enemies.every((e) => !e.alive) && eagles.every((e) => !e.alive) && yetis.every((y) => !y.alive) && frogs.every((f) => !f.alive) && vortices.every((v) => !v.alive) && darkMattersRef.current.every((b) => !b.alive) && regsRef.current.every((r) => !r.alive) && shapeshiftersRef.current.every((s) => !s.alive) && spaceshipsRef.current.every((s) => !s.alive) && (levelConfigRef.current.hasTwinGlaciers || iceBeesRef.current.every((b) => !b.alive)) && (!leftGlacierRef.current || !leftGlacierRef.current.alive) && (!rightGlacierRef.current || !rightGlacierRef.current.alive);
       if (allEnemiesDead && gameStateRef.current === 'playing') {
         const isFinalLevel = levelIndexRef.current === LEVELS.length - 1;
+        const finalHp = Math.max(player.health, 0);
+        const summary = finalizeRunSummary(finalHp);
+        if (onLevelComplete) {
+          // Preserve the summary for the button action after the outro overlay.
+          setRunSummary(summary);
+        }
         outroTargetRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
         player.triggerVictory();
         gameStateRef.current = 'celebrating';
@@ -1686,6 +1768,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       }
 
       if (player.health <= 0 && gameStateRef.current === 'playing') {
+        const summary = finalizeRunSummary(0);
+        setRunSummary(summary);
         player.triggerDeath();
         gameStateRef.current = 'dying';
         setGameState('dying');
@@ -1932,45 +2016,36 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
 
       drawTopCenterHud(ctx, levelIndexRef.current + 1);
 
-      if (gameStateRef.current === 'gameover') {
+      const renderSummaryScreen = (title, subtitle) => {
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
         ctx.fillStyle = '#fff';
-        ctx.font = '32px monospace';
+        ctx.font = 'bold 26px "Press Start 2P", monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('GAME OVER', 400, 180);
+        ctx.fillText(title, 400, 120);
 
-        ctx.font = '18px monospace';
-        ctx.fillText('Press R to retry this level', 400, 220);
+        ctx.font = '14px "Press Start 2P", monospace';
+        ctx.fillText(subtitle, 400, 170);
+        ctx.fillText('STARS SECURED', 400, 210);
+        ctx.fillText(`${runSummary.stars} / 3`, 400, 235);
+        ctx.fillText('COINS GOT', 400, 270);
+        ctx.fillText(`${runSummary.coins}`, 400, 295);
+      };
+
+      if (gameStateRef.current === 'gameover') {
+        renderSummaryScreen('RUN FAILED', 'MISSION ENDED');
+        ctx.fillStyle = '#d2ff66';
+        ctx.font = '12px "Press Start 2P", monospace';
+        ctx.fillText('R = RETRY', 400, 340);
       }
 
       if (gameStateRef.current === 'levelComplete') {
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-        ctx.fillStyle = '#3aff6a';
-        ctx.font = '32px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(`LEVEL ${levelIndexRef.current + 1} CLEAR`, 400, 180);
-
-        ctx.fillStyle = '#fff';
-        ctx.font = '18px monospace';
-        ctx.fillText('Press N to return to Level Select', 400, 220);
+        renderSummaryScreen(`LEVEL ${levelIndexRef.current + 1} CLEAR`, 'RESULT');
       }
 
       if (gameStateRef.current === 'gameComplete') {
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-        ctx.fillStyle = '#ffd23a';
-        ctx.font = '30px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('ALL 10 LEVELS CLEARED', 400, 170);
-
-        ctx.fillStyle = '#fff';
-        ctx.font = '18px monospace';
-        ctx.fillText('Press R to return to Level Select', 400, 210);
+        renderSummaryScreen('ALL 10 LEVELS CLEARED', 'FINAL RUN');
       }
     }
 
@@ -1993,6 +2068,19 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
+
+  const handleResultAction = (action) => {
+    if (action === 'retry') {
+      restartCurrentLevel();
+      return;
+    }
+
+    if (action === 'proceed') {
+      onLevelComplete && onLevelComplete(levelIndexRef.current, runSummary);
+    }
+  };
+
+  const showActionButtons = gameState === 'levelComplete' || gameState === 'gameComplete';
 
   return (
     <div
@@ -2028,6 +2116,25 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, onLe
           background: 'transparent',
         }}
       />
+
+      {showActionButtons && (
+        <div className="result-overlay">
+          <button
+            type="button"
+            className="result-button result-button--retry"
+            onClick={() => handleResultAction('retry')}
+          >
+            RETRY
+          </button>
+          <button
+            type="button"
+            className="result-button result-button--proceed"
+            onClick={() => handleResultAction('proceed')}
+          >
+            PROCEED
+          </button>
+        </div>
+      )}
     </div>
   );
 }
