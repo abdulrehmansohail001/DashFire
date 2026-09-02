@@ -111,15 +111,32 @@
 }
 
 .auth-toggle button {
+  position: relative;
   border: 2px solid #3ad1ff55;
-  background: #0d1420;
-  color: #9fb3c8;
+  background-image: url('/sprites/auth_button_bg.png');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
   border-radius: 0;
   padding: 10px 8px;
   font-family: 'Press Start 2P', monospace;
   font-size: 0.6rem;
   cursor: pointer;
   transition: transform 0.1s steps(2, end);
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
+}
+
+.auth-toggle button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 0;
+}
+
+.auth-toggle button span,
+.auth-toggle button {
+  z-index: 1;
 }
 
 .auth-toggle button:hover {
@@ -127,9 +144,11 @@
 }
 
 .auth-toggle button.active {
-  background: #3ad1ff;
-  color: #07131d;
   border-color: #3ad1ff;
+}
+
+.auth-toggle button.active::before {
+  background: rgba(58, 209, 255, 0.35);
 }
 
 .auth-form {
@@ -162,16 +181,28 @@
 }
 
 .auth-submit {
+  position: relative;
   border: 2px solid #3ad1ff;
   border-radius: 0;
-  background: #3ad1ff;
-  color: #07131d;
+  background-image: url('/sprites/auth_button_bg.png');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
   font-family: 'Press Start 2P', monospace;
   font-size: 0.7rem;
   padding: 14px 16px;
   cursor: pointer;
   margin-top: 6px;
   transition: transform 0.1s steps(2, end);
+}
+
+.auth-submit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(58, 209, 255, 0.3);
+  z-index: 0;
 }
 
 .auth-submit:hover:not(:disabled) {
@@ -181,6 +212,11 @@
 .auth-submit:disabled {
   opacity: 0.6;
   cursor: wait;
+}
+
+.auth-submit,
+.auth-toggle button {
+  isolation: isolate; /* keeps the ::before overlay from covering the button's own text */
 }
 
 .auth-error {
