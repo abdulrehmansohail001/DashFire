@@ -5,8 +5,10 @@ import { SHOP_CATALOG } from '../shopCatalog.js';
 
 const router = express.Router();
 
-function getUserId(req) {
-  return String(req.user.userId);
+function getUserIds(req) {
+  return [String(req.user.userId), String(req.user.username)].filter(
+    (userId, index, userIds) => userId && userIds.indexOf(userId) === index
+  );
 }
 
 function progressFields(progress) {
@@ -18,16 +20,17 @@ function progressFields(progress) {
   };
 }
 
-async function getOrCreateProgress(userId) {
-  const existing = await Progress.findOne({ userId });
+async function getOrCreateProgress(req) {
+  const userIds = getUserIds(req);
+  const existing = await Progress.findOne({ userId: { $in: userIds } });
   if (existing) return existing;
 
-  return Progress.create({ userId });
+  return Progress.create({ userId: userIds[0] });
 }
 
 router.get('/inventory', requireAuth, async (req, res) => {
   try {
-    const progress = await getOrCreateProgress(getUserId(req));
+    const progress = await getOrCreateProgress(req);
     return res.json(progressFields(progress));
   } catch (error) {
     console.error('GET /api/shop/inventory error:', error.message);
@@ -44,7 +47,7 @@ router.post('/purchase', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'item not found' });
     }
 
-    const progress = await getOrCreateProgress(getUserId(req));
+    const progress = await getOrCreateProgress(req);
     const ownedItems = progress.ownedItems || [];
 
     if (ownedItems.includes(item.id)) {
@@ -75,7 +78,7 @@ router.post('/equip', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'item not found' });
     }
 
-    const progress = await getOrCreateProgress(getUserId(req));
+    const progress = await getOrCreateProgress(req);
     if (!(progress.ownedItems || []).includes(item.id)) {
       return res.status(400).json({ error: 'item not owned' });
     }
