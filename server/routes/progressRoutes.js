@@ -1,5 +1,6 @@
 import express from 'express';
 import Progress from '../models/Progress.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 const DEFAULT_UNLOCKED_BY_WORLD = {
@@ -29,9 +30,13 @@ function normalizeUnlockedByWorld(value) {
   return normalized;
 }
 
-router.get('/:userId', async (req, res) => {
+router.get('/:userId', requireAuth, async (req, res) => {
   try {
     const { userId } = req.params;
+
+    if (req.user.userId !== userId && req.user.username !== userId) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
 
     const existing = await Progress.findOne({ userId });
     if (existing) {
@@ -56,10 +61,14 @@ router.get('/:userId', async (req, res) => {
   }
 });
 
-router.put('/:userId', async (req, res) => {
+router.put('/:userId', requireAuth, async (req, res) => {
   try {
     const { userId } = req.params;
     const { unlockedByWorld } = req.body || {};
+
+    if (req.user.userId !== userId && req.user.username !== userId) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
 
     const sanitizedUnlocked = normalizeUnlockedByWorld(unlockedByWorld);
 
@@ -87,10 +96,14 @@ router.put('/:userId', async (req, res) => {
   }
 });
 
-router.post('/:userId/level-clear', async (req, res) => {
+router.post('/:userId/level-clear', requireAuth, async (req, res) => {
   try {
     const { userId } = req.params;
     const { worldIndex, clearedIndex } = req.body || {};
+
+    if (req.user.userId !== userId && req.user.username !== userId) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
 
     const worldId = Number(worldIndex);
     const clearedLevel = Number(clearedIndex);
