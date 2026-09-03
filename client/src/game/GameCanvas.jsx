@@ -2002,6 +2002,21 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         'left'
       );
 
+      // --- HUD: coin total, same row as PLAYER HP, to its right — drawn
+      // on canvas (not a DOM overlay) so it scales in lockstep with the
+      // rest of the HUD instead of drifting at different viewport sizes.
+      const coinBadgeX = playerCircleX + circleRadius + 12 + 150 + 24;
+      const coinBadgeY = circleY - 8;
+      ctx.save();
+      ctx.font = '16px monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('🪙', coinBadgeX, coinBadgeY - 2);
+      ctx.font = 'bold 13px monospace';
+      ctx.fillStyle = '#8ae8ff';
+      ctx.fillText(String(totalCoins), coinBadgeX + 22, coinBadgeY + 1);
+      ctx.restore();
+
       // --- HUD: powerup bubbles below the player HP bar ---
       const POWERUP_DEFS = [
         { id: 'powerup_shield',     color: '#4a90d9', usedColor: '#333', letter: 'S', key: '1', icon: shieldIcon },
@@ -2021,8 +2036,19 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
       }
       powerupBubblePositionsRef.current = bubbles;
 
-      for (const b of bubbles) {
+      // Breathing pulse: each unused bubble slowly scales +/-6%, offset per
+      // slot so they don't all breathe in lockstep. Used (spent) bubbles
+      // hold still — the pulse is a "ready to use" cue, not decoration.
+      const breatheClock = performance.now() * 0.0025;
+      for (let i = 0; i < bubbles.length; i++) {
+        const b = bubbles[i];
+        const pulse = b.used ? 1 : 1 + Math.sin(breatheClock + i * 1.4) * 0.06;
+
         ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.scale(pulse, pulse);
+        ctx.translate(-b.x, -b.y);
+
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         ctx.clip(); // circular clip so the square icon image fills the bubble cleanly
@@ -2046,9 +2072,13 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         }
         ctx.restore();
 
-        // Ring and key hint drawn OUTSIDE the clipped save/restore, so
-        // they're never cropped by the circular clip.
+        // Ring and key hint pulse together with the bubble — drawn in
+        // their own save/restore (outside the clip) so they're never
+        // cropped, but still under the same scale transform.
         ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.scale(pulse, pulse);
+        ctx.translate(-b.x, -b.y);
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         ctx.strokeStyle = '#fff';
@@ -2301,12 +2331,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         }}
       />
 
-      <div className="game-total-hud" aria-label="Total coins">
-        <span className="game-total-hud__item game-total-hud__item--coins">
-          <span className="game-total-hud__coin" aria-hidden="true">🪙</span>
-          <span>{totalCoins}</span>
-        </span>
-      </div>
+
 
       {showActionButtons && (
         <div className="result-overlay">
