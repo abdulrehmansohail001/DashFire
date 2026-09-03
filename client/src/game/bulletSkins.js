@@ -39,26 +39,30 @@ export function drawBulletSkin(ctx, skinId, x, y, width, height, direction = 'ri
     ctx.stroke();
 
   } else if (skinId === 'bullet_03') {
-    // Blood drop, lying horizontal — round end leads, point trails behind.
-    const roundX = facingLeft ? x + width * 0.35 : x + width * 0.65;
-    const pointX = facingLeft ? x + width : x;
-    const r = height * 0.9;
+    // Blood drop — a rounded leading bulb with a tapered tail behind it.
+    ctx.translate(cx, cy);
+    ctx.scale(facingLeft ? -1 : 1, 1);
+    const bulbX = width * 0.16;
 
-    ctx.fillStyle = '#b0102a';
-    ctx.strokeStyle = '#6b0818';
-    ctx.lineWidth = 1;
+    const bloodGradient = ctx.createLinearGradient(-width / 2, 0, width / 2, 0);
+    bloodGradient.addColorStop(0, '#720b1d');
+    bloodGradient.addColorStop(0.45, '#b81232');
+    bloodGradient.addColorStop(1, '#e13c58');
+    ctx.fillStyle = bloodGradient;
+    ctx.strokeStyle = '#510714';
+    ctx.lineWidth = Math.max(1, height * 0.12);
     ctx.beginPath();
-    ctx.arc(roundX, cy, r, 0, Math.PI * 2);
-    ctx.moveTo(roundX, cy - r);
-    ctx.lineTo(pointX, cy);
-    ctx.lineTo(roundX, cy + r);
+    ctx.moveTo(-width * 0.46, 0);
+    ctx.bezierCurveTo(-width * 0.24, -height * 0.18, -width * 0.06, -height * 0.52, bulbX, -height * 0.47);
+    ctx.bezierCurveTo(width * 0.42, -height * 0.39, width * 0.48, height * 0.35, bulbX, height * 0.47);
+    ctx.bezierCurveTo(-width * 0.06, height * 0.52, -width * 0.24, height * 0.18, -width * 0.46, 0);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillStyle = 'rgba(255, 235, 240, 0.58)';
     ctx.beginPath();
-    ctx.arc(roundX - (facingLeft ? -2 : 2), cy - r * 0.4, r * 0.25, 0, Math.PI * 2);
+    ctx.ellipse(width * 0.25, -height * 0.22, width * 0.08, height * 0.16, -0.25, 0, Math.PI * 2);
     ctx.fill();
 
   } else if (skinId === 'bullet_04') {
@@ -86,36 +90,42 @@ export function drawBulletSkin(ctx, skinId, x, y, width, height, direction = 'ri
     ctx.stroke();
 
   } else if (skinId === 'bullet_05') {
-    // Balloon — oval body + tiny knot + thin trailing string.
-    const bodyX = facingLeft ? x + width * 0.35 : x + width * 0.65;
-    const knotX = facingLeft ? x + width * 0.62 : x + width * 0.38;
-    const stringEndX = facingLeft ? x + width : x;
+    // Balloon — a polished oval leading the flight, with its knot and string trailing behind.
+    ctx.translate(cx, cy);
+    ctx.scale(facingLeft ? -1 : 1, 1);
+    const bodyX = width * 0.18;
+    const knotX = -width * 0.03;
 
-    ctx.strokeStyle = '#cccccc';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#9a9a9a';
+    ctx.lineWidth = Math.max(1, height * 0.1);
     ctx.beginPath();
-    ctx.moveTo(knotX, cy);
-    ctx.lineTo(stringEndX, cy);
+    ctx.moveTo(knotX, height * 0.46);
+    ctx.bezierCurveTo(-width * 0.08, height * 0.62, -width * 0.22, height * 0.38, -width * 0.46, height * 0.52);
     ctx.stroke();
 
-    ctx.fillStyle = '#ff7ac9';
-    ctx.strokeStyle = '#b8478f';
+    const balloonGradient = ctx.createLinearGradient(bodyX - width * 0.2, 0, bodyX + width * 0.2, 0);
+    balloonGradient.addColorStop(0, '#d93696');
+    balloonGradient.addColorStop(0.5, '#ff7ac9');
+    balloonGradient.addColorStop(1, '#ffb4e1');
+    ctx.fillStyle = balloonGradient;
+    ctx.strokeStyle = '#a52c72';
+    ctx.lineWidth = Math.max(1, height * 0.1);
     ctx.beginPath();
-    ctx.ellipse(bodyX, cy, height * 0.9, height * 1.15, 0, 0, Math.PI * 2);
+    ctx.ellipse(bodyX, -height * 0.08, width * 0.22, height * 0.58, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
+    ctx.fillStyle = '#a52c72';
     ctx.beginPath();
-    ctx.moveTo(bodyX - (facingLeft ? -3 : 3), cy + height * 1.0);
-    ctx.lineTo(knotX, cy);
-    ctx.lineTo(bodyX + (facingLeft ? -3 : 3), cy + height * 1.0);
+    ctx.moveTo(bodyX - width * 0.05, height * 0.44);
+    ctx.lineTo(bodyX, height * 0.62);
+    ctx.lineTo(bodyX + width * 0.05, height * 0.44);
     ctx.closePath();
-    ctx.fillStyle = '#b8478f';
     ctx.fill();
 
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.62)';
     ctx.beginPath();
-    ctx.ellipse(bodyX - height * 0.3, cy - height * 0.4, height * 0.25, height * 0.35, 0, 0, Math.PI * 2);
+    ctx.ellipse(bodyX - width * 0.08, -height * 0.25, width * 0.06, height * 0.18, -0.3, 0, Math.PI * 2);
     ctx.fill();
 
   } else {

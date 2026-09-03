@@ -32,8 +32,8 @@ export class Bullet {
 
   draw(ctx) {
     if (this.skinId !== 'bullet_01') {
-      const visualWidth = this.width * 2.5;
-      const visualHeight = this.height * 3;
+      const visualWidth = this.skinId === 'bullet_04' ? this.width * 4 : this.width * 3;
+      const visualHeight = this.height * 3.5;
       const visualX = this.x - (visualWidth - this.width) / 2;
       const visualY = this.y - (visualHeight - this.height) / 2;
       const drew = drawBulletSkin(ctx, this.skinId, visualX, visualY, visualWidth, visualHeight, this.direction, this.age);
