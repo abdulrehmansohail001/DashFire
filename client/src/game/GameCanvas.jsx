@@ -2008,7 +2008,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         { id: 'powerup_booster',    color: '#e89030', usedColor: '#333', letter: 'B', key: '2', icon: boosterIcon },
         { id: 'powerup_machinegun', color: '#d94a4a', usedColor: '#333', letter: 'M', key: '3', icon: machinegunIcon },
       ];
-      const bubbleRadius = 14;
+      const bubbleRadius = 18;
       const bubbleY = circleY + circleRadius + 24;
       let bubbleSlot = 0;
       const bubbles = [];
@@ -2029,7 +2029,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
 
         if (b.icon && b.icon.complete && b.icon.naturalWidth > 0) {
           ctx.globalAlpha = b.used ? 0.35 : 1;
-          ctx.drawImage(b.icon, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+          const overfill = b.r * 2.15; // slightly larger than the clip circle so there's no gap/dead-space ring around the icon
+          ctx.drawImage(b.icon, b.x - overfill / 2, b.y - overfill / 2, overfill, overfill);
           ctx.globalAlpha = 1;
         } else {
           ctx.fillStyle = b.used ? b.usedColor : b.color;

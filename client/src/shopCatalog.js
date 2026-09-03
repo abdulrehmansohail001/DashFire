@@ -95,7 +95,7 @@ export const SHOP_CATALOG = [
     name: 'Shield',
     price: 250,
     description: 'Grants 3 seconds of full invincibility.',
-    spritePath: '/sprites/powerup_shield.png',
+    spritePath: '/sprites/shield_icon.png',
   },
   {
     id: 'powerup_booster',
@@ -103,7 +103,7 @@ export const SHOP_CATALOG = [
     name: 'Booster',
     price: 200,
     description: 'Increases movement speed for 5 seconds.',
-    spritePath: '/sprites/powerup_booster.png',
+    spritePath: '/sprites/booster_icon.png',
   },
   {
     id: 'powerup_machinegun',
@@ -111,6 +111,6 @@ export const SHOP_CATALOG = [
     name: 'Machine Gun',
     price: 300,
     description: 'Removes the firing cooldown for 2.5 seconds.',
-    spritePath: '/sprites/powerup_machinegun.png',
+    spritePath: '/sprites/machinegun_icon.png',
   },
 ];
