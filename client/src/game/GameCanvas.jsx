@@ -41,6 +41,7 @@ import { IcyBee } from './entities/IcyBee';
 import { Boss } from './entities/Boss';
 import { TimeDistorter } from './entities/TimeDistorter';
 import { playSound } from './sound';
+import { useItem } from '../services/shopApi';
 import { IceBeeProjectile } from './entities/IceBeeProjectile';
 import { ShipProjectile } from './entities/ShipProjectile';
 import { BossFireball } from './entities/BossFireball';
@@ -521,7 +522,7 @@ function drawTimeDistorterOverlay(ctx, boss) {
   ctx.restore();
 }
 
-export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, totalCoins = 0, equippedSkin = 'skin_01', equippedBulletSkin = 'bullet_01', onLevelComplete, onExitToMenu }) {
+export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, totalCoins = 0, equippedSkin = 'skin_01', equippedBulletSkin = 'bullet_01', ownedItems = [], onLevelComplete, onExitToMenu }) {
   const world = WORLDS[worldIndex] ?? WORLDS[0];
   const LEVELS = world.levels; // every existing LEVELS[...] reference below now resolves per-world, unchanged
 
@@ -682,6 +683,12 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
   const levelIndexRef = useRef(initialLevelIndex); // 0-based index into LEVELS
   const outroTargetRef = useRef(null); // 'levelComplete' | 'gameComplete' — which screen to show once the victory animation finishes
   const coinsEarnedRef = useRef(0);
+  const usedThisAttemptRef = useRef({ powerup_shield: false, powerup_booster: false, powerup_machinegun: false });
+  // Bubble positions are updated every draw() frame so the click handler
+  // can hit-test against them without duplicating layout math.
+  const powerupBubblePositionsRef = useRef([]);
+  const ownedItemsRef = useRef(ownedItems);
+  ownedItemsRef.current = ownedItems;
 
   const awardCoinReward = () => {
     const reward = 200 + Math.floor(Math.random() * 51);
@@ -715,6 +722,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     }
 
     coinsEarnedRef.current = 0;
+    usedThisAttemptRef.current = { powerup_shield: false, powerup_booster: false, powerup_machinegun: false };
     const resetSummary = { stars: 0, coins: 0, hp: playerRef.current.health, rewarded: false };
     runSummaryRef.current = resetSummary;
     setRunSummary(resetSummary);
@@ -864,12 +872,56 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
           playerRef.current.jump();
         }
       }
+      // Powerup keyboard shortcuts: 1=Shield, 2=Booster, 3=MachineGun
+      if (!e.repeat && gameStateRef.current === 'playing') {
+        const POWERUP_KEY_MAP = { '1': 'powerup_shield', '2': 'powerup_booster', '3': 'powerup_machinegun' };
+        const powerupId = POWERUP_KEY_MAP[e.key];
+        if (powerupId) activatePowerup(powerupId);
+      }
     };
 
     const handleKeyUp = (e) => {
       keysRef.current[e.key] = false;
     };
 
+    // Powerup activation helper — shared by keyboard (1/2/3) and click.
+    function activatePowerup(powerupId) {
+      if (gameStateRef.current !== 'playing') return;
+      if (usedThisAttemptRef.current[powerupId]) return;
+      if (!ownedItemsRef.current.includes(powerupId)) return;
+
+      const player = playerRef.current;
+      if (powerupId === 'powerup_shield') player.activateShield();
+      else if (powerupId === 'powerup_booster') player.activateBooster();
+      else if (powerupId === 'powerup_machinegun') player.activateMachineGun();
+
+      usedThisAttemptRef.current = { ...usedThisAttemptRef.current, [powerupId]: true };
+
+      // Fire-and-forget server call — don't block gameplay on network.
+      useItem(powerupId).catch((err) => console.error('useItem failed:', err));
+    }
+
+    // Canvas click handler — translates CSS-scaled mouse coords back into
+    // the 800×400 canvas coordinate space, then hit-tests against the
+    // powerup bubble positions recorded by the last draw() frame.
+    function handleCanvasClick(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = CANVAS_WIDTH / rect.width;
+      const scaleY = CANVAS_HEIGHT / rect.height;
+      const cx = (e.clientX - rect.left) * scaleX;
+      const cy = (e.clientY - rect.top) * scaleY;
+
+      for (const bubble of powerupBubblePositionsRef.current) {
+        const dx = cx - bubble.x;
+        const dy = cy - bubble.y;
+        if (dx * dx + dy * dy <= bubble.r * bubble.r) {
+          activatePowerup(bubble.id);
+          break;
+        }
+      }
+    }
+
+    canvas.addEventListener('click', handleCanvasClick);
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
@@ -1944,6 +1996,49 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         'left'
       );
 
+      // --- HUD: powerup bubbles below the player HP bar ---
+      const POWERUP_DEFS = [
+        { id: 'powerup_shield',     color: '#4a90d9', usedColor: '#333', letter: 'S', key: '1' },
+        { id: 'powerup_booster',    color: '#e89030', usedColor: '#333', letter: 'B', key: '2' },
+        { id: 'powerup_machinegun', color: '#d94a4a', usedColor: '#333', letter: 'M', key: '3' },
+      ];
+      const bubbleRadius = 14;
+      const bubbleY = circleY + circleRadius + 24;
+      let bubbleSlot = 0;
+      const bubbles = [];
+      for (const def of POWERUP_DEFS) {
+        if (!ownedItemsRef.current.includes(def.id)) continue;
+        const used = usedThisAttemptRef.current[def.id];
+        const bx = 20 + bubbleSlot * (bubbleRadius * 2 + 8) + bubbleRadius;
+        bubbles.push({ ...def, x: bx, y: bubbleY, r: bubbleRadius, used });
+        bubbleSlot++;
+      }
+      powerupBubblePositionsRef.current = bubbles;
+
+      for (const b of bubbles) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fillStyle = b.used ? b.usedColor : b.color;
+        ctx.globalAlpha = b.used ? 0.35 : 0.9;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 13px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(b.letter, b.x, b.y);
+        // Key hint below the bubble
+        ctx.font = '9px monospace';
+        ctx.fillStyle = '#aaa';
+        ctx.fillText(b.key, b.x, b.y + b.r + 9);
+        ctx.textBaseline = 'alphabetic';
+        ctx.restore();
+      }
+
       // --- HUD: enemy HP top-right, above the enemy patrol area ---
       // One independent bar per enemy (not summed/shared) — stacked
       // vertically when a level has more than one gunman, so defeating
@@ -2130,6 +2225,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
 
     return () => {
       cancelAnimationFrame(animationFrameId);
+      canvas.removeEventListener('click', handleCanvasClick);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };

@@ -144,6 +144,14 @@ export class Player {
     this.stuck = false;
     this.stuckInvulnerableTimer = 0;
 
+    // Powerup: Booster — increases horizontal move speed for boostTimer seconds.
+    this.boosted = false;
+    this.boostTimer = 0;
+
+    // Powerup: Machine Gun — removes firing cooldown for rapidFireTimer seconds.
+    this.rapidFire = false;
+    this.rapidFireTimer = 0;
+
     this.isSitting = false; // set every frame from GameCanvas based on ArrowDown held
 
     // World 5 TimeDistorter reversal: timeHistory records {t, x, y, facing,
@@ -196,11 +204,12 @@ export class Player {
     }
 
     // Normal movement (not stuck)
+    const speed = this.boosted ? MOVE_SPEED * 1.6 : MOVE_SPEED;
     if (keys['ArrowLeft'] || keys['a']) {
-      this.vx = -MOVE_SPEED;
+      this.vx = -speed;
       this.facing = 'left';
     } else if (keys['ArrowRight'] || keys['d']) {
-      this.vx = MOVE_SPEED;
+      this.vx = speed;
       this.facing = 'right';
     } else {
       this.vx = 0;
@@ -291,7 +300,7 @@ export class Player {
 
   triggerShoot() {
     this.shootTimer = SHOOT_ANIM_DURATION;
-    this.shootCooldown = 1.0;
+    this.shootCooldown = this.rapidFire ? 0.15 : 1.0;
   }
 
   canShoot() {
@@ -412,6 +421,20 @@ export class Player {
       this.stillTimer += dt;
     } else {
       this.stillTimer = 0;
+    }
+
+    if (this.boosted) {
+      this.boostTimer -= dt;
+      if (this.boostTimer <= 0) {
+        this.boosted = false;
+      }
+    }
+
+    if (this.rapidFire) {
+      this.rapidFireTimer -= dt;
+      if (this.rapidFireTimer <= 0) {
+        this.rapidFire = false;
+      }
     }
 
     if (this.shootCooldown > 0) {
@@ -586,6 +609,20 @@ export class Player {
   grantShield(durationSec) {
     this.invulnerable = true;
     this.invulnerableTimer = Math.max(this.invulnerableTimer, durationSec);
+  }
+
+  activateShield() {
+    this.grantShield(3);
+  }
+
+  activateBooster() {
+    this.boosted = true;
+    this.boostTimer = 5;
+  }
+
+  activateMachineGun() {
+    this.rapidFire = true;
+    this.rapidFireTimer = 2.5;
   }
 
   getBounds() {

@@ -29,6 +29,7 @@ function App() {
   const [starsByLevel, setStarsByLevel] = useState({});
   const [equippedSkin, setEquippedSkin] = useState('skin_01');
   const [equippedBulletSkin, setEquippedBulletSkin] = useState('bullet_01');
+  const [ownedItems, setOwnedItems] = useState([]);
   const [authMode, setAuthMode] = useState('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -58,9 +59,11 @@ function App() {
         const inventory = await getInventory();
         setEquippedSkin(inventory.equippedSkin || 'skin_01');
         setEquippedBulletSkin(inventory.equippedBulletSkin || 'bullet_01');
+        setOwnedItems(inventory.ownedItems || []);
       } catch {
         setEquippedSkin('skin_01');
         setEquippedBulletSkin('bullet_01');
+        setOwnedItems([]);
       }
     };
 
@@ -129,9 +132,11 @@ function App() {
       const inventory = await getInventory();
       setEquippedSkin(inventory.equippedSkin || 'skin_01');
       setEquippedBulletSkin(inventory.equippedBulletSkin || 'bullet_01');
+      setOwnedItems(inventory.ownedItems || []);
     } catch {
       setEquippedSkin('skin_01');
       setEquippedBulletSkin('bullet_01');
+      setOwnedItems([]);
     }
     setSelectedLevelIndex(index);
     setScreen('game');
@@ -308,6 +313,7 @@ function App() {
           totalCoins={totalCoins}
           equippedSkin={equippedSkin}
           equippedBulletSkin={equippedBulletSkin}
+          ownedItems={ownedItems}
           onLevelComplete={handleLevelComplete}
           onExitToMenu={handleExitToMenu}
         />
