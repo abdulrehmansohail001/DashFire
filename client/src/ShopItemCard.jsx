@@ -20,17 +20,21 @@ export default function ShopItemCard({ item, inventory, onPurchase, onEquip }) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const drawWidth = canvas.width * 0.6;
-    const drawHeight = canvas.height * 0.6;
-    const drawX = (canvas.width - drawWidth) / 2;
-    const drawY = (canvas.height - drawHeight) / 2;
 
     if (item.id === 'bullet_01') {
+      const drawWidth = canvas.width * 0.32;
+      const drawHeight = canvas.height * 0.11;
+      const drawX = (canvas.width - drawWidth) / 2 + drawWidth * 0.1;
+      const drawY = (canvas.height - drawHeight) / 2;
       const bullet = new Bullet(drawX, drawY, 'right');
       bullet.width = drawWidth;
       bullet.height = drawHeight;
       bullet.draw(ctx);
     } else {
+      const drawWidth = canvas.width * 0.6;
+      const drawHeight = canvas.height * 0.6;
+      const drawX = (canvas.width - drawWidth) / 2;
+      const drawY = (canvas.height - drawHeight) / 2;
       drawBulletSkin(ctx, item.id, drawX, drawY, drawWidth, drawHeight, 'right', 0);
     }
   }, [isBulletPreview, item.id, item.previewType]);
