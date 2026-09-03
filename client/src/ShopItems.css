@@ -104,7 +104,8 @@
 
 .shop-items-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, 160px);
+  justify-content: center;
   gap: 12px;
 }
 
@@ -212,11 +213,13 @@
 @media (max-width: 760px) {
   .shop-items-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
   }
 }
 
 @media (max-width: 420px) {
   .shop-items-grid {
     grid-template-columns: 1fr;
+    justify-content: stretch;
   }
 }
