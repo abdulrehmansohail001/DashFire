@@ -102,34 +102,39 @@ export const OBSTACLE_INFO = [
     name: 'Wall',
     world: 'World 1 — Lunar Front',
     specialEffect: 'Solid wall. Blocks movement and player bullets. Enemy bullets pass through.',
-    description: 'Wall — World 1 (Lunar Front).'
+    description: 'Wall — World 1 (Lunar Front).',
+    spritePath: '/sprites/obs1.png'
   },
   {
     id: 'cactus',
     name: 'Cactus',
     world: 'World 2 — Mars Invasion',
     specialEffect: 'Solid wall. Deals contact damage. Enemy bullets pass through.',
-    description: 'Cactus — World 2 (Mars Invasion).'
+    description: 'Cactus — World 2 (Mars Invasion).',
+    spritePath: '/sprites/obs2.png'
   },
   {
     id: 'iceberg',
     name: 'Iceberg',
     world: 'World 3 — Neon Tundra',
     specialEffect: 'Solid moving wall. Contact freezes player (no damage). Sweeps one-way.',
-    description: 'Iceberg — World 3 (Neon Tundra).'
+    description: 'Iceberg — World 3 (Neon Tundra).',
+    spritePath: '/sprites/obs3.png'
   },
   {
     id: 'quicksand',
     name: 'Quicksand Patch',
     world: 'World 4 — Farthest Black Hole',
     specialEffect: 'Ground hazard. Traps player in place until released. Not solid.',
-    description: 'Quicksand Patch — World 4 (Farthest Black Hole).'
+    description: 'Quicksand Patch — World 4 (Farthest Black Hole).',
+    spritePath: '/sprites/obs4.png'
   },
   {
     id: 'sitting_duck',
     name: 'Sitting Duck',
     world: 'World 5 — Void Rift',
     specialEffect: 'Moving ground hazard. Deals damage and forces player to duck. Sweeps one-way.',
-    description: 'Sitting Duck — World 5 (Void Rift).'
+    description: 'Sitting Duck — World 5 (Void Rift).',
+    spritePath: '/sprites/obs5.png'
   },
 ];
