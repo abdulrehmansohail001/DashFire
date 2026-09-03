@@ -95,3 +95,41 @@ export const ENEMY_INFO = [
     spritePath: '/sprites/time_gunman.png', spriteColumns: 4, spriteRows: 4
   },
 ];
+
+export const OBSTACLE_INFO = [
+  {
+    id: 'obstacle',
+    name: 'Wall',
+    world: 'World 1 — Lunar Front',
+    specialEffect: 'Solid wall. Blocks movement and player bullets. Enemy bullets pass through.',
+    description: 'Wall — World 1 (Lunar Front).'
+  },
+  {
+    id: 'cactus',
+    name: 'Cactus',
+    world: 'World 2 — Mars Invasion',
+    specialEffect: 'Solid wall. Deals contact damage. Enemy bullets pass through.',
+    description: 'Cactus — World 2 (Mars Invasion).'
+  },
+  {
+    id: 'iceberg',
+    name: 'Iceberg',
+    world: 'World 3 — Neon Tundra',
+    specialEffect: 'Solid moving wall. Contact freezes player (no damage). Sweeps one-way.',
+    description: 'Iceberg — World 3 (Neon Tundra).'
+  },
+  {
+    id: 'quicksand',
+    name: 'Quicksand Patch',
+    world: 'World 4 — Farthest Black Hole',
+    specialEffect: 'Ground hazard. Traps player in place until released. Not solid.',
+    description: 'Quicksand Patch — World 4 (Farthest Black Hole).'
+  },
+  {
+    id: 'sitting_duck',
+    name: 'Sitting Duck',
+    world: 'World 5 — Void Rift',
+    specialEffect: 'Moving ground hazard. Deals damage and forces player to duck. Sweeps one-way.',
+    description: 'Sitting Duck — World 5 (Void Rift).'
+  },
+];
