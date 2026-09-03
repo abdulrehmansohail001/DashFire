@@ -8,8 +8,11 @@ export default function ShopItemCard({ item, inventory, onPurchase, onEquip }) {
   const owned = inventory.ownedItems.includes(item.id);
   const equipped = item.category === 'skin'
     ? inventory.equippedSkin === item.id
-    : inventory.equippedBulletSkin === item.id;
+    : item.category === 'bulletSkin'
+      ? inventory.equippedBulletSkin === item.id
+      : false;
   const affordable = inventory.totalCoins >= item.price;
+  const isPowerup = item.category === 'powerup';
   const isSkinPreview = item.category === 'skin' && item.spriteColumns && item.spriteRows;
   const isBulletPreview = item.category === 'bulletSkin';
   const canvasRef = useRef(null);
@@ -93,10 +96,10 @@ export default function ShopItemCard({ item, inventory, onPurchase, onEquip }) {
         <button
           type="button"
           className="shop-item-card__action"
-          disabled={isBusy || (!owned && !affordable)}
+          disabled={isBusy || (!owned && !affordable) || (isPowerup && owned)}
           onClick={handleAction}
         >
-          {isBusy ? 'WAIT...' : owned ? 'EQUIP' : 'BUY'}
+          {isBusy ? 'WAIT...' : owned ? (isPowerup ? 'OWNED ✓' : 'EQUIP') : 'BUY'}
         </button>
       )}
       {error && <p className="shop-item-card__error">{error}</p>}

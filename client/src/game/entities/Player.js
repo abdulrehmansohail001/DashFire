@@ -98,6 +98,7 @@ export class Player {
     this.invulnerable = false;
     this.invulnerableTimer = 0;
     this.shootCooldown = 0;
+    this.shieldActive = false; // true only while the Shield powerup's invulnerability is live
 
     // Freeze status (World 3+): a freeze-capable hit damages AND locks all
     // input (move/jump/shoot) for frozenTimer seconds. Deliberately
@@ -373,6 +374,7 @@ export class Player {
       this.invulnerableTimer -= dt;
       if (this.invulnerableTimer <= 0) {
         this.invulnerable = false;
+        this.shieldActive = false;
       }
     }
 
@@ -613,6 +615,7 @@ export class Player {
 
   activateShield() {
     this.grantShield(3);
+    this.shieldActive = true;
   }
 
   activateBooster() {
@@ -727,6 +730,17 @@ export class Player {
           ctx.globalAlpha = GHOST_ALPHA_LEVELS[ghostStep];
         }
 
+        // Powerup glow — same shadowBlur technique DarkMatterBeing uses.
+        // Boosted and rapidFire can overlap; whichever is active wins
+        // (rapidFire takes visual priority since it's rarer/shorter).
+        if (this.rapidFire) {
+          ctx.shadowColor = '#ff3030';
+          ctx.shadowBlur = 16;
+        } else if (this.boosted) {
+          ctx.shadowColor = '#ffaa20';
+          ctx.shadowBlur = 18;
+        }
+
         if (skinId && sheet && sheet.loaded) {
           let row, col;
           if (config.cells) {
@@ -796,6 +810,32 @@ export class Player {
         ctx.lineWidth = 2;
         ctx.strokeRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
       }
+    }
+
+    // Shield powerup: transparent bubble overlay drawn on top of everything
+    // (sprite, freeze crystals, etc.) — pulses gently via a sine wave on
+    // the alpha so it reads as an active force field rather than a static
+    // overlay. Uses the same hitbox-derived center/radii so it always
+    // wraps the character regardless of skin dimensions.
+    if (this.shieldActive) {
+      const sinkOffset = this.stuck ? SINK_OFFSET : 0;
+      const cx = this.x + this.width / 2;
+      const cy = this.y + this.height / 2 + sinkOffset;
+      const rx = this.width * 0.85;
+      const ry = this.height * 0.6;
+      const pulse = 0.18 + Math.sin(performance.now() * 0.006) * 0.07;
+
+      ctx.save();
+      ctx.globalAlpha = pulse;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#4ac8ff';
+      ctx.fill();
+      ctx.globalAlpha = pulse + 0.15;
+      ctx.strokeStyle = '#80dfff';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctx.restore();
     }
   }
 }

@@ -6,6 +6,7 @@ import Leaderboard from './Leaderboard';
 import Shop from './Shop';
 import SkinsShop from './SkinsShop';
 import BulletsShop from './BulletsShop';
+import PowerupsShop from './PowerupsShop';
 import { WORLDS } from './game/worlds';
 import { getPlayerProgress, saveLevelClear, getAuthenticatedUser, saveAuth, clearAuth } from './services/progressApi';
 import { getInventory } from './services/shopApi';
@@ -267,6 +268,7 @@ function App() {
       {screen === 'shop' && <Shop onNavigate={setScreen} onBack={handleBackToMainMenu} />}
       {screen === 'skinsShop' && <SkinsShop onBack={handleBackToShop} />}
       {screen === 'bulletsShop' && <BulletsShop onBack={handleBackToShop} />}
+      {screen === 'powerupsShop' && <PowerupsShop onBack={handleBackToShop} />}
       {screen === 'mainMenu' && (
         <div className="main-menu">
           <AnimatedGameBackground className="main-menu__backdrop-anim" style={GAME_BACKGROUND_STYLE} />

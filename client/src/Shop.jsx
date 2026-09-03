@@ -53,9 +53,9 @@ export default function Shop({ onNavigate, onBack }) {
             <span className="shop-category__title">BULLET SKINS</span>
             <span className="shop-category__detail">WEAPON VISUALS</span>
           </button>
-          <button type="button" className="shop-category shop-category--locked" disabled>
+          <button type="button" className="shop-category" onClick={() => onNavigate('powerupsShop')}>
             <span className="shop-category__title">POWERUPS</span>
-            <span className="shop-category__detail">COMING SOON</span>
+            <span className="shop-category__detail">IN-GAME BOOSTS</span>
           </button>
         </div>
       </main>
