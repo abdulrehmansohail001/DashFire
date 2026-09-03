@@ -585,6 +585,12 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
   const obstacleImage = getImage(world.sprites.obstacle);
   const cactusImage = getImage(world.sprites.cactus);
   const sittingDuckImage = getImage(world.sprites.sittingDuck);
+
+  // Powerup HUD icons — universal assets, not per-world (same reasoning
+  // as freezeCrystalSheet/ghostSheet/duckSheet above).
+  const shieldIcon = getImage('/sprites/shield_icon.png');
+  const boosterIcon = getImage('/sprites/booster_icon.png');
+  const machinegunIcon = getImage('/sprites/machinegun_icon.png');
   const quicksandImage = getImage(world.sprites.quicksand);
   const icebergImage = getImage(world.sprites.iceberg);
   const vortexSheet = getSheet(world.sprites.vortex);
@@ -1998,9 +2004,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
 
       // --- HUD: powerup bubbles below the player HP bar ---
       const POWERUP_DEFS = [
-        { id: 'powerup_shield',     color: '#4a90d9', usedColor: '#333', letter: 'S', key: '1' },
-        { id: 'powerup_booster',    color: '#e89030', usedColor: '#333', letter: 'B', key: '2' },
-        { id: 'powerup_machinegun', color: '#d94a4a', usedColor: '#333', letter: 'M', key: '3' },
+        { id: 'powerup_shield',     color: '#4a90d9', usedColor: '#333', letter: 'S', key: '1', icon: shieldIcon },
+        { id: 'powerup_booster',    color: '#e89030', usedColor: '#333', letter: 'B', key: '2', icon: boosterIcon },
+        { id: 'powerup_machinegun', color: '#d94a4a', usedColor: '#333', letter: 'M', key: '3', icon: machinegunIcon },
       ];
       const bubbleRadius = 14;
       const bubbleY = circleY + circleRadius + 24;
@@ -2019,23 +2025,38 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         ctx.save();
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-        ctx.fillStyle = b.used ? b.usedColor : b.color;
-        ctx.globalAlpha = b.used ? 0.35 : 0.9;
-        ctx.fill();
-        ctx.globalAlpha = 1;
+        ctx.clip(); // circular clip so the square icon image fills the bubble cleanly
+
+        if (b.icon && b.icon.complete && b.icon.naturalWidth > 0) {
+          ctx.globalAlpha = b.used ? 0.35 : 1;
+          ctx.drawImage(b.icon, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.fillStyle = b.used ? b.usedColor : b.color;
+          ctx.globalAlpha = b.used ? 0.35 : 0.9;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 13px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(b.letter, b.x, b.y);
+          ctx.textBaseline = 'alphabetic';
+        }
+        ctx.restore();
+
+        // Ring and key hint drawn OUTSIDE the clipped save/restore, so
+        // they're never cropped by the circular clip.
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 2;
         ctx.stroke();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 13px monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(b.letter, b.x, b.y);
-        // Key hint below the bubble
         ctx.font = '9px monospace';
         ctx.fillStyle = '#aaa';
+        ctx.textAlign = 'center';
         ctx.fillText(b.key, b.x, b.y + b.r + 9);
-        ctx.textBaseline = 'alphabetic';
         ctx.restore();
       }
 
