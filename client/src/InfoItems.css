@@ -110,8 +110,8 @@
 }
 
 .info-item-card__image {
-  width: 92px;
-  height: 92px;
+  width: 128px;
+  height: 128px;
   object-fit: contain;
   image-rendering: pixelated;
 }

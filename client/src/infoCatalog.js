@@ -92,5 +92,6 @@ export const ENEMY_INFO = [
     name: 'Time Gunman',
     world: 'World 5 — Void Rift',
     specialEffect: 'None — standard damage only. Spawned by the TimeDistorter boss.',
+    spritePath: '/sprites/time_gunman.png', spriteColumns: 4, spriteRows: 4
   },
 ];
