@@ -116,6 +116,12 @@
   image-rendering: pixelated;
 }
 
+.info-item-card__image--sheet {
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: calc(var(--sprite-columns) * 100%) calc(var(--sprite-rows) * 100%);
+}
+
 .info-item-card h2 {
   min-height: 2.8em;
   margin: 8px 0;

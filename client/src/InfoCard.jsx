@@ -1,11 +1,23 @@
 export default function InfoCard({ item }) {
   // If spritePath isn't defined, we'll just show a placeholder box
   const hasImage = !!item.spritePath;
+  const isSheet = hasImage && item.spriteColumns && item.spriteRows;
 
   return (
     <article className="info-item-card">
       <div className="info-item-card__image-wrap">
-        {hasImage ? (
+        {isSheet ? (
+          <div
+            role="img"
+            aria-label={item.name}
+            className="info-item-card__image info-item-card__image--sheet"
+            style={{
+              backgroundImage: `url(${item.spritePath})`,
+              '--sprite-columns': item.spriteColumns,
+              '--sprite-rows': item.spriteRows,
+            }}
+          />
+        ) : hasImage ? (
           <img src={item.spritePath} alt={item.name} className="info-item-card__image" />
         ) : (
           <div style={{ color: '#000', fontSize: '2rem' }}>?</div>
