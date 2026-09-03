@@ -39,3 +39,10 @@ export function equipItem(itemId) {
     body: JSON.stringify({ itemId }),
   });
 }
+
+export function useItem(itemId) {
+  return request('/use', {
+    method: 'POST',
+    body: JSON.stringify({ itemId }),
+  });
+}

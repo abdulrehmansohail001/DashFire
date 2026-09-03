@@ -105,4 +105,33 @@ router.post('/equip', requireAuth, async (req, res) => {
   }
 });
 
+router.post('/use', requireAuth, async (req, res) => {
+  try {
+    const { itemId } = req.body || {};
+    const item = SHOP_CATALOG.find((catalogItem) => catalogItem.id === itemId);
+
+    if (!item) {
+      return res.status(400).json({ error: 'item not found' });
+    }
+
+    if (item.category !== 'powerup') {
+      return res.status(400).json({ error: 'item category not supported' });
+    }
+
+    const progress = await getOrCreateProgress(req);
+    if (!(progress.ownedItems || []).includes(item.id)) {
+      return res.status(400).json({ error: 'item not owned' });
+    }
+
+    progress.ownedItems = (progress.ownedItems || []).filter(
+      (ownedId) => ownedId !== item.id
+    );
+    await progress.save();
+    return res.json(progressFields(progress));
+  } catch (error) {
+    console.error('POST /api/shop/use error:', error.message);
+    return res.status(500).json({ error: 'Could not use shop item' });
+  }
+});
+
 export default router;

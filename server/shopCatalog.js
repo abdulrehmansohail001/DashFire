@@ -42,9 +42,9 @@ export const SHOP_CATALOG = [
   {
     id: 'bullet_01',
     category: 'bulletSkin',
-    name: 'Bullet Skin 01',
+    name: 'lightening',
     price: 150,
-    description: 'Placeholder bullet skin 01',
+    description: 'Placeholder lightening',
     spritePath: '/sprites/bullet_placeholder_01.png',
   },
   {
@@ -78,5 +78,29 @@ export const SHOP_CATALOG = [
     price: 350,
     description: 'Placeholder bullet skin 05',
     spritePath: '/sprites/bullet_placeholder_05.png',
+  },
+  {
+    id: 'powerup_shield',
+    category: 'powerup',
+    name: 'Shield',
+    price: 250,
+    description: 'Grants 3 seconds of full invincibility.',
+    spritePath: '/sprites/powerup_shield.png',
+  },
+  {
+    id: 'powerup_booster',
+    category: 'powerup',
+    name: 'Booster',
+    price: 200,
+    description: 'Increases movement speed for 5 seconds.',
+    spritePath: '/sprites/powerup_booster.png',
+  },
+  {
+    id: 'powerup_machinegun',
+    category: 'powerup',
+    name: 'Machine Gun',
+    price: 300,
+    description: 'Removes the firing cooldown for 2.5 seconds.',
+    spritePath: '/sprites/powerup_machinegun.png',
   },
 ];

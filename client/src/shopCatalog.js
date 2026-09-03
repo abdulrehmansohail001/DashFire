@@ -52,9 +52,9 @@ export const SHOP_CATALOG = [
   {
     id: 'bullet_01',
     category: 'bulletSkin',
-    name: 'Bullet Skin 01',
+    name: 'lightening',
     price: 150,
-    description: 'Placeholder bullet skin 01',
+    description: 'Placeholder lightening',
     spritePath: '/sprites/bullet_placeholder_01.png',
   },
   {
