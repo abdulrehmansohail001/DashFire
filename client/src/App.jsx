@@ -7,6 +7,8 @@ import Shop from './Shop';
 import SkinsShop from './SkinsShop';
 import BulletsShop from './BulletsShop';
 import PowerupsShop from './PowerupsShop';
+import InfoScreen from './InfoScreen';
+import InfoEnemiesScreen from './InfoEnemiesScreen';
 import { WORLDS } from './game/worlds';
 import { getPlayerProgress, saveLevelClear, getAuthenticatedUser, saveAuth, clearAuth } from './services/progressApi';
 import { getInventory } from './services/shopApi';
@@ -114,6 +116,14 @@ function App() {
 
   const handleLeaderboard = () => {
     setScreen('leaderboard');
+  };
+
+  const handleInfo = () => {
+    setScreen('info');
+  };
+
+  const handleBackToInfo = () => {
+    setScreen('info');
   };
 
   const handleBackToMainMenu = () => {
@@ -265,6 +275,8 @@ function App() {
       </div>
 
       {screen === 'leaderboard' && <Leaderboard onBack={handleBackToMainMenu} />}
+      {screen === 'info' && <InfoScreen onNavigate={setScreen} onBack={handleBackToMainMenu} />}
+      {screen === 'infoEnemies' && <InfoEnemiesScreen onBack={handleBackToInfo} />}
       {screen === 'shop' && <Shop onNavigate={setScreen} onBack={handleBackToMainMenu} />}
       {screen === 'skinsShop' && <SkinsShop onBack={handleBackToShop} />}
       {screen === 'bulletsShop' && <BulletsShop onBack={handleBackToShop} />}
@@ -285,6 +297,9 @@ function App() {
               </button>
               <button type="button" className="main-menu__button" onClick={handleLeaderboard}>
                 LEADERBOARD
+              </button>
+              <button type="button" className="main-menu__button" onClick={handleInfo}>
+                INFO
               </button>
               <button type="button" className="main-menu__button" onClick={handleShop}>
                 SHOP
