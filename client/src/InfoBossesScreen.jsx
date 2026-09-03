@@ -1,11 +1,11 @@
 import AnimatedGameBackground from './game/AnimatedGameBackground';
 import InfoCard from './InfoCard';
-import { OBSTACLE_INFO } from './infoCatalog';
+import { BOSS_INFO } from './infoCatalog';
 import './InfoItems.css';
 
-export default function InfoObstaclesScreen({ onBack }) {
+export default function InfoBossesScreen({ onBack }) {
   return (
-    <div className="info-items-screen info-obstacles-screen">
+    <div className="info-items-screen">
       <AnimatedGameBackground className="info-items-screen__backdrop-anim" style={{ backgroundImage: "url('/sprites/game_bg.png')" }} />
       <div className="info-items-screen__backdrop" />
       <div className="info-items-screen__scanlines" />
@@ -16,10 +16,10 @@ export default function InfoObstaclesScreen({ onBack }) {
 
       <main className="info-items-panel">
         <p className="eyebrow">Dashfire compendium</p>
-        <h1>OBSTACLES</h1>
+        <h1>BOSSES</h1>
 
         <div className="info-items-grid">
-          {OBSTACLE_INFO.map((item) => (
+          {BOSS_INFO.map((item) => (
             <InfoCard key={item.id} item={item} />
           ))}
         </div>

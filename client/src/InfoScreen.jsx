@@ -25,9 +25,9 @@ export default function InfoScreen({ onNavigate, onBack }) {
             <span className="info-category__title">ENEMIES</span>
             <span className="info-category__detail">BESTIARY</span>
           </button>
-          <button type="button" className="info-category" onClick={() => onNavigate('infoBosses')} disabled>
+          <button type="button" className="info-category" onClick={() => onNavigate('infoBosses')}>
             <span className="info-category__title">BOSSES</span>
-            <span className="info-category__detail">COMING SOON</span>
+            <span className="info-category__detail">ELITES</span>
           </button>
         </div>
       </main>

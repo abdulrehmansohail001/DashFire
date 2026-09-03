@@ -10,6 +10,7 @@ import PowerupsShop from './PowerupsShop';
 import InfoScreen from './InfoScreen';
 import InfoEnemiesScreen from './InfoEnemiesScreen';
 import InfoObstaclesScreen from './InfoObstaclesScreen';
+import InfoBossesScreen from './InfoBossesScreen';
 import { WORLDS } from './game/worlds';
 import { getPlayerProgress, saveLevelClear, getAuthenticatedUser, saveAuth, clearAuth } from './services/progressApi';
 import { getInventory } from './services/shopApi';
@@ -279,6 +280,7 @@ function App() {
       {screen === 'info' && <InfoScreen onNavigate={setScreen} onBack={handleBackToMainMenu} />}
       {screen === 'infoEnemies' && <InfoEnemiesScreen onBack={handleBackToInfo} />}
       {screen === 'infoObstacles' && <InfoObstaclesScreen onBack={handleBackToInfo} />}
+      {screen === 'infoBosses' && <InfoBossesScreen onBack={handleBackToInfo} />}
       {screen === 'shop' && <Shop onNavigate={setScreen} onBack={handleBackToMainMenu} />}
       {screen === 'skinsShop' && <SkinsShop onBack={handleBackToShop} />}
       {screen === 'bulletsShop' && <BulletsShop onBack={handleBackToShop} />}

@@ -138,3 +138,46 @@ export const OBSTACLE_INFO = [
     spritePath: '/sprites/obs5.png'
   },
 ];
+
+export const BOSS_INFO = [
+  {
+    id: 'boss',
+    name: 'War Machine',
+    world: 'World 1 — Lunar Front',
+    specialEffect: 'Stationary boss. Summons basic gunmen as shields.',
+    description: 'War Machine — World 1 Boss.',
+    spritePath: '/sprites/boss.png', spriteColumns: 3, spriteRows: 2
+  },
+  {
+    id: 'bossfrog',
+    name: 'Giant Frog',
+    world: 'World 2 — Mars Invasion',
+    specialEffect: 'Hops around. Spawns baby frogs and spits fireballs.',
+    description: 'Giant Frog — World 2 Boss.',
+    spritePath: '/sprites/bossfrog.png', spriteColumns: 4, spriteRows: 2
+  },
+  {
+    id: 'glacier',
+    name: 'Twin Glaciers',
+    world: 'World 3 — Neon Tundra',
+    specialEffect: 'Stationary bosses at edges. Fire straight shots independently.',
+    description: 'Twin Glaciers — World 3 Boss.',
+    spritePath: '/sprites/glacier.png', spriteColumns: 4, spriteRows: 2
+  },
+  {
+    id: 'blackhole_boss',
+    name: 'Black Hole Boss',
+    world: 'World 4 — Farthest Black Hole',
+    specialEffect: 'Flies across screen. Spawns Dark Matter Beings. Alters zone physics.',
+    description: 'Black Hole Boss — World 4 Boss.',
+    spritePath: '/sprites/blackhole_boss.png', spriteColumns: 4, spriteRows: 2
+  },
+  {
+    id: 'timedistorter',
+    name: 'Time Distorter',
+    world: 'World 5 — Void Rift',
+    specialEffect: 'Alters time and space. Reverses time and inverts controls.',
+    description: 'Time Distorter — World 5 Boss.',
+    spritePath: '/sprites/timedistorter.png', spriteColumns: 4, spriteRows: 4
+  }
+];
