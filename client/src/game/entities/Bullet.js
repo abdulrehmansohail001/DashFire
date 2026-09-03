@@ -2,6 +2,8 @@
 // Player-fired bullet. Travels in the direction the player was facing
 // when fired, removed once off-screen or once it hits the enemy.
 
+import { drawBulletSkin } from '../bulletSkins';
+
 export class Bullet {
   constructor(x, y, direction, speedMultiplier = 1, skinId = 'bullet_01') {
     this.x = x;
@@ -12,9 +14,11 @@ export class Bullet {
     this.direction = direction; // 'left' | 'right'
     this.skinId = skinId;
     this.hit = false;
+    this.age = 0;
   }
 
   update(dt) {
+    this.age += dt;
     this.x += this.direction === 'right' ? this.speed * dt : -this.speed * dt;
   }
 
@@ -28,11 +32,8 @@ export class Bullet {
 
   draw(ctx) {
     if (this.skinId !== 'bullet_01') {
-      ctx.save();
-      ctx.fillStyle = this.skinId === 'bullet_02' ? '#8ae8ff' : this.skinId === 'bullet_03' ? '#ff7777' : this.skinId === 'bullet_04' ? '#b88cff' : '#ffe08a';
-      ctx.fillRect(this.x, this.y, this.width, this.height);
-      ctx.restore();
-      return;
+      const drew = drawBulletSkin(ctx, this.skinId, this.x, this.y, this.width, this.height, this.direction, this.age);
+      if (drew) return;
     }
 
     const cx = this.x + this.width / 2;
