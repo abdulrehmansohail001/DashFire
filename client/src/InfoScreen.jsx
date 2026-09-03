@@ -17,8 +17,8 @@ export default function InfoScreen({ onNavigate, onBack }) {
         <h1>INFO</h1>
 
         <div className="info-categories">
-          <button type="button" className="info-category" onClick={() => onNavigate('infoProjectiles')} disabled>
-            <span className="info-category__title">PROJECTILES</span>
+          <button type="button" className="info-category" onClick={() => onNavigate('infoObstacles')} disabled>
+            <span className="info-category__title">OBSTACLES</span>
             <span className="info-category__detail">COMING SOON</span>
           </button>
           <button type="button" className="info-category" onClick={() => onNavigate('infoEnemies')}>

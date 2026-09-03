@@ -117,6 +117,12 @@
   color: #eef8ff;
   text-align: center;
   text-shadow: 2px 2px 0 #000;
+  transition: transform 0.1s steps(2, end), border-color 0.1s ease;
+}
+
+.shop-item-card:hover {
+  transform: translate(-2px, -2px);
+  border-color: #3ad1ff;
 }
 
 .shop-item-card--equipped {
