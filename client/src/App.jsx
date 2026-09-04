@@ -14,7 +14,7 @@ import InfoBossesScreen from './InfoBossesScreen';
 import { WORLDS } from './game/worlds';
 import { getPlayerProgress, saveLevelClear, getAuthenticatedUser, saveAuth, clearAuth } from './services/progressApi';
 import { getInventory } from './services/shopApi';
-import { registerUser, loginUser } from './services/authApi';
+import { registerUser, loginUser, googleLogin } from './services/authApi';
 import AnimatedGameBackground from './game/AnimatedGameBackground';
 import './App.css';
 
@@ -41,6 +41,42 @@ function App() {
   const [authError, setAuthError] = useState('');
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => getAuthenticatedUser());
+
+  useEffect(() => {
+    // Initialize Google Identity Services if on auth screen
+    if (screen === 'auth') {
+      const initGoogle = () => {
+        if (window.google && window.google.accounts && window.google.accounts.id) {
+          window.google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            callback: handleGoogleResponse,
+          });
+          window.google.accounts.id.renderButton(
+            document.getElementById('google-signin-button'),
+            { theme: 'outline', size: 'large', width: 280 }
+          );
+        } else {
+          // If script hasn't loaded yet, try again in 100ms
+          setTimeout(initGoogle, 100);
+        }
+      };
+      initGoogle();
+    }
+  }, [screen]);
+
+  const handleGoogleResponse = async (response) => {
+    setAuthError('');
+    setIsAuthLoading(true);
+    try {
+      const data = await googleLogin(response.credential);
+      saveAuth(data);
+      setCurrentUser(data.user);
+    } catch (error) {
+      setAuthError(error.message || 'Google Authentication failed');
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!currentUser) {
@@ -264,6 +300,17 @@ function App() {
               {isAuthLoading ? 'Please wait...' : authMode === 'login' ? 'Login' : 'Create account'}
             </button>
           </form>
+
+          <div style={{ textAlign: 'center', margin: '20px 0', color: '#666' }}>
+            — or —
+          </div>
+          
+          {/* 
+            Requires a real VITE_GOOGLE_CLIENT_ID in the environment to render and work.
+            Without it, the button will fail to render or authentication will fail,
+            which is expected in local dev before it is configured.
+          */}
+          <div id="google-signin-button" style={{ display: 'flex', justifyContent: 'center' }}></div>
         </div>
       </div>
     );

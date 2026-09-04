@@ -29,3 +29,18 @@ export async function loginUser(username, password) {
 
   return data;
 }
+
+export async function googleLogin(credential) {
+  const response = await fetch(`${API_BASE}/api/auth/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ credential }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Google Login failed');
+  }
+
+  return data;
+}

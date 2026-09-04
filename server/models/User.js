@@ -11,9 +11,20 @@ const userSchema = new mongoose.Schema({
     minlength: 3,
     maxlength: 24,
   },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
+  email: {
+    type: String,
+    unique: true,
+    sparse: true,
+    lowercase: true,
+  },
   passwordHash: {
     type: String,
-    required: true,
+    required: false,
   },
   createdAt: {
     type: Date,
