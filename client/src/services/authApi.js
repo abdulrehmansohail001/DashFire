@@ -1,10 +1,10 @@
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 
-export async function registerUser(username, password, firstName, lastName) {
+export async function registerUser(email, password, firstName, lastName) {
   const response = await fetch(`${API_BASE}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password, firstName, lastName }),
+    body: JSON.stringify({ email, password, firstName, lastName }),
   });
 
   const data = await response.json();
@@ -15,11 +15,11 @@ export async function registerUser(username, password, firstName, lastName) {
   return data;
 }
 
-export async function loginUser(username, password) {
+export async function loginUser(email, password) {
   const response = await fetch(`${API_BASE}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ email, password }),
   });
 
   const data = await response.json();

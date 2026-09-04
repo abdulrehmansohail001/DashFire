@@ -30,46 +30,18 @@ router.post('/google', async (req, res) => {
     const payload = ticket.getPayload();
     const googleId = payload.sub;
     const email = payload.email;
-    const name = payload.name || payload.given_name || 'user';
-
     let user = await User.findOne({ googleId });
 
     if (!user) {
-      // Generate a username based on name/email
-      let baseUsername = String(name)
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '')
-        .slice(0, 24);
-
-      if (baseUsername.length < 3) {
-        baseUsername = baseUsername.padEnd(3, '0');
-      }
-
-      let uniqueUsername = baseUsername;
-      let suffix = 1;
-      let maxAttempts = 5;
-
-      while (maxAttempts > 0) {
-        const existing = await User.findOne({ username: uniqueUsername });
-        if (!existing) {
-          break; // found unique
-        }
-        uniqueUsername = `${baseUsername.slice(0, 20)}${Math.floor(Math.random() * 9999)}`;
-        maxAttempts--;
-      }
-
-      if (maxAttempts === 0) {
-        uniqueUsername = `user${Date.now().toString().slice(-8)}`;
-      }
-
       user = await User.create({
-        username: uniqueUsername,
         googleId,
         email,
+        firstName: payload.given_name,
+        lastName: payload.family_name,
       });
     }
 
-    const token = jwt.sign({ userId: user._id, username: user.username }, JWT_SECRET, {
+    const token = jwt.sign({ userId: String(user._id) }, JWT_SECRET, {
       expiresIn: '7d',
     });
 
@@ -77,7 +49,9 @@ router.post('/google', async (req, res) => {
       token,
       user: {
         id: user._id,
-        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
       },
     });
   } catch (error) {
@@ -88,35 +62,35 @@ router.post('/google', async (req, res) => {
 
 router.post('/register', async (req, res) => {
   try {
-    const { username, password, firstName, lastName } = req.body || {};
+    const { email, password, firstName, lastName } = req.body || {};
 
-    if (!username || !password) {
-      return res.status(400).json({ error: 'username and password are required' });
+    if (!email || !password || !firstName || !lastName) {
+      return res.status(400).json({ error: 'first name, last name, email, and password are required' });
     }
 
-    const trimmedUsername = String(username).trim();
-    if (trimmedUsername.length < 3 || trimmedUsername.length > 24) {
-      return res.status(400).json({ error: 'username must be between 3 and 24 chars' });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return res.status(400).json({ error: 'please enter a valid email address' });
     }
 
     if (String(password).length < 6) {
       return res.status(400).json({ error: 'password must be at least 6 chars' });
     }
 
-    const existingUser = await User.findOne({ username: trimmedUsername.toLowerCase() });
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
-      return res.status(409).json({ error: 'username already taken' });
+      return res.status(409).json({ error: 'email is already registered' });
     }
 
     const passwordHash = await User.hashPassword(String(password));
     const user = await User.create({
-      username: trimmedUsername.toLowerCase(),
+      email: normalizedEmail,
       passwordHash,
       firstName: firstName ? String(firstName).trim() : undefined,
       lastName: lastName ? String(lastName).trim() : undefined,
     });
 
-    const token = jwt.sign({ userId: user._id, username: user.username }, JWT_SECRET, {
+    const token = jwt.sign({ userId: String(user._id) }, JWT_SECRET, {
       expiresIn: '7d',
     });
 
@@ -124,7 +98,9 @@ router.post('/register', async (req, res) => {
       token,
       user: {
         id: user._id,
-        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
       },
     });
   } catch (error) {
@@ -135,13 +111,18 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body || {};
+    const { email, password } = req.body || {};
 
-    if (!username || !password) {
-      return res.status(400).json({ error: 'username and password are required' });
+    if (!email || !password) {
+      return res.status(400).json({ error: 'email and password are required' });
     }
 
-    const user = await User.findOne({ username: String(username).trim().toLowerCase() });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return res.status(400).json({ error: 'please enter a valid email address' });
+    }
+
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(401).json({ error: 'invalid credentials' });
     }
@@ -151,7 +132,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: user._id, username: user.username }, JWT_SECRET, {
+    const token = jwt.sign({ userId: String(user._id) }, JWT_SECRET, {
       expiresIn: '7d',
     });
 
@@ -159,7 +140,9 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         id: user._id,
-        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
       },
     });
   } catch (error) {

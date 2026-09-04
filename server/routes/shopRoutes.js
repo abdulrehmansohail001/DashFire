@@ -6,9 +6,7 @@ import { SHOP_CATALOG } from '../shopCatalog.js';
 const router = express.Router();
 
 function getUserIds(req) {
-  return [String(req.user.userId), String(req.user.username)].filter(
-    (userId, index, userIds) => userId && userIds.indexOf(userId) === index
-  );
+  return [String(req.user.userId)];
 }
 
 function progressFields(progress) {

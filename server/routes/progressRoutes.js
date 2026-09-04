@@ -47,7 +47,7 @@ router.get('/:userId', requireAuth, async (req, res) => {
   try {
     const { userId } = req.params;
 
-    if (req.user.userId !== userId && req.user.username !== userId) {
+    if (String(req.user.userId) !== userId) {
       return res.status(403).json({ error: 'forbidden' });
     }
 
@@ -88,7 +88,7 @@ router.put('/:userId', requireAuth, async (req, res) => {
     const { userId } = req.params;
     const { unlockedByWorld, totalStars, totalCoins, starsByLevel } = req.body || {};
 
-    if (req.user.userId !== userId && req.user.username !== userId) {
+    if (String(req.user.userId) !== userId) {
       return res.status(403).json({ error: 'forbidden' });
     }
 
@@ -131,7 +131,7 @@ router.post('/:userId/level-clear', requireAuth, async (req, res) => {
     const { userId } = req.params;
     const { worldIndex, clearedIndex, stars, coins } = req.body || {};
 
-    if (req.user.userId !== userId && req.user.username !== userId) {
+    if (String(req.user.userId) !== userId) {
       return res.status(403).json({ error: 'forbidden' });
     }
 

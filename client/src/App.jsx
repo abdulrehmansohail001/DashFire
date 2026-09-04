@@ -36,7 +36,7 @@ function App() {
   const [equippedBulletSkin, setEquippedBulletSkin] = useState('bullet_01');
   const [ownedItems, setOwnedItems] = useState([]);
   const [authMode, setAuthMode] = useState('login');
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -89,7 +89,7 @@ function App() {
 
     const loadProgress = async () => {
       try {
-        const progress = await getPlayerProgress(currentUser.username);
+        const progress = await getPlayerProgress(currentUser.id);
         setUnlockedByWorld(progress.unlockedByWorld || DEFAULT_UNLOCKED_BY_WORLD);
         setTotalCoins(Number(progress.totalCoins) || 0);
         setStarsByLevel(progress.starsByLevel || {});
@@ -122,13 +122,13 @@ function App() {
 
     try {
       const request = authMode === 'login'
-        ? loginUser(username.trim(), password)
-        : registerUser(username.trim(), password, firstName.trim(), lastName.trim());
+        ? loginUser(email.trim(), password)
+        : registerUser(email.trim(), password, firstName.trim(), lastName.trim());
 
       const response = await request;
       saveAuth(response);
       setCurrentUser(response.user);
-      setUsername('');
+      setEmail('');
       setPassword('');
       setFirstName('');
       setLastName('');
@@ -144,7 +144,7 @@ function App() {
     setCurrentUser(null);
     setScreen('auth');
     setAuthError('');
-    setUsername('');
+    setEmail('');
     setPassword('');
   };
 
@@ -206,7 +206,7 @@ function App() {
       return;
     }
 
-    const userId = currentUser.username;
+    const userId = currentUser.id;
     const currentUnlocked = unlockedByWorld[selectedWorldIndex] ?? 1;
     const newUnlocked = Math.max(currentUnlocked, clearedIndex + 2);
 
@@ -303,15 +303,13 @@ function App() {
             )}
 
             <label>
-              <span>Username</span>
+              <span>Email</span>
               <input
-                type="text"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                placeholder="Enter username"
-                minLength={3}
-                maxLength={24}
-                autoComplete="username"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Enter email"
+                autoComplete="email"
                 required
               />
             </label>
@@ -379,7 +377,7 @@ function App() {
   return (
     <div className="app-container">
       <div className="topbar-user">
-        <span>Signed in as {currentUser?.username || 'Player'}</span>
+        <span>Signed in as {[currentUser?.firstName, currentUser?.lastName].filter(Boolean).join(' ') || currentUser?.email || 'Player'}</span>
         <button type="button" className="logout-button" onClick={handleLogout}>Logout</button>
       </div>
 
