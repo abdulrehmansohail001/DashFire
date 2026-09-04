@@ -83,7 +83,7 @@ router.post('/equip', requireAuth, async (req, res) => {
     }
 
     const progress = await getOrCreateProgress(req);
-    if (!(progress.ownedItems || []).includes(item.id)) {
+    if (!(progress.ownedItems || []).includes(item.id) && item.id !== 'skin_01' && item.id !== 'bullet_01') {
       return res.status(400).json({ error: 'item not owned' });
     }
 

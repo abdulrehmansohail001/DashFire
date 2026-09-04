@@ -5,7 +5,7 @@ import { Bullet } from './game/entities/Bullet';
 export default function ShopItemCard({ item, inventory, onPurchase, onEquip }) {
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState('');
-  const owned = inventory.ownedItems.includes(item.id);
+  const owned = inventory.ownedItems.includes(item.id) || item.id === 'skin_01' || item.id === 'bullet_01';
   const equipped = item.category === 'skin'
     ? inventory.equippedSkin === item.id
     : item.category === 'bulletSkin'
