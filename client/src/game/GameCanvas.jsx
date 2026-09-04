@@ -1689,12 +1689,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         for (const eagle of eagles) {
           if (!eagle.alive) continue;
           if (isColliding(bullet.getBounds(), eagle.getBounds())) {
+            const wasAlive = eagle.alive;
             eagle.takeHit();
-            if (!eagle.alive) {
+            if (wasAlive && !eagle.alive) {
               awardCoinReward();
             }
             bullet.hit = true;
             hitEagle = true;
+            playSound(wasAlive && !eagle.alive ? 'explosion' : 'hit', 0.6);
             break;
           }
         }
@@ -1704,13 +1706,15 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         for (const glacier of [leftGlacierRef.current, rightGlacierRef.current]) {
           if (!glacier || !glacier.alive) continue;
           if (isColliding(bullet.getBounds(), glacier.getBounds())) {
+            const wasAlive = glacier.alive;
             glacier.takeHit();
-            if (!glacier.alive) {
+            if (wasAlive && !glacier.alive) {
               awardCoinReward();
             }
             glacierStallTimerRef.current = 0; // successful hit on EITHER glacier resets the stall clock
             bullet.hit = true;
             hitShipOrBee = true;
+            playSound(wasAlive && !glacier.alive ? 'explosion' : 'hit', 0.6);
             break;
           }
         }
@@ -1718,12 +1722,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         for (const ship of spaceships) {
           if (!ship.alive) continue;
           if (isColliding(bullet.getBounds(), ship.getBounds())) {
+            const wasAlive = ship.alive;
             ship.takeHit();
-            if (!ship.alive) {
+            if (wasAlive && !ship.alive) {
               awardCoinReward();
             }
             bullet.hit = true;
             hitShipOrBee = true;
+            playSound(wasAlive && !ship.alive ? 'explosion' : 'hit', 0.6);
             break;
           }
         }
@@ -1731,12 +1737,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         for (const bee of iceBees) {
           if (!bee.alive) continue;
           if (isColliding(bullet.getBounds(), bee.getBounds())) {
+            const wasAlive = bee.alive;
             bee.takeHit();
-            if (!bee.alive) {
+            if (wasAlive && !bee.alive) {
               awardCoinReward();
             }
             bullet.hit = true;
             hitShipOrBee = true;
+            playSound(wasAlive && !bee.alive ? 'explosion' : 'hit', 0.6);
             break;
           }
         }
@@ -1744,12 +1752,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         for (const yeti of yetis) {
           if (!yeti.alive) continue;
           if (isColliding(bullet.getBounds(), yeti.getBounds())) {
+            const wasAlive = yeti.alive;
             yeti.takeHit();
-            if (!yeti.alive) {
+            if (wasAlive && !yeti.alive) {
               awardCoinReward();
             }
             bullet.hit = true;
             hitYeti = true;
+            playSound(wasAlive && !yeti.alive ? 'explosion' : 'hit', 0.6);
             break;
           }
         }
@@ -1758,12 +1768,14 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         for (const frog of frogs) {
           if (!frog.alive) continue;
           if (isColliding(bullet.getBounds(), frog.getBounds())) {
+            const wasAlive = frog.alive;
             frog.takeHit();
-            if (!frog.alive) {
+            if (wasAlive && !frog.alive) {
               awardCoinReward();
             }
             bullet.hit = true;
             hitFrog = true;
+            playSound(wasAlive && !frog.alive ? 'explosion' : 'hit', 0.6);
             break;
           }
         }
@@ -1772,13 +1784,15 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         for (const vortex of vortices) {
           if (!vortex.alive) continue;
           if (isColliding(bullet.getBounds(), vortex.getBounds())) {
+            const wasAlive = vortex.alive;
             vortex.takeHit();
-            if (!vortex.alive) {
+            if (wasAlive && !vortex.alive) {
               awardCoinReward();
             }
             bullet.hit = true;
             hitVortex = true;
             player.escapeQuicksand(); // no-op if the player wasn't stuck
+            playSound(wasAlive && !vortex.alive ? 'explosion' : 'hit', 0.6);
             break;
           }
         }
@@ -1787,13 +1801,15 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         for (const being of darkMatters) {
           if (!being.alive) continue;
           if (isColliding(bullet.getBounds(), being.getBounds())) {
+            const wasAlive = being.alive;
             being.takeHit();
-            if (!being.alive) {
+            if (wasAlive && !being.alive) {
               awardCoinReward();
             }
             bullet.hit = true;
             hitDarkMatter = true;
             player.escapeQuicksand(); // no-op if the player wasn't stuck
+            playSound(wasAlive && !being.alive ? 'explosion' : 'hit', 0.6);
             break;
           }
         }
@@ -1802,13 +1818,15 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         for (const reg of regs) {
           if (!reg.alive) continue;
           if (isColliding(bullet.getBounds(), reg.getBounds())) {
+            const wasAlive = reg.alive;
             reg.takeHit();
-            if (!reg.alive) {
+            if (wasAlive && !reg.alive) {
               awardCoinReward();
             }
             bullet.hit = true;
             hitReg = true;
             player.escapeQuicksand();
+            playSound(wasAlive && !reg.alive ? 'explosion' : 'hit', 0.6);
             break;
           }
         }
@@ -1824,22 +1842,26 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
               // face right now, so a hit redirects onto the player.
               player.takeHit();
             } else {
+              const wasAlive = ss.alive;
               ss.takeHit();
-              if (!ss.alive) {
+              if (wasAlive && !ss.alive) {
                 awardCoinReward();
               }
+              playSound(wasAlive && !ss.alive ? 'explosion' : 'hit', 0.6);
             }
             break;
           }
         }
         if (hitShapeshifter) continue;
         if (bossRef.current && bossRef.current.alive && isColliding(bullet.getBounds(), bossRef.current.getBounds())) {
+          const wasAlive = bossRef.current.alive;
           bossRef.current.takeHit();
-          if (!bossRef.current.alive) {
+          if (wasAlive && !bossRef.current.alive) {
             awardCoinReward();
           }
           player.escapeQuicksand(); // no-op if the player wasn't stuck
           bullet.hit = true;
+          playSound(wasAlive && !bossRef.current.alive ? 'explosion' : 'hit', 0.6);
           continue;
         }
         for (const enemy of enemies) {
