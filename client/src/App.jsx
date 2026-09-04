@@ -47,15 +47,27 @@ function App() {
   const [currentUser, setCurrentUser] = useState(() => getAuthenticatedUser());
 
   useEffect(() => {
-    const handleGlobalClick = (e) => {
+    const handleInteraction = () => {
       resumeBgmIfPaused();
+    };
+
+    const handleGlobalClick = (e) => {
+      handleInteraction();
       const btn = e.target.closest('button');
       if (btn && !btn.disabled) {
         playSound('click', 0.6);
       }
     };
+
     document.addEventListener('click', handleGlobalClick);
-    return () => document.removeEventListener('click', handleGlobalClick);
+    document.addEventListener('keydown', handleInteraction);
+    document.addEventListener('touchstart', handleInteraction);
+    
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+      document.removeEventListener('keydown', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
   }, []);
 
   useEffect(() => {
