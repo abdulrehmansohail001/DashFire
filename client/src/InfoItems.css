@@ -137,6 +137,11 @@
   background-position: 0 0;
   background-repeat: no-repeat;
   background-size: calc(var(--sprite-columns) * 100%) calc(var(--sprite-rows) * 100%);
+  width: auto;
+  height: 100%;
+  max-width: 128px;
+  max-height: 128px;
+  aspect-ratio: var(--sprite-aspect, 1);
 }
 
 .info-item-card h2 {

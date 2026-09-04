@@ -15,6 +15,7 @@ export default function InfoCard({ item }) {
               backgroundImage: `url(${item.spritePath})`,
               '--sprite-columns': item.spriteColumns,
               '--sprite-rows': item.spriteRows,
+              ...(item.spriteAspect && { '--sprite-aspect': item.spriteAspect })
             }}
           />
         ) : hasImage ? (
