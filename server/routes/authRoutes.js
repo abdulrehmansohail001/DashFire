@@ -88,7 +88,7 @@ router.post('/google', async (req, res) => {
 
 router.post('/register', async (req, res) => {
   try {
-    const { username, password } = req.body || {};
+    const { username, password, firstName, lastName } = req.body || {};
 
     if (!username || !password) {
       return res.status(400).json({ error: 'username and password are required' });
@@ -112,6 +112,8 @@ router.post('/register', async (req, res) => {
     const user = await User.create({
       username: trimmedUsername.toLowerCase(),
       passwordHash,
+      firstName: firstName ? String(firstName).trim() : undefined,
+      lastName: lastName ? String(lastName).trim() : undefined,
     });
 
     const token = jwt.sign({ userId: user._id, username: user.username }, JWT_SECRET, {

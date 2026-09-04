@@ -11,6 +11,16 @@ const userSchema = new mongoose.Schema({
     minlength: 3,
     maxlength: 24,
   },
+  firstName: {
+    type: String,
+    trim: true,
+    maxlength: 30,
+  },
+  lastName: {
+    type: String,
+    trim: true,
+    maxlength: 30,
+  },
   googleId: {
     type: String,
     unique: true,

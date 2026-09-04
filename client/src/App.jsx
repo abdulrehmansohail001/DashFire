@@ -38,6 +38,9 @@ function App() {
   const [authMode, setAuthMode] = useState('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => getAuthenticatedUser());
@@ -120,13 +123,15 @@ function App() {
     try {
       const request = authMode === 'login'
         ? loginUser(username.trim(), password)
-        : registerUser(username.trim(), password);
+        : registerUser(username.trim(), password, firstName.trim(), lastName.trim());
 
       const response = await request;
       saveAuth(response);
       setCurrentUser(response.user);
       setUsername('');
       setPassword('');
+      setFirstName('');
+      setLastName('');
     } catch (error) {
       setAuthError(error.message || 'Authentication failed');
     } finally {
@@ -267,6 +272,36 @@ function App() {
           </div>
 
           <form className="auth-form" onSubmit={handleAuthSubmit}>
+            {authMode === 'register' && (
+              <>
+                <label>
+                  <span>First Name</span>
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={(event) => setFirstName(event.target.value)}
+                    placeholder="Enter first name"
+                    maxLength={30}
+                    autoComplete="given-name"
+                    required
+                  />
+                </label>
+
+                <label>
+                  <span>Last Name</span>
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={(event) => setLastName(event.target.value)}
+                    placeholder="Enter last name"
+                    maxLength={30}
+                    autoComplete="family-name"
+                    required
+                  />
+                </label>
+              </>
+            )}
+
             <label>
               <span>Username</span>
               <input
@@ -283,15 +318,25 @@ function App() {
 
             <label>
               <span>Password</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Enter password"
-                minLength={6}
-                autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
-                required
-              />
+              <div className="auth-password-wrap">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Enter password"
+                  minLength={6}
+                  autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
+                  required
+                />
+                <button
+                  type="button"
+                  className="auth-eye-toggle"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? '🙈' : '👁'}
+                </button>
+              </div>
             </label>
 
             {authError && <p className="auth-error">{authError}</p>}
