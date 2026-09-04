@@ -8,6 +8,7 @@
   background: #000;
   position: relative;
   font-family: 'Press Start 2P', monospace;
+  text-transform: uppercase;
 }
 .google-btn-stack {
   position: relative;
@@ -234,6 +235,7 @@
   font-family: 'Press Start 2P', monospace;
   font-size: 0.7rem;
   box-sizing: border-box;
+  text-transform: none;
 }
 
 .auth-form input:focus {
