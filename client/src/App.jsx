@@ -376,10 +376,6 @@ function App() {
 
   return (
     <div className="app-container">
-      <div className="topbar-user">
-        <span>Signed in as {[currentUser?.firstName, currentUser?.lastName].filter(Boolean).join(' ') || currentUser?.email || 'Player'}</span>
-        <button type="button" className="logout-button" onClick={handleLogout}>Logout</button>
-      </div>
 
       {screen === 'leaderboard' && <Leaderboard onBack={handleBackToMainMenu} />}
       {screen === 'info' && <InfoScreen onNavigate={setScreen} onBack={handleBackToMainMenu} />}
@@ -392,6 +388,9 @@ function App() {
       {screen === 'powerupsShop' && <PowerupsShop onBack={handleBackToShop} />}
       {screen === 'mainMenu' && (
         <div className="main-menu">
+          <button type="button" className="main-menu__logout" onClick={handleLogout}>
+            LOGOUT
+          </button>
           <AnimatedGameBackground className="main-menu__backdrop-anim" style={GAME_BACKGROUND_STYLE} />
           <div className="main-menu__backdrop" />
           <div className="main-menu__scanlines" />
