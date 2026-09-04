@@ -366,7 +366,7 @@ function App() {
           */}
           <div className="google-btn-stack">
             <div className="google-btn-stack__fake" aria-hidden="true">
-              <span className="google-btn-stack__g">G</span>
+              <img src="/sprites/google_g_pixel.png" alt="" className="google-btn-stack__g" />
               <span>CONTINUE WITH GOOGLE</span>
             </div>
             <div id="google-signin-button" className="google-btn-stack__real"></div>
