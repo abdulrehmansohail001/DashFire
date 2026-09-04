@@ -16,6 +16,7 @@ import { getPlayerProgress, saveLevelClear, getAuthenticatedUser, saveAuth, clea
 import { getInventory } from './services/shopApi';
 import { registerUser, loginUser, googleLogin } from './services/authApi';
 import AnimatedGameBackground from './game/AnimatedGameBackground';
+import { playSound } from './game/sound';
 import './App.css';
 
 const GAME_BACKGROUND_STYLE = {
@@ -44,6 +45,17 @@ function App() {
   const [authError, setAuthError] = useState('');
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => getAuthenticatedUser());
+
+  useEffect(() => {
+    const handleGlobalClick = (e) => {
+      const btn = e.target.closest('button');
+      if (btn && !btn.disabled) {
+        playSound('click', 0.6);
+      }
+    };
+    document.addEventListener('click', handleGlobalClick);
+    return () => document.removeEventListener('click', handleGlobalClick);
+  }, []);
 
   useEffect(() => {
     // Initialize Google Identity Services if on auth screen
