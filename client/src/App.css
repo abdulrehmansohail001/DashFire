@@ -9,6 +9,54 @@
   position: relative;
   font-family: 'Press Start 2P', monospace;
 }
+.google-btn-stack {
+  position: relative;
+  width: 280px;
+  height: 44px;
+  margin: 0 auto;
+}
+
+.google-btn-stack__fake {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 2px solid #3ad1ff88;
+  background-image: url('/sprites/auth_button_bg.png');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.6rem;
+  pointer-events: none; /* purely visual — the real button below it takes the click */
+  z-index: 1;
+}
+
+.google-btn-stack__g {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  color: #4285F4;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.65rem;
+  line-height: 1;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.google-btn-stack__real {
+  position: absolute;
+  inset: 0;
+  opacity: 0; /* invisible but still clickable — NOT display:none/visibility:hidden, those would break the iframe's click handling */
+  z-index: 2;
+  overflow: hidden;
+}
 
 .auth-page-shell {
   display: grid;

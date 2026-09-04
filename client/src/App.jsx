@@ -56,7 +56,7 @@ function App() {
           });
           window.google.accounts.id.renderButton(
             document.getElementById('google-signin-button'),
-            { theme: 'outline', size: 'large', width: 280 }
+            { theme: 'outline', size: 'large', width: 280 } // stays invisible — see the wrapping div's CSS. This is the real, clickable Google button; the retro one under it is pure visual.
           );
         } else {
           // If script hasn't loaded yet, try again in 100ms
@@ -355,7 +355,22 @@ function App() {
             Without it, the button will fail to render or authentication will fail,
             which is expected in local dev before it is configured.
           */}
-          <div id="google-signin-button" style={{ display: 'flex', justifyContent: 'center' }}></div>
+          {/*
+            Google's rendered button lives in a cross-origin iframe — it
+            can't be restyled or triggered via a fake .click() from our own
+            button (that's the whole point of the iframe, security-wise).
+            So instead: the real Google button renders here fully
+            transparent but still clickable, stacked exactly on top of a
+            retro-styled fake button underneath. The click lands on the
+            real one; the person only ever sees the retro one.
+          */}
+          <div className="google-btn-stack">
+            <div className="google-btn-stack__fake" aria-hidden="true">
+              <span className="google-btn-stack__g">G</span>
+              <span>CONTINUE WITH GOOGLE</span>
+            </div>
+            <div id="google-signin-button" className="google-btn-stack__real"></div>
+          </div>
         </div>
       </div>
     );
