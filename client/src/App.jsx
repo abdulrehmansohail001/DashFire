@@ -417,7 +417,7 @@ function App() {
           </div>
         </div>
       )}
-      {screen === 'worldSelect' && <WorldSelect onSelectWorld={handleSelectWorld} />}
+      {screen === 'worldSelect' && <WorldSelect onSelectWorld={handleSelectWorld} onBack={handleBackToMainMenu} />}
       {screen === 'menu' && (
         <LevelSelect
           levels={currentWorld.levels}

@@ -10,12 +10,18 @@ import { PixelLock } from './PixelIcon';
 import { WORLDS } from './worlds';
 import AnimatedGameBackground from './AnimatedGameBackground';
 
-export default function WorldSelect({ onSelectWorld }) {
+export default function WorldSelect({ onSelectWorld, onBack }) {
   return (
     <div className="world-select">
       <AnimatedGameBackground className="world-select__backdrop-anim" style={{ backgroundImage: "url('/sprites/game_bg.png')" }} />
       <div className="world-select__backdrop" />
       <div className="world-select__scanlines" />
+
+      {onBack && (
+        <button className="world-select__back" onClick={onBack} aria-label="Back to main menu">
+          ← MENU
+        </button>
+      )}
 
       <h1 className="world-select__title">DASHFIRE</h1>
       <p className="world-select__subtitle">SELECT A WORLD</p>

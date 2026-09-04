@@ -124,3 +124,23 @@
   text-shadow: 2px 2px 0 #000;
   z-index: 1;
 }
+
+.world-select__back {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 2;
+  background: none;
+  border: 2px solid #3ad1ff88;
+  color: #9fb3c8;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.world-select__back:hover {
+  color: #fff;
+  border-color: #3ad1ff;
+}
