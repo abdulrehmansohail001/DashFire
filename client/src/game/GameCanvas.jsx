@@ -535,13 +535,13 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     columns: 4,
     rows: 4,
   });
- const player2ExtraSheet = getSheet({
-  path: '/sprites/player2_extra.png',
-  frameWidth: 384,
-  frameHeight: 304, // actual image is 1536x1216
-  columns: 4,
-  rows: 4,
-});
+  const player2ExtraSheet = getSheet({
+    path: '/sprites/player2_extra.png',
+    frameWidth: 384,
+    frameHeight: 304, // actual image is 1536x1216
+    columns: 4,
+    rows: 4,
+  });
   const player3ExtraSheet = getSheet({
     path: '/sprites/player3_extra.png',
     frameWidth: 256,
@@ -570,9 +570,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
       ? player3ExtraSheet
       : equippedSkin === 'skin_04'
         ? player4ExtraSheet
-      : equippedSkin === 'skin_05'
-        ? player5ExtraSheet
-        : playerExtraSheet;
+        : equippedSkin === 'skin_05'
+          ? player5ExtraSheet
+          : playerExtraSheet;
   const enemySheet = getSheet(world.sprites.enemy ?? world.sprites.martianCat);
   const martianCatSheet = getSheet(world.sprites.martianCat ?? world.sprites.enemy);
   const eagleSheet = getSheet(world.sprites.eagle);
@@ -596,7 +596,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
   const vortexSheet = getSheet(world.sprites.vortex);
   const regGlitchSheet = getSheet(world.sprites.regGlitch);
   const darkMatterSheet = getSheet(world.sprites.darkMatter);
-    const shapeshifterSheet = getSheet(world.sprites.shapeshifter);
+  const shapeshifterSheet = getSheet(world.sprites.shapeshifter);
   const pullPushRaysSheet = getSheet(world.sprites.pullPushRays);
   const pullPushRaysGreenSheet = getSheet(world.sprites.pullPushRaysGreen);
   const frogSheet = getSheet(world.sprites.frog);
@@ -2019,8 +2019,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
 
       // --- HUD: powerup bubbles below the player HP bar ---
       const POWERUP_DEFS = [
-        { id: 'powerup_shield',     color: '#4a90d9', usedColor: '#333', letter: 'S', key: '1', icon: shieldIcon },
-        { id: 'powerup_booster',    color: '#e89030', usedColor: '#333', letter: 'B', key: '2', icon: boosterIcon },
+        { id: 'powerup_shield', color: '#4a90d9', usedColor: '#333', letter: 'S', key: '1', icon: shieldIcon },
+        { id: 'powerup_booster', color: '#e89030', usedColor: '#333', letter: 'B', key: '2', icon: boosterIcon },
         { id: 'powerup_machinegun', color: '#d94a4a', usedColor: '#333', letter: 'M', key: '3', icon: machinegunIcon },
       ];
       const bubbleRadius = 18;
@@ -2248,9 +2248,6 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
 
       if (gameStateRef.current === 'gameover') {
         renderSummaryScreen('RUN FAILED', 'MISSION ENDED');
-        ctx.fillStyle = '#d2ff66';
-        ctx.font = '12px "Press Start 2P", monospace';
-        ctx.fillText('R = RETRY', 400, 340);
       }
 
       if (gameStateRef.current === 'levelComplete') {
@@ -2294,7 +2291,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     }
   };
 
-  const showActionButtons = gameState === 'levelComplete' || gameState === 'gameComplete';
+  const showActionButtons = gameState === 'levelComplete' || gameState === 'gameComplete' || gameState === 'gameover';
 
   return (
     <div
@@ -2342,13 +2339,23 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
           >
             RETRY
           </button>
-          <button
-            type="button"
-            className="result-button result-button--proceed"
-            onClick={() => handleResultAction('proceed')}
-          >
-            PROCEED
-          </button>
+          {gameState === 'gameover' ? (
+            <button
+              type="button"
+              className="result-button result-button--proceed"
+              onClick={onExitToMenu}
+            >
+              BACK
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="result-button result-button--proceed"
+              onClick={() => handleResultAction('proceed')}
+            >
+              PROCEED
+            </button>
+          )}
         </div>
       )}
     </div>
