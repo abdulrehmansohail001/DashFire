@@ -41,8 +41,51 @@ export function playSound(name, volume = 1) {
 
 export function setMuted(value) {
   muted = value;
+  if (muted) {
+    Object.values(bgmAudio).forEach((a) => a.pause());
+  } else if (currentBgm && bgmAudio[currentBgm]) {
+    bgmAudio[currentBgm].play().catch(() => {});
+  }
 }
 
 export function isMuted() {
   return muted;
+}
+
+const bgmAudio = {
+  menu: new Audio('/sounds/menu.wav'),
+  game: new Audio('/sounds/game.wav'),
+};
+
+Object.values(bgmAudio).forEach((audio) => {
+  audio.loop = true;
+  audio.volume = 0.4;
+});
+
+let currentBgm = null;
+
+export function playBgm(track) {
+  if (muted) return;
+  if (currentBgm === track) return;
+
+  Object.keys(bgmAudio).forEach((key) => {
+    if (key !== track) {
+      bgmAudio[key].pause();
+    }
+  });
+
+  currentBgm = track;
+  const audio = bgmAudio[track];
+  if (audio) {
+    audio.play().catch(() => {});
+  }
+}
+
+// Helper to attempt starting BGM on first interaction if it was blocked
+export function resumeBgmIfPaused() {
+  if (muted || !currentBgm) return;
+  const audio = bgmAudio[currentBgm];
+  if (audio && audio.paused) {
+    audio.play().catch(() => {});
+  }
 }
