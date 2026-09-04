@@ -31,9 +31,6 @@ export default function InfoCard({ item }) {
       <div className="info-item-card__effect">
         <strong>EFFECT:</strong> {item.specialEffect}
       </div>
-      <p className="info-item-card__desc">
-        {item.description}
-      </p>
     </article>
   );
 }

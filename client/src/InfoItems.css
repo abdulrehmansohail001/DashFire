@@ -167,15 +167,6 @@
   text-align: left;
 }
 
-.info-item-card__desc {
-  margin: 12px 0 0;
-  color: #9fb3c8;
-  font-size: 0.45rem;
-  line-height: 1.6;
-  text-align: left;
-  flex-grow: 1;
-}
-
 @media (max-width: 760px) {
   .info-items-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
