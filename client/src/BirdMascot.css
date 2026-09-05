@@ -21,7 +21,7 @@
 
 .bird-mascot__speech-bubble {
   position: absolute;
-  bottom: calc(100% + 15px);
+  top: calc(100% + 15px);
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(15, 20, 30, 0.95);
@@ -41,12 +41,12 @@
 .bird-mascot__speech-bubble::after {
   content: '';
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
   border-width: 8px;
   border-style: solid;
-  border-color: #44e transparent transparent transparent;
+  border-color: transparent transparent #44e transparent;
 }
 
 .bird-mascot__effect strong {
