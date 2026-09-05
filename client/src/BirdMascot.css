@@ -35,7 +35,15 @@
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
   font-size: 0.9rem;
   line-height: 1.4;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease-out, visibility 0.2s;
   /* Speech bubble tail */
+}
+
+.bird-mascot__speech-bubble.show {
+  opacity: 1;
+  visibility: visible;
 }
 
 .bird-mascot__speech-bubble::after {
