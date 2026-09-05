@@ -17,6 +17,7 @@ import { getInventory } from './services/shopApi';
 import { registerUser, loginUser, googleLogin } from './services/authApi';
 import AnimatedGameBackground from './game/AnimatedGameBackground';
 import { playSound, playBgm, resumeBgmIfPaused } from './game/sound';
+import { useMascot } from './context/MascotContext';
 import './App.css';
 
 const GAME_BACKGROUND_STYLE = {
@@ -28,6 +29,7 @@ const DEFAULT_UNLOCKED_BY_WORLD = { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1 };
 
 function App() {
   const [screen, setScreen] = useState('auth');
+  const { setHidden } = useMascot();
   const [selectedWorldIndex, setSelectedWorldIndex] = useState(0);
   const [selectedLevelIndex, setSelectedLevelIndex] = useState(0);
   const [unlockedByWorld, setUnlockedByWorld] = useState(DEFAULT_UNLOCKED_BY_WORLD);
@@ -45,6 +47,10 @@ function App() {
   const [authError, setAuthError] = useState('');
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => getAuthenticatedUser());
+
+  useEffect(() => {
+    setHidden(screen === 'game');
+  }, [screen, setHidden]);
 
   useEffect(() => {
     const handleInteraction = () => {

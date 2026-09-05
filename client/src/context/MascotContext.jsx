@@ -7,6 +7,7 @@ export function MascotProvider({ children }) {
   const [target, setTarget] = useState(null);
   const [activeCardId, setActiveCardId] = useState(null);
   const [pointingMessages, setPointingMessages] = useState(null);
+  const [hidden, setHidden] = useState(false);
   const hoverTokenRef = useRef(0);
 
   const flyTo = useCallback((cardId, rect, messages) => {
@@ -36,7 +37,7 @@ export function MascotProvider({ children }) {
   }, []);
 
   const value = {
-    phase, target, activeCardId, pointingMessages,
+    phase, target, activeCardId, pointingMessages, hidden, setHidden,
     perchPosition: PERCH_POSITION,
     flyTo, arrived, flyHome, landedHome,
     currentToken: () => hoverTokenRef.current,

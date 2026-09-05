@@ -6,7 +6,7 @@ import { MASCOT_MESSAGES, POINTING_MESSAGES } from "../../data/mascotMessages";
 import SpeechBubble from "./SpeechBubble";
 
 export default function MascotBird() {
-  const { phase, target, perchPosition, arrived, landedHome, currentToken, pointingMessages } = useMascot();
+  const { phase, target, perchPosition, arrived, landedHome, currentToken, pointingMessages, hidden } = useMascot();
   const [frameIndex, setFrameIndex] = useState(0);
   const prevX = useRef(perchPosition.left);
 
@@ -68,6 +68,8 @@ export default function MascotBird() {
   } else if (localPhase === "perched") {
     // We could show MASCOT_MESSAGES here occasionally, but for exactness with the prompt constraints we'll just show pointing for now.
   }
+
+  if (hidden) return null;
 
   return (
     <>
