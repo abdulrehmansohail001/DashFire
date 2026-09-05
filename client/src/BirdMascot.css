@@ -15,10 +15,17 @@
      1708x854 total, so scale each frame to this element's own box. */
   background-size: 400% 200%;
   background-position: 0% 0%;
+  transform: scaleX(-1); /* sheet's bird faces the wrong way for this UI — mirrored */
+  animation: bird-mascot-idle 1.2s steps(1) infinite;
 }
 
 .bird-mascot__bird.is-flapping {
   animation: bird-mascot-flap 0.7s steps(1) infinite;
+}
+
+@keyframes bird-mascot-idle {
+  0%, 49%   { background-position: 0%   0%; } /* frame 1 */
+  50%, 100% { background-position: 33.33% 0%; } /* frame 2 */
 }
 
 @keyframes bird-mascot-flap {
