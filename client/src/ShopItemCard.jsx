@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { drawBulletSkin } from './game/bulletSkins';
 import { Bullet } from './game/entities/Bullet';
+import { useMascot } from './context/MascotContext';
 
 export default function ShopItemCard({ item, inventory, onPurchase, onEquip }) {
   const [isBusy, setIsBusy] = useState(false);
@@ -16,6 +17,16 @@ export default function ShopItemCard({ item, inventory, onPurchase, onEquip }) {
   const isSkinPreview = item.category === 'skin' && item.spriteColumns && item.spriteRows;
   const isBulletPreview = item.category === 'bulletSkin';
   const canvasRef = useRef(null);
+  
+  const { flyTo, flyHome } = useMascot();
+
+  const handleEnter = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const message = item.description || "Take a look at this";
+    flyTo(item.id, rect, [message]);
+  };
+  
+  const handleLeave = () => flyHome(item.id);
 
   useEffect(() => {
     if ((!isBulletPreview && item.previewType !== 'canvas') || !canvasRef.current) return;
@@ -60,7 +71,11 @@ export default function ShopItemCard({ item, inventory, onPurchase, onEquip }) {
   };
 
   return (
-    <article className={`shop-item-card${equipped ? ' shop-item-card--equipped' : ''}`}>
+    <article 
+      className={`shop-item-card${equipped ? ' shop-item-card--equipped' : ''}`}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
       <div className="shop-item-card__image-wrap">
         {isBulletPreview || item.previewType === 'canvas' ? (
           <canvas
