@@ -1,10 +1,17 @@
-export default function InfoCard({ item }) {
+import { forwardRef } from 'react';
+
+const InfoCard = forwardRef(({ item, onMouseEnter, onMouseLeave }, ref) => {
   // If spritePath isn't defined, we'll just show a placeholder box
   const hasImage = !!item.spritePath;
   const isSheet = hasImage && item.spriteColumns && item.spriteRows;
 
   return (
-    <article className="info-item-card">
+    <article 
+      className="info-item-card"
+      ref={ref}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
       <div className="info-item-card__image-wrap">
         {isSheet ? (
           <div
@@ -28,9 +35,8 @@ export default function InfoCard({ item }) {
       <p className="info-item-card__world">
         {item.world}
       </p>
-      <div className="info-item-card__effect">
-        <strong>EFFECT:</strong> {item.specialEffect}
-      </div>
     </article>
   );
-}
+});
+
+export default InfoCard;
