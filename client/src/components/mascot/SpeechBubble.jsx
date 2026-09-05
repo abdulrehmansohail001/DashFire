@@ -50,7 +50,7 @@ export default function SpeechBubble({ x, y, messages }) {
             position: 'fixed',
             left: x,
             top: y,
-            transform: 'translate(-50%, -100%)',
+            transform: 'translate(-50%, 0)',
             pointerEvents: 'none',
             zIndex: 9999,
             backgroundColor: 'rgba(15, 20, 30, 0.95)',
@@ -73,12 +73,12 @@ export default function SpeechBubble({ x, y, messages }) {
             style={{
               content: '""',
               position: 'absolute',
-              top: '100%',
+              bottom: '100%',
               left: '50%',
               transform: 'translateX(-50%)',
               borderWidth: '8px',
               borderStyle: 'solid',
-              borderColor: '#44e transparent transparent transparent'
+              borderColor: 'transparent transparent #44e transparent'
             }}
           />
         </motion.div>

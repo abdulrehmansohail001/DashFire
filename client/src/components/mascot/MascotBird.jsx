@@ -74,7 +74,7 @@ export default function MascotBird() {
       {showBubble && (
         <SpeechBubble 
           x={destX + (RENDER_WIDTH / 2)} 
-          y={destY - 10} 
+          y={destY + RENDER_HEIGHT + 10} 
           messages={messages} 
         />
       )}
