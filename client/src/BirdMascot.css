@@ -1,7 +1,7 @@
 .bird-mascot {
   position: fixed;
   z-index: 9999;
-  transition: left 0.4s ease, top 0.4s ease;
+  transition: left 0.8s ease, top 0.8s ease;
   transform: translate(-50%, -50%);
   pointer-events: none; /* Let clicks pass through to underneath elements */
 }
