@@ -61,7 +61,7 @@ export default function BirdMascot({ targetPosition, message, visible }) {
           </div>
         )}
       </div>
-      <div className="bird-mascot__bird"></div>
+      <div className={`bird-mascot__bird ${visible ? 'is-flapping' : ''}`}></div>
     </div>
   );
 }
