@@ -5,6 +5,12 @@ import { FRAMES, SHEET_SRC, CELL_WIDTH, CELL_HEIGHT, GRID_COLS, RENDER_WIDTH, RE
 import { MASCOT_MESSAGES, POINTING_MESSAGES } from "../../data/mascotMessages";
 import SpeechBubble from "./SpeechBubble";
 
+const PERCHED_MESSAGES = [
+  "HI i am Moco",
+  "Let me guide you through the game",
+  "Hover over a card to learn about the entity"
+];
+
 export default function MascotBird() {
   const { phase, target, perchPosition, arrived, landedHome, currentToken, pointingMessages, hidden } = useMascot();
   const [frameIndex, setFrameIndex] = useState(0);
@@ -67,11 +73,7 @@ export default function MascotBird() {
     messages = pointingMessages || POINTING_MESSAGES;
   } else if (localPhase === "perched") {
     showBubble = true;
-    messages = [
-      "HI i am Moco",
-      "Let me guide you through the game",
-      "Hover over a card to learn about the entity"
-    ];
+    messages = PERCHED_MESSAGES;
   }
 
   if (hidden) return null;
