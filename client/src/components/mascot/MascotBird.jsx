@@ -8,7 +8,6 @@ import SpeechBubble from "./SpeechBubble";
 export default function MascotBird() {
   const { phase, target, perchPosition, arrived, landedHome, currentToken, pointingMessages } = useMascot();
   const [frameIndex, setFrameIndex] = useState(0);
-  const [facing, setFacing] = useState(1);
   const prevX = useRef(perchPosition.left);
 
   const [localPhase, setLocalPhase] = useState(phase);
@@ -46,11 +45,6 @@ export default function MascotBird() {
   const destY = target ? target.y : (window.innerHeight - perchPosition.bottom - RENDER_HEIGHT);
 
   useEffect(() => {
-    if (destX > prevX.current + 5) {
-      setFacing(-1); 
-    } else if (destX < prevX.current - 5) {
-      setFacing(1);
-    }
     prevX.current = destX;
   }, [destX]);
 
@@ -86,7 +80,7 @@ export default function MascotBird() {
       )}
       <motion.div
         initial={false}
-        animate={{ x: destX, y: destY, scaleX: facing }}
+        animate={{ x: destX, y: destY }}
         transition={{ type: "spring", stiffness: 120, damping: 20 }}
         onAnimationComplete={onAnimationComplete}
         style={{
