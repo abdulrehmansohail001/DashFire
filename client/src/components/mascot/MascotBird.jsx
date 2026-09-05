@@ -66,7 +66,12 @@ export default function MascotBird() {
     showBubble = true;
     messages = pointingMessages || POINTING_MESSAGES;
   } else if (localPhase === "perched") {
-    // We could show MASCOT_MESSAGES here occasionally, but for exactness with the prompt constraints we'll just show pointing for now.
+    showBubble = true;
+    messages = [
+      "HI i am Moco",
+      "Let me guide you through the game",
+      "Hover over a card to learn about the entity"
+    ];
   }
 
   if (hidden) return null;
@@ -83,7 +88,7 @@ export default function MascotBird() {
       <motion.div
         initial={false}
         animate={{ x: destX, y: destY }}
-        transition={{ type: "spring", stiffness: 120, damping: 20 }}
+        transition={{ type: "spring", stiffness: 40, damping: 15 }}
         onAnimationComplete={onAnimationComplete}
         style={{
           position: "fixed",
