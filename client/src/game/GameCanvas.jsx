@@ -527,6 +527,7 @@ function drawTimeDistorterOverlay(ctx, boss) {
 }
 
 export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, totalCoins = 0, equippedSkin = 'skin_01', equippedBulletSkin = 'bullet_01', ownedItems = [], onLevelComplete, onExitToMenu }) {
+  console.log('🔥🔥🔥 GameCanvas MOUNTED with worldIndex:', worldIndex, 'initialLevelIndex:', initialLevelIndex);
   const world = WORLDS[worldIndex] ?? WORLDS[0];
   const LEVELS = world.levels; // every existing LEVELS[...] reference below now resolves per-world, unchanged
   const { flyTo, flyHome, setHidden } = useMascot();
@@ -704,6 +705,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
   ownedItemsRef.current = ownedItems;
   const introQueueRef = useRef([]);
   const currentIntroIndexRef = useRef(0);
+  const hasInitializedIntroRef = useRef(false);
+  
+  console.log('⚡⚡⚡ Initial refs setup - introQueue:', introQueueRef.current, 'currentIntroIndex:', currentIntroIndexRef.current);
 
   const awardCoinReward = () => {
     const reward = 200 + Math.floor(Math.random() * 51);
@@ -721,6 +725,32 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
   useEffect(() => {
     runSummaryRef.current = runSummary;
   }, [runSummary]);
+
+  // Initialize intro queue on component mount
+  useEffect(() => {
+    if (hasInitializedIntroRef.current) return;
+    hasInitializedIntroRef.current = true;
+    
+    console.log('🌟🌟🌟 Mount effect - setting up initial intro queue');
+    const initialLevelIntros = LEVEL_INTROS[worldIndex]?.[initialLevelIndex] || [];
+    console.log('🌟🌟🌟 Initial level intros:', initialLevelIntros);
+    
+    const initialUnseenIntros = initialLevelIntros.filter(id => !hasSeenEntity(id));
+    console.log('🌟🌟🌟 Initial unseen intros:', initialUnseenIntros);
+    
+    // TEMPORARY: Force show intro for level 1 of world 1 for testing
+    const forceInitialIntro = (worldIndex === 0 && initialLevelIndex === 0 && initialLevelIntros.length > 0);
+    console.log('🌟🌟🌟 Force initial intro for testing:', forceInitialIntro);
+    
+    introQueueRef.current = forceInitialIntro ? initialLevelIntros : initialUnseenIntros;
+    currentIntroIndexRef.current = 0;
+    
+    if (introQueueRef.current.length > 0) {
+      console.log('🌟🌟🌟 Setting initial gameState to introOverlay');
+      gameStateRef.current = 'introOverlay';
+      setGameState('introOverlay');
+    }
+  }, [worldIndex, initialLevelIndex]); // Run when world/level changes
 
   // Control mascot visibility based on gameState
   useEffect(() => {
@@ -768,6 +798,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
   }, [gameState, flyTo]);
 
   const startLevel = (index, keepHealth = true) => {
+    console.log('🚀🚀🚀 startLevel called with index:', index, 'keepHealth:', keepHealth);
     levelIndexRef.current = index;
     const config = LEVELS[index];
 
@@ -841,7 +872,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
 
     // Build intro queue for unseen entities in this level
     const levelIntros = LEVEL_INTROS[worldIndex]?.[index] || [];
-    console.log('Level intros for world', worldIndex, 'level', index, ':', levelIntros);
+    console.log('*** NEW CODE RUNNING *** Level intros for world', worldIndex, 'level', index, ':', levelIntros);
     
     // Debug: check each entity individually
     levelIntros.forEach(id => {
@@ -860,7 +891,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     currentIntroIndexRef.current = 0;
 
     if (introQueueRef.current.length > 0) {
-      console.log('Setting gameState to introOverlay');
+      console.log('*** SETTING GAMESTATE TO INTROOVERLAY ***');
       gameStateRef.current = 'introOverlay';
       setGameState('introOverlay');
     } else {
@@ -2434,7 +2465,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
       style={{
         position: 'fixed',
         inset: 0,
-        background: '#000',
+        background: '#330011', // TEMPORARY: Changed to dark red to verify new build
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -2502,16 +2533,19 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
             top: '70%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            color: '#fff',
-            fontSize: '16px',
+            color: '#ff0000',
+            fontSize: '24px',
             fontFamily: '"Press Start 2P", monospace',
             textShadow: '2px 2px 0 #000',
             textAlign: 'center',
             pointerEvents: 'none',
-            opacity: 0.8,
+            opacity: 1,
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            padding: '20px',
+            border: '4px solid #ff0000',
           }}
         >
-          PRESS ANY KEY TO CONTINUE
+          🔴 INTRO OVERLAY ACTIVE - PRESS ANY KEY TO CONTINUE 🔴
         </div>
       )}
     </div>
