@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './SpeechBubble.css';
 
-export default function SpeechBubble({ x, y, messages }) {
+export default function SpeechBubble({ x, y, messages, anchorSide = 'below' }) {
   const [msgIndex, setMsgIndex] = useState(0);
   const [text, setText] = useState('');
   
@@ -50,7 +50,7 @@ export default function SpeechBubble({ x, y, messages }) {
             position: 'fixed',
             left: x,
             top: y,
-            transform: 'translate(-50%, 0)',
+            transform: anchorSide === 'above' ? 'translate(-50%, -100%)' : 'translate(-50%, 0)',
             pointerEvents: 'none',
             zIndex: 9999,
             backgroundColor: 'rgba(15, 20, 30, 0.95)',
@@ -73,12 +73,13 @@ export default function SpeechBubble({ x, y, messages }) {
             style={{
               content: '""',
               position: 'absolute',
-              bottom: '100%',
+              ...(anchorSide === 'above'
+                ? { top: '100%', borderColor: '#44e transparent transparent transparent' }
+                : { bottom: '100%', borderColor: 'transparent transparent #44e transparent' }),
               left: '50%',
               transform: 'translateX(-50%)',
               borderWidth: '8px',
               borderStyle: 'solid',
-              borderColor: 'transparent transparent #44e transparent'
             }}
           />
         </motion.div>
