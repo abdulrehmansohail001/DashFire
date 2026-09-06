@@ -83,7 +83,7 @@ export default function MascotBird() {
       {showBubble && (
         <SpeechBubble 
           x={destX + (RENDER_WIDTH / 2)} 
-          y={phase === 'pointing' ? destY + RENDER_HEIGHT + 10 : destY - 45}
+          y={phase === 'pointing' ? destY + RENDER_HEIGHT + 10 : destY - 75}
           anchorSide={phase === 'pointing' ? 'below' : 'above'}
           messages={messages} 
         />
@@ -91,7 +91,7 @@ export default function MascotBird() {
       <motion.div
         initial={false}
         animate={{ x: destX, y: destY }}
-        transition={{ type: "spring", stiffness: 40, damping: 15 }}
+        transition={{ type: "spring", stiffness: 55, damping: 16 }}
         onAnimationComplete={onAnimationComplete}
         style={{
           position: "fixed",
