@@ -1154,6 +1154,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         } else {
           player.x = cactus.x + cactus.width;
         }
+        player.takeHit(); // was missing entirely — comment above already said "PLUS contact damage like a frog" but the actual takeHit() call had been dropped
+        playSound('hit', 0.6);
       }
 
       // Quicksand: NOT solid — no push-back, the player walks freely onto
