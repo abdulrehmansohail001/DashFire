@@ -726,6 +726,16 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     runSummaryRef.current = runSummary;
   }, [runSummary]);
 
+  // Control mascot visibility based on gameState
+  useEffect(() => {
+    console.log('Mascot visibility effect, gameState:', gameState);
+    if (gameState === 'introOverlay') {
+      setHidden(false);
+    } else if (gameState === 'playing') {
+      setHidden(true);
+    }
+  }, [gameState, setHidden]);
+
   // Initialize intro queue on component mount
   useEffect(() => {
     if (hasInitializedIntroRef.current) return;
@@ -752,16 +762,6 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     }
   }, [worldIndex, initialLevelIndex]); // Run when world/level changes
 
-  // Control mascot visibility based on gameState
-  useEffect(() => {
-    console.log('Mascot visibility effect, gameState:', gameState);
-    if (gameState === 'introOverlay') {
-      setHidden(false);
-    } else if (gameState === 'playing') {
-      setHidden(true);
-    }
-  }, [gameState, setHidden]);
-
   // Trigger mascot intro when gameState becomes introOverlay
   useEffect(() => {
     console.log('Intro trigger effect, gameState:', gameState, 'introQueue length:', introQueueRef.current.length);
@@ -774,26 +774,36 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
       console.log('Entity info found:', entityInfo);
       if (!entityInfo) return;
 
-      // Get canvas rect for mascot positioning - delay slightly to ensure canvas is mounted
-      setTimeout(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) {
-          console.log('Canvas not available');
-          return;
-        }
-        const rect = canvas.getBoundingClientRect();
-        console.log('Canvas rect:', rect);
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        console.log('Canvas not available');
+        return;
+      }
+      const rect = canvas.getBoundingClientRect();
+      console.log('Canvas rect:', rect);
 
-        // Shape messages according to mascotMessages.js format
-        const messages = [
-          `New threat detected: ${entityInfo.name}!`,
-          entityInfo.specialEffect,
-        ];
+      // Create a target rect for the center of the screen
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const targetRect = {
+        left: centerX - 100,
+        top: centerY - 50,
+        right: centerX + 100,
+        bottom: centerY + 50,
+        width: 200,
+        height: 100,
+      };
+      console.log('Target rect:', targetRect);
 
-        // Trigger mascot flyTo
-        console.log('Calling flyTo with:', currentId, messages);
-        flyTo(currentId, rect, messages);
-      }, 100);
+      // Shape messages according to mascotMessages.js format
+      const messages = [
+        `New threat detected: ${entityInfo.name}!`,
+        entityInfo.specialEffect,
+      ];
+
+      // Trigger mascot flyTo immediately
+      console.log('Calling flyTo with:', currentId, targetRect, messages);
+      flyTo(currentId, targetRect, messages);
     }
   }, [gameState, flyTo]);
 
