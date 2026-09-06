@@ -799,6 +799,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
       const messages = [
         `New threat detected: ${entityInfo.name}!`,
         entityInfo.specialEffect,
+        'PRESS ANY KEY TO CONTINUE',
       ];
 
       // Trigger mascot flyTo immediately
@@ -2536,28 +2537,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         </div>
       )}
 
-      {gameState === 'introOverlay' && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '70%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            color: '#ff0000',
-            fontSize: '24px',
-            fontFamily: '"Press Start 2P", monospace',
-            textShadow: '2px 2px 0 #000',
-            textAlign: 'center',
-            pointerEvents: 'none',
-            opacity: 1,
-            backgroundColor: 'rgba(0,0,0,0.8)',
-            padding: '20px',
-            border: '4px solid #ff0000',
-          }}
-        >
-          🔴 INTRO OVERLAY ACTIVE - PRESS ANY KEY TO CONTINUE 🔴
-        </div>
-      )}
+
     </div>
   );
 }
