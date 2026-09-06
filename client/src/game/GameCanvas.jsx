@@ -748,11 +748,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     const initialUnseenIntros = initialLevelIntros.filter(id => !hasSeenEntity(id));
     console.log('🌟🌟🌟 Initial unseen intros:', initialUnseenIntros);
     
-    // TEMPORARY: Force show intro for level 1 of world 1 for testing
-    const forceInitialIntro = (worldIndex === 0 && initialLevelIndex === 0 && initialLevelIntros.length > 0);
-    console.log('🌟🌟🌟 Force initial intro for testing:', forceInitialIntro);
-    
-    introQueueRef.current = forceInitialIntro ? initialLevelIntros : initialUnseenIntros;
+    introQueueRef.current = initialUnseenIntros;
     currentIntroIndexRef.current = 0;
     
     if (introQueueRef.current.length > 0) {
@@ -894,11 +890,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     const unseenIntros = levelIntros.filter(id => !hasSeenEntity(id));
     console.log('Unseen intros:', unseenIntros);
     
-    // TEMPORARY: Force show intro for level 1 of world 1 for testing
-    const forceIntro = (worldIndex === 0 && index === 0 && levelIntros.length > 0);
-    console.log('Force intro for testing:', forceIntro);
-    
-    introQueueRef.current = forceIntro ? levelIntros : unseenIntros;
+    introQueueRef.current = unseenIntros;
     currentIntroIndexRef.current = 0;
 
     if (introQueueRef.current.length > 0) {
