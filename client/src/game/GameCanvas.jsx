@@ -12,7 +12,7 @@
 // portrait) top-right above the enemy's patrol zone. Both portraits are
 // cropped from each sprite sheet's idle frame via SpriteSheet.drawPortrait.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Player } from './entities/Player';
 import { isColliding, Obstacle } from './entities/Obstacle';
 import { Cactus } from './entities/Cactus';
@@ -758,51 +758,49 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     }
   }, [worldIndex, initialLevelIndex]); // Run when world/level changes
 
+  // Shared by both "enter introOverlay for the first entity" (the effect
+  // below) and "advance to the next queued entity" (handleKeyDown) — this
+  // used to be duplicated in both places with drifted logic (the keydown
+  // copy used the raw canvas rect instead of a centered box, and dropped
+  // the "press to continue" line), which is why a level with 2+ new
+  // entities only ever showed the first one correctly.
+  const showIntroAtIndex = useCallback((index) => {
+    const currentId = introQueueRef.current[index];
+    if (!currentId) return;
+
+    const entityInfo = [...ENEMY_INFO, ...OBSTACLE_INFO, ...BOSS_INFO].find((e) => e.id === currentId);
+    if (!entityInfo) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const targetRect = {
+      left: centerX - 100,
+      top: centerY - 50,
+      right: centerX + 100,
+      bottom: centerY + 50,
+      width: 200,
+      height: 100,
+    };
+
+    const messages = [
+      `New threat detected: ${entityInfo.name}!`,
+      entityInfo.specialEffect,
+      'PRESS ANY KEY TO CONTINUE',
+    ];
+
+    flyTo(currentId, targetRect, messages);
+  }, [flyTo]);
+
   // Trigger mascot intro when gameState becomes introOverlay
   useEffect(() => {
-    console.log('Intro trigger effect, gameState:', gameState, 'introQueue length:', introQueueRef.current.length);
     if (gameState === 'introOverlay' && introQueueRef.current.length > 0) {
-      const currentId = introQueueRef.current[currentIntroIndexRef.current];
-      console.log('Current intro ID:', currentId);
-      
-      // Look up entity info from catalog
-      const entityInfo = [...ENEMY_INFO, ...OBSTACLE_INFO, ...BOSS_INFO].find(e => e.id === currentId);
-      console.log('Entity info found:', entityInfo);
-      if (!entityInfo) return;
-
-      const canvas = canvasRef.current;
-      if (!canvas) {
-        console.log('Canvas not available');
-        return;
-      }
-      const rect = canvas.getBoundingClientRect();
-      console.log('Canvas rect:', rect);
-
-      // Create a target rect for the center of the screen
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      const targetRect = {
-        left: centerX - 100,
-        top: centerY - 50,
-        right: centerX + 100,
-        bottom: centerY + 50,
-        width: 200,
-        height: 100,
-      };
-      console.log('Target rect:', targetRect);
-
-      // Shape messages according to mascotMessages.js format
-      const messages = [
-        `New threat detected: ${entityInfo.name}!`,
-        entityInfo.specialEffect,
-        'PRESS ANY KEY TO CONTINUE',
-      ];
-
-      // Trigger mascot flyTo immediately
-      console.log('Calling flyTo with:', currentId, targetRect, messages);
-      flyTo(currentId, targetRect, messages);
+      showIntroAtIndex(currentIntroIndexRef.current);
     }
-  }, [gameState, flyTo]);
+  }, [gameState, showIntroAtIndex]);
 
   const startLevel = (index, keepHealth = true) => {
     console.log('🚀🚀🚀 startLevel called with index:', index, 'keepHealth:', keepHealth);
@@ -954,27 +952,16 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
 
       // Handle intro overlay dismissal on any key
       if (gameStateRef.current === 'introOverlay') {
-        console.log('Intro overlay key pressed');
         const currentId = introQueueRef.current[currentIntroIndexRef.current];
         if (currentId) {
           markEntitySeen(currentId);
         }
         flyHome();
-        
+
         // Move to next intro or resume gameplay
         currentIntroIndexRef.current++;
         if (currentIntroIndexRef.current < introQueueRef.current.length) {
-          // Trigger next intro
-          const nextId = introQueueRef.current[currentIntroIndexRef.current];
-          const entityInfo = [...ENEMY_INFO, ...OBSTACLE_INFO, ...BOSS_INFO].find(e => e.id === nextId);
-          if (entityInfo && canvasRef.current) {
-            const rect = canvasRef.current.getBoundingClientRect();
-            const messages = [
-              `New threat detected: ${entityInfo.name}!`,
-              entityInfo.specialEffect,
-            ];
-            flyTo(nextId, rect, messages);
-          }
+          showIntroAtIndex(currentIntroIndexRef.current); // same helper the initial effect uses — was a separate, drifted copy before
         } else {
           // All intros done, resume gameplay
           gameStateRef.current = 'playing';
