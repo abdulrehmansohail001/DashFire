@@ -14,7 +14,6 @@ const PERCHED_MESSAGES = [
 export default function MascotBird() {
   const { phase, target, perchPosition, arrived, landedHome, currentToken, pointingMessages, hidden } = useMascot();
   const [frameIndex, setFrameIndex] = useState(0);
-  const prevX = useRef(perchPosition.left);
 
   const [localPhase, setLocalPhase] = useState(phase);
   
@@ -50,14 +49,28 @@ export default function MascotBird() {
   const destX = target ? target.x : perchPosition.left;
   const destY = target ? target.y : (window.innerHeight - perchPosition.bottom - RENDER_HEIGHT);
 
-  useEffect(() => {
-    prevX.current = destX;
-  }, [destX]);
-
   const onAnimationComplete = () => {
     if (phase === "flying-out") arrived(currentToken());
     else if (phase === "flying-home") landedHome();
   };
+
+  // framer-motion never calls onAnimationComplete when animate={{x,y}}
+  // targets the position it's already sitting at — there's no actual
+  // motion to finish. That happens whenever two intro entities land the
+  // bird at the same on-screen spot back to back (e.g. both centered),
+  // leaving it stuck flapping in "flying-out"/"flying-home" forever
+  // waiting for a completion event that will never fire. prevPos tracks
+  // both axes (prevX alone missed same-x-different-y cases and vice versa)
+  // and, on a genuine zero-distance request, resolves it immediately
+  // instead of waiting on motion.
+  const prevPos = useRef({ x: destX, y: destY });
+  useEffect(() => {
+    const samePosition = destX === prevPos.current.x && destY === prevPos.current.y;
+    prevPos.current = { x: destX, y: destY };
+    if (samePosition && (phase === "flying-out" || phase === "flying-home")) {
+      onAnimationComplete();
+    }
+  }, [destX, destY, phase]);
 
   const col = frameIndex % GRID_COLS;
   const row = Math.floor(frameIndex / GRID_COLS);
@@ -91,7 +104,7 @@ export default function MascotBird() {
       <motion.div
         initial={false}
         animate={{ x: destX, y: destY }}
-        transition={{ type: "spring", stiffness: 55, damping: 16 }}
+        transition={{ type: "spring", stiffness: 40, damping: 15 }}
         onAnimationComplete={onAnimationComplete}
         style={{
           position: "fixed",

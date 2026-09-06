@@ -952,18 +952,26 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
 
       // Handle intro overlay dismissal on any key
       if (gameStateRef.current === 'introOverlay') {
+        if (e.repeat) return; // ignore auto-repeat from a held key — each real press should advance exactly one entity
+
         const currentId = introQueueRef.current[currentIntroIndexRef.current];
         if (currentId) {
           markEntitySeen(currentId);
         }
-        flyHome();
 
         // Move to next intro or resume gameplay
         currentIntroIndexRef.current++;
         if (currentIntroIndexRef.current < introQueueRef.current.length) {
-          showIntroAtIndex(currentIntroIndexRef.current); // same helper the initial effect uses — was a separate, drifted copy before
+          // Fly straight to the next entity — NOT flyHome() first. Calling
+          // flyHome() then immediately flyTo() in the same tick was
+          // thrashing the mascot's internal flight token (each call bumps
+          // it), which could leave the bird's in-flight animation's
+          // onAnimationComplete check against a now-stale token, so it
+          // never reached "arrived" and just kept flying.
+          showIntroAtIndex(currentIntroIndexRef.current);
         } else {
-          // All intros done, resume gameplay
+          // All intros done — NOW send the bird home, and resume gameplay.
+          flyHome();
           gameStateRef.current = 'playing';
           setGameState('playing');
         }
