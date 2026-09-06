@@ -49,6 +49,10 @@ import { Frog } from './entities/Frog';
 import { BossFrog } from './entities/BossFrog';
 import { REG } from './entities/REG';
 import { ENEMY_GROUND_Y as GUNMAN_REST_Y } from './entities/Enemy'; // Enemy.js's OWN ground constant (310) — different from this file's local ENEMY_GROUND_Y (340), which is only the pre-physics spawn y
+import { hasSeenEntity, markEntitySeen } from '../utils/seenEntities';
+import { LEVEL_INTROS } from '../data/levelIntros';
+import { ENEMY_INFO, OBSTACLE_INFO, BOSS_INFO } from '../infoCatalog';
+import { useMascot } from '../context/MascotContext';
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
 const ENEMY_GROUND_Y = 340;
@@ -525,6 +529,7 @@ function drawTimeDistorterOverlay(ctx, boss) {
 export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, totalCoins = 0, equippedSkin = 'skin_01', equippedBulletSkin = 'bullet_01', ownedItems = [], onLevelComplete, onExitToMenu }) {
   const world = WORLDS[worldIndex] ?? WORLDS[0];
   const LEVELS = world.levels; // every existing LEVELS[...] reference below now resolves per-world, unchanged
+  const { flyTo, flyHome, setHidden } = useMascot();
 
   const playerSheet = getSheet(world.sprites.player);
   const playerExtraSheet = getSheet(world.sprites.playerExtra);
@@ -608,10 +613,12 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
   const [runSummary, setRunSummary] = useState({ stars: 0, coins: 0, hp: PLAYER_MAX_HEALTH, rewarded: false });
   const runSummaryRef = useRef(runSummary);
   const [resultOverlay, setResultOverlay] = useState(null);
-  // 'playing' | 'dying' | 'gameover' | 'celebrating' | 'levelComplete' | 'gameComplete'
+  // 'playing' | 'dying' | 'gameover' | 'celebrating' | 'levelComplete' | 'gameComplete' | 'introOverlay'
   // 'dying'/'celebrating' are animation-only holds: the death/victory sprite
   // sequence plays out (gameplay paused) before flipping to the actual
   // result screen, so results never appear mid-animation.
+  // 'introOverlay' is also an animation-only hold: gameplay pauses while
+  // the mascot introduces new entities for the first time.
   const [gameState, setGameState] = useState('playing');
 
   const playerRef = useRef(new Player(100, 310));
@@ -695,6 +702,8 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
   const powerupBubblePositionsRef = useRef([]);
   const ownedItemsRef = useRef(ownedItems);
   ownedItemsRef.current = ownedItems;
+  const introQueueRef = useRef([]);
+  const currentIntroIndexRef = useRef(0);
 
   const awardCoinReward = () => {
     const reward = 200 + Math.floor(Math.random() * 51);
@@ -712,6 +721,51 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
   useEffect(() => {
     runSummaryRef.current = runSummary;
   }, [runSummary]);
+
+  // Control mascot visibility based on gameState
+  useEffect(() => {
+    console.log('Mascot visibility effect, gameState:', gameState);
+    if (gameState === 'introOverlay') {
+      setHidden(false);
+    } else if (gameState === 'playing') {
+      setHidden(true);
+    }
+  }, [gameState, setHidden]);
+
+  // Trigger mascot intro when gameState becomes introOverlay
+  useEffect(() => {
+    console.log('Intro trigger effect, gameState:', gameState, 'introQueue length:', introQueueRef.current.length);
+    if (gameState === 'introOverlay' && introQueueRef.current.length > 0) {
+      const currentId = introQueueRef.current[currentIntroIndexRef.current];
+      console.log('Current intro ID:', currentId);
+      
+      // Look up entity info from catalog
+      const entityInfo = [...ENEMY_INFO, ...OBSTACLE_INFO, ...BOSS_INFO].find(e => e.id === currentId);
+      console.log('Entity info found:', entityInfo);
+      if (!entityInfo) return;
+
+      // Get canvas rect for mascot positioning - delay slightly to ensure canvas is mounted
+      setTimeout(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) {
+          console.log('Canvas not available');
+          return;
+        }
+        const rect = canvas.getBoundingClientRect();
+        console.log('Canvas rect:', rect);
+
+        // Shape messages according to mascotMessages.js format
+        const messages = [
+          `New threat detected: ${entityInfo.name}!`,
+          entityInfo.specialEffect,
+        ];
+
+        // Trigger mascot flyTo
+        console.log('Calling flyTo with:', currentId, messages);
+        flyTo(currentId, rect, messages);
+      }, 100);
+    }
+  }, [gameState, flyTo]);
 
   const startLevel = (index, keepHealth = true) => {
     levelIndexRef.current = index;
@@ -785,8 +839,22 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
       : null;
     levelConfigRef.current = config;
 
-    gameStateRef.current = 'playing';
-    setGameState('playing');
+    // Build intro queue for unseen entities in this level
+    const levelIntros = LEVEL_INTROS[worldIndex]?.[index] || [];
+    console.log('Level intros for world', worldIndex, 'level', index, ':', levelIntros);
+    const unseenIntros = levelIntros.filter(id => !hasSeenEntity(id));
+    console.log('Unseen intros:', unseenIntros);
+    introQueueRef.current = unseenIntros;
+    currentIntroIndexRef.current = 0;
+
+    if (unseenIntros.length > 0) {
+      console.log('Setting gameState to introOverlay');
+      gameStateRef.current = 'introOverlay';
+      setGameState('introOverlay');
+    } else {
+      gameStateRef.current = 'playing';
+      setGameState('playing');
+    }
     setLevelNumber(config.level);
     setHealth(playerRef.current.health);
   };
@@ -837,6 +905,37 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
 
     const handleKeyDown = (e) => {
       keysRef.current[e.key] = true;
+
+      // Handle intro overlay dismissal on any key
+      if (gameStateRef.current === 'introOverlay') {
+        console.log('Intro overlay key pressed');
+        const currentId = introQueueRef.current[currentIntroIndexRef.current];
+        if (currentId) {
+          markEntitySeen(currentId);
+        }
+        flyHome();
+        
+        // Move to next intro or resume gameplay
+        currentIntroIndexRef.current++;
+        if (currentIntroIndexRef.current < introQueueRef.current.length) {
+          // Trigger next intro
+          const nextId = introQueueRef.current[currentIntroIndexRef.current];
+          const entityInfo = [...ENEMY_INFO, ...OBSTACLE_INFO, ...BOSS_INFO].find(e => e.id === nextId);
+          if (entityInfo && canvasRef.current) {
+            const rect = canvasRef.current.getBoundingClientRect();
+            const messages = [
+              `New threat detected: ${entityInfo.name}!`,
+              entityInfo.specialEffect,
+            ];
+            flyTo(nextId, rect, messages);
+          }
+        } else {
+          // All intros done, resume gameplay
+          gameStateRef.current = 'playing';
+          setGameState('playing');
+        }
+        return;
+      }
 
       if (gameStateRef.current === 'gameover' && (e.key === 'r' || e.key === 'R')) {
         restartCurrentLevel();
@@ -953,6 +1052,9 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
         }
         return;
       }
+
+      // Intro overlay is active — freeze gameplay entirely
+      if (gameStateRef.current === 'introOverlay') return;
 
       if (gameStateRef.current !== 'playing') return;
 
@@ -2378,6 +2480,26 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
               PROCEED
             </button>
           )}
+        </div>
+      )}
+
+      {gameState === 'introOverlay' && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '70%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: '#fff',
+            fontSize: '16px',
+            fontFamily: '"Press Start 2P", monospace',
+            textShadow: '2px 2px 0 #000',
+            textAlign: 'center',
+            pointerEvents: 'none',
+            opacity: 0.8,
+          }}
+        >
+          PRESS ANY KEY TO CONTINUE
         </div>
       )}
     </div>
