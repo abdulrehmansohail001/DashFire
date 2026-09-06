@@ -83,7 +83,7 @@ export default function MascotBird() {
       {showBubble && (
         <SpeechBubble 
           x={destX + (RENDER_WIDTH / 2)} 
-          y={phase === 'pointing' ? destY + RENDER_HEIGHT + 10 : destY - 10}
+          y={phase === 'pointing' ? destY + RENDER_HEIGHT + 10 : destY - 45}
           anchorSide={phase === 'pointing' ? 'below' : 'above'}
           messages={messages} 
         />
