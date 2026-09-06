@@ -842,12 +842,24 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
     // Build intro queue for unseen entities in this level
     const levelIntros = LEVEL_INTROS[worldIndex]?.[index] || [];
     console.log('Level intros for world', worldIndex, 'level', index, ':', levelIntros);
+    
+    // Debug: check each entity individually
+    levelIntros.forEach(id => {
+      const seen = hasSeenEntity(id);
+      console.log(`Entity ${id} seen:`, seen);
+    });
+    
     const unseenIntros = levelIntros.filter(id => !hasSeenEntity(id));
     console.log('Unseen intros:', unseenIntros);
-    introQueueRef.current = unseenIntros;
+    
+    // TEMPORARY: Force show intro for level 1 of world 1 for testing
+    const forceIntro = (worldIndex === 0 && index === 0 && levelIntros.length > 0);
+    console.log('Force intro for testing:', forceIntro);
+    
+    introQueueRef.current = forceIntro ? levelIntros : unseenIntros;
     currentIntroIndexRef.current = 0;
 
-    if (unseenIntros.length > 0) {
+    if (introQueueRef.current.length > 0) {
       console.log('Setting gameState to introOverlay');
       gameStateRef.current = 'introOverlay';
       setGameState('introOverlay');
