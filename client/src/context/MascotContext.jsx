@@ -7,13 +7,15 @@ export function MascotProvider({ children }) {
   const [target, setTarget] = useState(null);
   const [activeCardId, setActiveCardId] = useState(null);
   const [pointingMessages, setPointingMessages] = useState(null);
+  const [onMessagesRead, setOnMessagesRead] = useState(null); // optional callback: fires once the pointing bubble's last message finishes typing
   const [hidden, setHidden] = useState(false);
   const hoverTokenRef = useRef(0);
 
-  const flyTo = useCallback((cardId, rect, messages) => {
+  const flyTo = useCallback((cardId, rect, messages, onLastMessageTyped) => {
     const myToken = ++hoverTokenRef.current;
     setActiveCardId(cardId);
     setPointingMessages(messages ?? null);
+    setOnMessagesRead(() => onLastMessageTyped ?? null); // wrapped in a function so useState doesn't treat the callback itself as a lazy initializer
     setTarget({ x: rect.left - RENDER_WIDTH + 24, y: rect.top - 24 });
     setPhase("flying-out");
     return myToken;
@@ -37,7 +39,7 @@ export function MascotProvider({ children }) {
   }, []);
 
   const value = {
-    phase, target, activeCardId, pointingMessages, hidden, setHidden,
+    phase, target, activeCardId, pointingMessages, onMessagesRead, hidden, setHidden,
     perchPosition: PERCH_POSITION,
     flyTo, arrived, flyHome, landedHome,
     currentToken: () => hoverTokenRef.current,

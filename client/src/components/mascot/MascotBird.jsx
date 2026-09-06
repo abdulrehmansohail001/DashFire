@@ -12,7 +12,7 @@ const PERCHED_MESSAGES = [
 ];
 
 export default function MascotBird() {
-  const { phase, target, perchPosition, arrived, landedHome, currentToken, pointingMessages, hidden } = useMascot();
+  const { phase, target, perchPosition, arrived, landedHome, currentToken, pointingMessages, onMessagesRead, hidden } = useMascot();
   const [frameIndex, setFrameIndex] = useState(0);
 
   const [localPhase, setLocalPhase] = useState(phase);
@@ -98,7 +98,8 @@ export default function MascotBird() {
           x={destX + (RENDER_WIDTH / 2)} 
           y={phase === 'pointing' ? destY + RENDER_HEIGHT + 10 : destY - 75}
           anchorSide={phase === 'pointing' ? 'below' : 'above'}
-          messages={messages} 
+          messages={messages}
+          onLastMessageTyped={phase === 'pointing' ? onMessagesRead : undefined}
         />
       )}
       <motion.div

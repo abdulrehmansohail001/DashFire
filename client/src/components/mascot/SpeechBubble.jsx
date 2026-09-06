@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './SpeechBubble.css';
 
-export default function SpeechBubble({ x, y, messages, anchorSide = 'below' }) {
+export default function SpeechBubble({ x, y, messages, anchorSide = 'below', onLastMessageTyped }) {
   const [msgIndex, setMsgIndex] = useState(0);
   const [text, setText] = useState('');
-  
+  const firedRef = useRef(false);
+
   useEffect(() => {
     if (!messages || messages.length === 0) return;
     
@@ -20,7 +21,13 @@ export default function SpeechBubble({ x, y, messages, anchorSide = 'below' }) {
         charIndex++;
       } else {
         clearInterval(typeInterval);
-        
+
+        const isLastMessage = msgIndex === messages.length - 1;
+        if (isLastMessage && !firedRef.current) {
+          firedRef.current = true; // only ever fires once per messages-array lifecycle, even though it can keep looping after this
+          onLastMessageTyped?.();
+        }
+
         if (messages.length > 1) {
           setTimeout(() => {
             setMsgIndex((prev) => (prev + 1) % messages.length);
@@ -36,6 +43,7 @@ export default function SpeechBubble({ x, y, messages, anchorSide = 'below' }) {
   useEffect(() => {
     setMsgIndex(0);
     setText('');
+    firedRef.current = false; // new messages array (new entity) — the gate resets separately per entity
   }, [messages]);
 
   return (

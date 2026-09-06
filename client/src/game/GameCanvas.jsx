@@ -705,6 +705,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
   ownedItemsRef.current = ownedItems;
   const introQueueRef = useRef([]);
   const currentIntroIndexRef = useRef(0);
+  const introReadyRef = useRef(false); // true only once the current entity's "PRESS ANY KEY TO CONTINUE" line has fully typed out — gates handleKeyDown so an early press can't skip past it
   const hasInitializedIntroRef = useRef(false);
   
   console.log('⚡⚡⚡ Initial refs setup - introQueue:', introQueueRef.current, 'currentIntroIndex:', currentIntroIndexRef.current);
@@ -792,7 +793,10 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
       'PRESS ANY KEY TO CONTINUE',
     ];
 
-    flyTo(currentId, targetRect, messages);
+    introReadyRef.current = false; // gate resets separately per entity — can't advance until THIS entity's "press any key" line has fully typed out
+    flyTo(currentId, targetRect, messages, () => {
+      introReadyRef.current = true;
+    });
   }, [flyTo]);
 
   // Trigger mascot intro when gameState becomes introOverlay
@@ -953,6 +957,7 @@ export default function GameCanvas({ worldIndex = 0, initialLevelIndex = 0, tota
       // Handle intro overlay dismissal on any key
       if (gameStateRef.current === 'introOverlay') {
         if (e.repeat) return; // ignore auto-repeat from a held key — each real press should advance exactly one entity
+        if (!introReadyRef.current) return; // this entity's "PRESS ANY KEY TO CONTINUE" line hasn't finished typing yet — ignore the press
 
         const currentId = introQueueRef.current[currentIntroIndexRef.current];
         if (currentId) {
